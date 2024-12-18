@@ -1,23 +1,16 @@
-console.log("Amazon to Idealo content script loaded.");
-
-// setTimeout(() => {
-//   console.log("Checking for product title...");
-//   const titleElement = document.getElementById("productTitle");
-//   if (titleElement) {
-//     console.log("Product title element found:", titleElement.innerText.trim());
-//     addIdealoButton(titleElement);
-//   } else {
-//     console.error("Product title element not found.");
-//   }
-// }, 1000); // Wait 1 seconds
+setTimeout(() => {
+  const titleElement = document.getElementById("productTitle");
+  if (titleElement) {
+    addIdealoButton(titleElement);
+  } else {
+  }
+}, 1000); // Wait 1 seconds
 
 function checkForTitle() {
   const titleElement = document.getElementById("productTitle");
   if (titleElement) {
-    console.log("Product title found:", titleElement.innerText.trim());
     addIdealoButton(titleElement);
   } else {
-    console.error("Product title not found. Watching for changes...");
     observeForTitle();
   }
 }
@@ -26,10 +19,6 @@ function observeForTitle() {
   const observer = new MutationObserver((mutations, obs) => {
     const titleElement = document.getElementById("productTitle");
     if (titleElement) {
-      console.log(
-        "Product title found via MutationObserver:",
-        titleElement.innerText.trim()
-      );
       obs.disconnect(); // Stop observing
       addIdealoButton(titleElement);
     }
@@ -57,5 +46,4 @@ function addIdealoButton(titleElement) {
     font-weight: bold;
   `;
   titleElement.parentElement.appendChild(idealoButton);
-  console.log("Idealo button added successfully.");
 }
