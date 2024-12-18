@@ -32,3 +32,5 @@ function addIdealoButton() {
 
 // Run the function when the DOM is fully loaded
 document.addEventListener("DOMContentLoaded", addIdealoButton);
+
+console.log("Amazon to Idealo content script loaded.");
