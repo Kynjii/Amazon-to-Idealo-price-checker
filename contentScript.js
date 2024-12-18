@@ -1,26 +1,39 @@
 console.log("Amazon to Idealo content script loaded.");
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM fully loaded, checking for product title...");
+  console.log("DOM fully loaded.");
+  checkForTitle();
+});
 
+function checkForTitle() {
   const titleElement = document.getElementById("productTitle");
-
-  if (!titleElement) {
-    console.error("Product title element not found. Exiting.");
-    return;
+  if (titleElement) {
+    console.log("Product title found:", titleElement.innerText.trim());
+    addIdealoButton(titleElement);
+  } else {
+    console.error("Product title not found. Watching for changes...");
+    observeForTitle();
   }
+}
 
-  console.log("Product title element found:", titleElement.innerText.trim());
+function observeForTitle() {
+  const observer = new MutationObserver((mutations, obs) => {
+    const titleElement = document.getElementById("productTitle");
+    if (titleElement) {
+      console.log(
+        "Product title found via MutationObserver:",
+        titleElement.innerText.trim()
+      );
+      obs.disconnect(); // Stop observing
+      addIdealoButton(titleElement);
+    }
+  });
 
-  // Extract product title
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function addIdealoButton(titleElement) {
   const productTitle = titleElement.innerText.trim();
-
-  if (!productTitle) {
-    console.error("Product title is empty. Exiting.");
-    return;
-  }
-
-  // Create Idealo button
   const idealoButton = document.createElement("a");
   idealoButton.innerText = "Search on Idealo";
   idealoButton.href = `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${encodeURIComponent(
@@ -37,7 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
     border-radius: 5px;
     font-weight: bold;
   `;
-
-  console.log("Adding Idealo button to page...");
   titleElement.parentElement.appendChild(idealoButton);
-});
+  console.log("Idealo button added successfully.");
+}
