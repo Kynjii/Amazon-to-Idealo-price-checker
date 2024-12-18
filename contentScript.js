@@ -109,11 +109,15 @@ setTimeout(() => {
       return;
     }
 
-    // Select all result items that have the product title inside
-    const resultItems = document.querySelectorAll(
-      '[data-testid="resultItem"]:has(.sr-productSummary__title_f5flP)'
-    );
+    // Use MutationObserver to handle dynamically loaded content
+    observeDOM(".sr-productSummary__title_f5flP", (resultItems) => {
+      resultItems.forEach((titleElement, index) => {
+        if (titleElement) {
+          const resultTitle = titleElement.textContent.trim();
+          const similarity = cosine.similarity(searchQuery, resultTitle);
+          const matchPercentage = Math.round(similarity * 100);
 
+<<<<<<< HEAD
     console.log(`Found ${resultItems.length} result items.`);
 
     resultItems.forEach((resultItem) => {
@@ -199,6 +203,42 @@ setTimeout(() => {
           resultItem.style.position = "relative";
         }
       }
+=======
+          let color;
+          if (matchPercentage >= 80) color = "#28a745";
+          else if (matchPercentage >= 60) color = "#ffc107";
+          else if (matchPercentage >= 40) color = "#fd7e14";
+          else color = "#dc3545";
+
+          const annotation = document.createElement("span");
+          annotation.textContent = `${matchPercentage}% match`;
+          titleElement.style.position = "relative";
+          annotation.style = `
+            display: inline-block;
+            margin-left: 10px;
+            padding: 5px;
+            background-color: ${color};
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 3px;
+            position: absolute;
+            top: 0.5rem;
+            left: 0.1rem; 
+            z-index: 9999; 
+      `;
+          // Find the nearest sr-resultList__item_m6xdA container
+          const resultItem = titleElement.closest(".sr-resultList__item_m6xdA");
+          if (resultItem) {
+            resultItem.appendChild(annotation); // Append annotation to the result item
+          } else {
+            console.error(
+              "Could not find sr-resultList__item_m6xdA for this title"
+            );
+          }
+        }
+      });
+>>>>>>> parent of b37fef7 (working)
     });
 
     // Highlight best match and largest price difference
