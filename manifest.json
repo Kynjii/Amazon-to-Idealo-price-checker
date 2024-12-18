@@ -1,13 +1,31 @@
 {
   "manifest_version": 3,
-  "name": "Amazon | Idealo Product Search",
+  "name": "Amazon to Idealo",
   "version": "1.0",
   "description": "Adds a button to Amazon product pages to search for the product on Idealo.",
   "permissions": ["activeTab"],
-  "host_permissions": ["https://www.amazon.*/*"],
+  "host_permissions": [
+    "https://www.amazon.de/*",
+    "https://www.amazon.com/*",
+    "https://www.amazon.co.uk/*",
+    "https://www.amazon.ca/*",
+    "https://www.amazon.fr/*",
+    "https://www.amazon.it/*",
+    "https://www.amazon.es/*",
+    "https://www.amazon.nl/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://www.amazon.*/*"],
+      "matches": [
+        "https://www.amazon.de/*",
+        "https://www.amazon.com/*",
+        "https://www.amazon.co.uk/*",
+        "https://www.amazon.ca/*",
+        "https://www.amazon.fr/*",
+        "https://www.amazon.it/*",
+        "https://www.amazon.es/*",
+        "https://www.amazon.nl/*"
+      ],
       "js": ["contentScript.js"]
     }
   ]
