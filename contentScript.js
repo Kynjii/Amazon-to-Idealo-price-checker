@@ -32,7 +32,10 @@ setTimeout(() => {
     } else {
       console.error("Product title element not found");
     }
-  } else if (currentUrl.includes("idealo.de/preisvergleich/ProductCategory")) {
+  } else if (
+    currentUrl.includes("idealo.de/preisvergleich/ProductCategory") ||
+    currentUrl.includes("idealo.de/preisvergleich/MainSearchProductCategory")
+  ) {
     console.log("Idealo page detected");
 
     setTimeout(() => {
@@ -46,7 +49,7 @@ setTimeout(() => {
       // Function to add match percentage to each result
       function annotateResults() {
         const resultItems = document.querySelectorAll(
-          ".sr-productSummary__title_f5flP"
+          ".sr-productSummary__title"
         );
         console.log("Number of results found:", resultItems.length);
 
@@ -91,7 +94,7 @@ setTimeout(() => {
       }
 
       annotateResults(); // Run the function after DOM is ready
-    }, 1000); // Wait 1 second to ensure Idealo content is fully loaded
+    }, 1500); // Wait 1 second to ensure Idealo content is fully loaded
   } else {
     console.log("Page not recognized for specific functionality");
   }
