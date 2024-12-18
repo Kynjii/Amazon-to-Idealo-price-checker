@@ -1,3 +1,5 @@
+// Content script for Amazon and Idealo functionality
+
 // Cosine similarity function
 const cosine = {
   similarity: function (s1, s2) {
@@ -15,12 +17,58 @@ const cosine = {
   },
 };
 
-// Function to extract price from a generic text string
+// Function to extract price from a generic text string (e.g., "€19.99")
 function extractPrice(priceText) {
   const priceMatch = priceText.match(/\d+[.,]?\d*/);
   return priceMatch ? parseFloat(priceMatch[0].replace(",", ".")) : null;
 }
 
+// Highlight highest match and largest price difference
+function highlightBestMatch(resultItems) {
+  let highestMatch = { element: null, value: 0 };
+  let largestPriceDiff = { element: null, value: -Infinity };
+
+  resultItems.forEach((resultItem) => {
+    const matchElement = resultItem.querySelector("[data-match-percentage]");
+    const priceDiffElement = resultItem.querySelector(
+      "[data-price-difference]"
+    );
+
+    if (matchElement) {
+      const matchValue = parseInt(
+        matchElement.getAttribute("data-match-percentage"),
+        10
+      );
+      if (matchValue > highestMatch.value) {
+        highestMatch = { element: resultItem, value: matchValue };
+      }
+    }
+
+    if (priceDiffElement) {
+      const priceDiffValue = parseFloat(
+        priceDiffElement.getAttribute("data-price-difference")
+      );
+      if (priceDiffValue > largestPriceDiff.value) {
+        largestPriceDiff = { element: resultItem, value: priceDiffValue };
+      }
+    }
+  });
+
+  if (highestMatch.element && largestPriceDiff.element) {
+    if (highestMatch.element === largestPriceDiff.element) {
+      highestMatch.element.style.border = "3px solid purple"; // Both criteria
+    } else {
+      if (highestMatch.element) {
+        highestMatch.element.style.border = "3px solid #28a745"; // Highest Match (Green)
+      }
+      if (largestPriceDiff.element) {
+        largestPriceDiff.element.style.border = "3px solid #ffc107"; // Largest Price Difference (Yellow)
+      }
+    }
+  }
+}
+
+// Main functionality
 setTimeout(() => {
   const currentUrl = window.location.href;
 
@@ -52,9 +100,6 @@ setTimeout(() => {
         '[data-testid="resultItem"]:has(.sr-productSummary__title_f5flP)'
       );
 
-      let highestMatch = { element: null, value: 0 };
-      let largestPriceDiff = { element: null, value: -Infinity };
-
       resultItems.forEach((resultItem) => {
         const titleElement = resultItem.querySelector(
           ".sr-productSummary__title_f5flP"
@@ -73,7 +118,7 @@ setTimeout(() => {
           );
           const priceDifference =
             !isNaN(amazonPrice) && !isNaN(idealoPrice)
-              ? (amazonPrice - idealoPrice).toFixed(2)
+              ? (idealoPrice - amazonPrice).toFixed(2) // Flip difference calculation
               : null;
 
           // Create annotation container
@@ -91,6 +136,10 @@ setTimeout(() => {
           // Match Percentage Annotation
           const matchAnnotation = document.createElement("span");
           matchAnnotation.textContent = `${matchPercentage}% match`;
+          matchAnnotation.setAttribute(
+            "data-match-percentage",
+            matchPercentage
+          );
           matchAnnotation.style = `
             display: inline-block;
             padding: 5px;
@@ -113,25 +162,22 @@ setTimeout(() => {
           // Price Difference Annotation
           if (priceDifference !== null) {
             const priceDiffAnnotation = document.createElement("span");
+            const priceDiffColor = priceDifference < 0 ? "#28a745" : "#dc3545"; // Green if Idealo price is lower, Red otherwise
             priceDiffAnnotation.textContent = `Price Diff: €${priceDifference}`;
+            priceDiffAnnotation.setAttribute(
+              "data-price-difference",
+              priceDifference
+            );
             priceDiffAnnotation.style = `
               display: inline-block;
               padding: 5px;
-              background-color: #007bff;
+              background-color: ${priceDiffColor};
               color: white;
               font-size: 12px;
               font-weight: bold;
               border-radius: 3px;
             `;
             annotationContainer.appendChild(priceDiffAnnotation);
-
-            // Update largest price difference
-            if (priceDifference > largestPriceDiff.value) {
-              largestPriceDiff = {
-                element: resultItem,
-                value: priceDifference,
-              };
-            }
           }
 
           // Ensure the resultItem container has relative positioning
@@ -142,23 +188,37 @@ setTimeout(() => {
           if (matchPercentage > highestMatch.value) {
             highestMatch = { element: resultItem, value: matchPercentage };
           }
+
+          // Update largest price difference
+          if (
+            priceDifference !== null &&
+            Math.abs(priceDifference) > Math.abs(largestPriceDiff.value)
+          ) {
+            largestPriceDiff = { element: resultItem, value: priceDifference };
+          }
         }
       });
 
-      // Highlight highest match and largest price difference
-      if (highestMatch.element) {
-        highestMatch.element.style.border = "3px solid #ff6600";
-        highestMatch.element.style.transform = "scale(1.05)";
-      }
-      if (largestPriceDiff.element) {
-        largestPriceDiff.element.style.border = "3px solid #007bff";
-        largestPriceDiff.element.style.transform = "scale(1.05)";
-      }
+      // Highlight best match and largest price difference
+      highlightBestMatch(resultItems);
     });
   }
 }, 1000);
 
-// Function to add Idealo button
+// MutationObserver function
+function observeDOM(selector, callback) {
+  const observer = new MutationObserver((mutations, obs) => {
+    const elements = document.querySelectorAll(selector);
+    if (elements.length > 0) {
+      obs.disconnect(); // Stop observing
+      callback(elements);
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+// Amazon-specific functionality
 function addIdealoButton(titleElement) {
   const productTitle = titleElement.innerText.trim();
   const idealoButton = document.createElement("a");
@@ -177,9 +237,24 @@ function addIdealoButton(titleElement) {
     border-radius: 5px;
     font-weight: bold;
     font-size: 1rem;
+    line-height: 16px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
     transition: all 0.3s ease;
     position: relative;
+    z-index: 9999;
   `;
+  idealoButton.addEventListener("mouseover", () => {
+    idealoButton.style.backgroundColor = "#e55c00";
+    idealoButton.style.boxShadow = "0 6px 8px rgba(0, 0, 0, 0.15)";
+    idealoButton.style.transform = "scale(1.05)";
+  });
+
+  idealoButton.addEventListener("mouseout", () => {
+    idealoButton.style.backgroundColor = "#ff6600";
+    idealoButton.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+    idealoButton.style.transform = "scale(1)";
+  });
+
   titleElement.parentElement.appendChild(idealoButton);
 }
