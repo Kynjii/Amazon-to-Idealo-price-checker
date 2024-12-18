@@ -33,17 +33,13 @@ setTimeout(() => {
       const wholePart = priceElement.textContent.trim().replace(",", ".");
       const fractionPart = fractionElement.textContent.trim();
       const amazonPrice = parseFloat(`${wholePart}${fractionPart}`);
-      console.log(amazonPrice);
 
-      chrome.storage.local.set({ amazonPrice }, () => {
-        console.log("Amazon price saved to storage:", amazonPrice);
-      });
+      chrome.storage.local.set({ amazonPrice }, () => {});
       addIdealoButton(titleElement);
     }
   } else if (currentUrl.includes("idealo.de/preisvergleich/")) {
     chrome.storage.local.get(["amazonPrice"], (result) => {
       const amazonPrice = result.amazonPrice;
-      console.log("Amazon price retrieved from storage:", amazonPrice);
 
       const searchQuery = new URL(window.location.href).searchParams.get("q");
       if (!searchQuery) return;
@@ -75,8 +71,6 @@ setTimeout(() => {
             !isNaN(amazonPrice) && !isNaN(idealoPrice)
               ? (idealoPrice - amazonPrice).toFixed(2)
               : null;
-
-          console.log(`Result: ${resultTitle}, Price Diff: ${priceDifference}`);
 
           // Create annotation container
           const annotationContainer = document.createElement("div");
@@ -138,9 +132,6 @@ setTimeout(() => {
             if (priceDifference !== null && !isNaN(priceDifference)) {
               const numericPriceDifference = parseFloat(priceDifference);
               if (numericPriceDifference < lowestPriceDiff.value) {
-                console.log(
-                  `New Lowest Price Difference Found: ${numericPriceDifference}`
-                );
                 lowestPriceDiff = {
                   element: resultItem,
                   value: numericPriceDifference,
@@ -165,7 +156,6 @@ setTimeout(() => {
           // Try finding an <a> tag first
           const linkElement = element.querySelector("a");
           if (linkElement) {
-            console.log(`Navigating to ${label} using <a>:`, linkElement);
             linkElement.click();
             return;
           }
@@ -175,10 +165,6 @@ setTimeout(() => {
             "button.sr-resultItemLink__button_k3jEE"
           );
           if (buttonElement) {
-            console.log(
-              `Navigating to ${label} using <button>:`,
-              buttonElement
-            );
             buttonElement.click();
           } else {
             console.error(
@@ -210,8 +196,6 @@ setTimeout(() => {
           extensionElements.forEach((element) => {
             element.style.display = newDisplay;
           });
-
-          console.log(`Extension UI toggled to: ${newDisplay}`);
         } else {
           console.warn("No extension UI elements found to toggle.");
         }
