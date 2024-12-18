@@ -30,11 +30,11 @@ setTimeout(() => {
     const fractionElement = document.querySelector(".a-price-fraction");
 
     if (titleElement && priceElement && fractionElement) {
-      const amazonPrice = parseFloat(
-        `${priceElement.innerText
-          .trim()
-          .replace(".", "")}.${fractionElement.innerText.trim()}`
-      );
+      const wholePart = priceElement.textContent.trim().replace(",", ".");
+      const fractionPart = fractionElement.textContent.trim();
+      const amazonPrice = parseFloat(`${wholePart}${fractionPart}`);
+      console.log(amazonPrice);
+
       chrome.storage.local.set({ amazonPrice }, () => {
         console.log("Amazon price saved to storage:", amazonPrice);
       });
@@ -53,7 +53,7 @@ setTimeout(() => {
       );
 
       let highestMatch = { element: null, value: 0 };
-      let largestPriceDiff = { element: null, value: -Infinity };
+      let lowestPriceDiff = { element: null, value: Infinity };
 
       resultItems.forEach((resultItem) => {
         const titleElement = resultItem.querySelector(
@@ -73,7 +73,7 @@ setTimeout(() => {
           );
           const priceDifference =
             !isNaN(amazonPrice) && !isNaN(idealoPrice)
-              ? (amazonPrice - idealoPrice).toFixed(2)
+              ? (idealoPrice - amazonPrice).toFixed(2)
               : null;
 
           // Create annotation container
@@ -125,9 +125,9 @@ setTimeout(() => {
             `;
             annotationContainer.appendChild(priceDiffAnnotation);
 
-            // Update largest price difference
-            if (priceDifference > largestPriceDiff.value) {
-              largestPriceDiff = {
+            // Update lowest price difference (most negative value)
+            if (priceDifference < lowestPriceDiff.value) {
+              lowestPriceDiff = {
                 element: resultItem,
                 value: priceDifference,
               };
@@ -145,14 +145,15 @@ setTimeout(() => {
         }
       });
 
-      // Highlight highest match and largest price difference
+      // Highlight highest match and lowest price difference
       if (highestMatch.element) {
-        highestMatch.element.style.border = "3px solid #ff6600";
-        highestMatch.element.style.transform = "scale(1.05)";
+        highestMatch.element.style.border = "3px solid #28a745";
       }
-      if (largestPriceDiff.element) {
-        largestPriceDiff.element.style.border = "3px solid #007bff";
-        largestPriceDiff.element.style.transform = "scale(1.05)";
+      if (lowestPriceDiff.element) {
+        lowestPriceDiff.element.style.border = "3px solid #ffc107";
+      }
+      if (highestMatch.element === lowestPriceDiff.element) {
+        highestMatch.element.style.border = "3px solid purple";
       }
     });
   }
