@@ -44,7 +44,25 @@ function addIdealoButton(titleElement) {
     text-decoration: none;
     border-radius: 5px;
     font-weight: bold;
-    font-size: 16px
+    font-size: 1rem;
+    line-height: 16px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: all 0.3s ease;
   `;
+  // Hover effects
+  idealoButton.addEventListener("mouseover", () => {
+    idealoButton.style.backgroundColor = "#e55c00";
+    idealoButton.style.boxShadow = "0 6px 8px rgba(0, 0, 0, 0.15)";
+    idealoButton.style.transform = "scale(1.05)";
+  });
+
+  idealoButton.addEventListener("mouseout", () => {
+    idealoButton.style.backgroundColor = "#ff6600";
+    idealoButton.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+    idealoButton.style.transform = "scale(1)";
+  });
+
+  idealoButton.innerText = "🔍 Search on Idealo";
   titleElement.parentElement.appendChild(idealoButton);
 }
