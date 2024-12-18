@@ -1,7 +1,7 @@
 console.log("Amazon to Idealo content script loaded.");
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOM fully loaded.");
+  console.log("DOMContentLoaded event fired.");
   checkForTitle();
 });
 
