@@ -7,6 +7,7 @@ function addIdealoButton() {
   // Extract the product title
   const productTitle = titleElement.innerText.trim();
   if (!productTitle) return;
+  console.log(productTitle);
 
   // Create the Idealo button
   const idealoButton = document.createElement("a");
