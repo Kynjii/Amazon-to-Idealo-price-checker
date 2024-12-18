@@ -17,89 +17,15 @@ const cosine = {
   },
 };
 
-// Function to extract price from Amazon price structure
-function extractPriceFromAmazon() {
-  const priceWholeElement = document.querySelector(".a-price-whole");
-  const priceFractionElement = document.querySelector(".a-price-fraction");
-  if (priceWholeElement && priceFractionElement) {
-    const whole = priceWholeElement.textContent.trim().replace(".", "");
-    const fraction = priceFractionElement.textContent.trim();
-    return parseFloat(`${whole}.${fraction}`);
-  }
-  return null;
-}
-
-// Function to extract price from Idealo price structure
-function extractPriceFromIdealo(priceElement) {
-  if (priceElement) {
-    const priceText = priceElement.textContent.trim();
-    return extractPrice(priceText);
-  }
-  return null;
-}
-
-// Function to extract price from a generic text string (e.g., "€19.99")
-function extractPrice(priceText) {
-  const priceMatch = priceText.match(/\d+[.,]?\d*/);
-  return priceMatch ? parseFloat(priceMatch[0].replace(",", ".")) : null;
-}
-
-function highlightBestMatch(resultItems) {
-  let highestMatch = { element: null, value: 0 };
-  let largestPriceDiff = { element: null, value: -Infinity };
-
-  resultItems.forEach((resultItem) => {
-    const matchElement = resultItem.querySelector("[data-match-percentage]");
-    const priceDiffElement = resultItem.querySelector(
-      "[data-price-difference]"
-    );
-
-    if (matchElement) {
-      const matchValue = parseInt(
-        matchElement.getAttribute("data-match-percentage"),
-        10
-      );
-      if (matchValue > highestMatch.value) {
-        highestMatch = { element: matchElement, value: matchValue }; // Target the `span` element
-      }
-    }
-
-    if (priceDiffElement) {
-      const priceDiffValue = parseFloat(
-        priceDiffElement.getAttribute("data-price-difference")
-      );
-      if (priceDiffValue > largestPriceDiff.value) {
-        largestPriceDiff = { element: priceDiffElement, value: priceDiffValue }; // Target the `span` element
-      }
-    }
-  });
-
-  if (highestMatch.element) {
-    highestMatch.element.style.border = "2px solid #FFD700"; // Highlight highest match
-  }
-
-  if (largestPriceDiff.element) {
-    largestPriceDiff.element.style.border = "2px solid #FFD700"; // Highlight largest price difference
-  }
-}
-
 // Check the current URL to determine functionality
 setTimeout(() => {
   const currentUrl = window.location.href;
 
   if (currentUrl.includes("amazon")) {
-    setTimeout(() => {
-      const titleElement = document.getElementById("productTitle");
-      const amazonPrice = extractPriceFromAmazon();
-
-      if (titleElement && amazonPrice !== null) {
-        console.log("Amazon price extracted:", amazonPrice);
-        titleElement.setAttribute("data-amazon-price", amazonPrice); // Store the Amazon price for later use
-        addIdealoButton(titleElement);
-      } else {
-        console.warn("Title element or price not found on Amazon page.");
-      }
-    }, 1000);
+    const titleElement = document.getElementById("productTitle");
+    if (titleElement) {
+      addIdealoButton(titleElement);
+    }
   } else if (
     currentUrl.includes("idealo.de/preisvergleich/ProductCategory") ||
     currentUrl.includes("idealo.de/preisvergleich/MainSearchProductCategory")
@@ -114,32 +40,14 @@ setTimeout(() => {
       '[data-testid="resultItem"]:has(.sr-productSummary__title_f5flP)'
     );
 
-    console.log(`Found ${resultItems.length} result items.`);
-
-    resultItems.forEach((resultItem) => {
+    resultItems.forEach((resultItem, index) => {
       const titleElement = resultItem.querySelector(
         ".sr-productSummary__title_f5flP"
       );
-      const priceElement = resultItem.querySelector(
-        "[data-testid='detailedPriceInfo__price']"
-      );
-
-      if (titleElement && priceElement) {
+      if (titleElement) {
         const resultTitle = titleElement.textContent.trim();
         const similarity = cosine.similarity(searchQuery, resultTitle);
         const matchPercentage = Math.round(similarity * 100);
-
-        const idealoPrice = extractPriceFromIdealo(priceElement);
-        const amazonPrice = parseFloat(
-          document
-            .querySelector("[data-amazon-price]")
-            ?.getAttribute("data-amazon-price")
-        );
-
-        let priceDifference = null;
-        if (!isNaN(amazonPrice) && !isNaN(idealoPrice)) {
-          priceDifference = (amazonPrice - idealoPrice).toFixed(2);
-        }
 
         let color;
         if (matchPercentage >= 80) color = "#28a745";
@@ -150,10 +58,8 @@ setTimeout(() => {
         // Create the annotation element
         const annotation = document.createElement("span");
         annotation.textContent = `${matchPercentage}% match`;
-        annotation.setAttribute("data-match-percentage", matchPercentage); // Added
         annotation.style = `
           display: inline-block;
-          margin-top: 5px;
           padding: 5px;
           background-color: ${color};
           color: white;
@@ -161,48 +67,19 @@ setTimeout(() => {
           font-weight: bold;
           border-radius: 3px;
           position: absolute;
-          top: 0.5rem;
-          left: 0.1rem;
+          top: 0.3rem;
+          left: 0.3rem;
           z-index: 9999;
         `;
 
-        resultItem.appendChild(annotation); // Append match percentage annotation
-        console.log(
-          `Match percentage annotation appended for result item ${index + 1}`
-        );
+        // Ensure the parent container has relative positioning
+        resultItem.style.position = "relative";
 
-        /// Append price difference annotation
-        if (priceDifference !== null) {
-          const priceDiffAnnotation = document.createElement("div");
-          priceDiffAnnotation.textContent = `Price Diff: €${priceDifference}`;
-          priceDiffAnnotation.setAttribute(
-            "data-price-difference",
-            priceDifference
-          );
-          priceDiffAnnotation.style = `
-    display: inline-block;
-    margin-left: 10px;
-    padding: 5px;
-    background-color: #007bff;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    border-radius: 3px;
-    position: absolute;
-    top: 1.5rem;
-    left: 0.1rem;
-    z-index: 9999;
-  `;
-          resultItem.appendChild(priceDiffAnnotation);
-
-          // Ensure the parent container has relative positioning
-          resultItem.style.position = "relative";
-        }
+        resultItem.appendChild(annotation); // Append annotation to the result item
+      } else {
+        console.warn(`Title element not found in result item ${index + 1}`);
       }
     });
-
-    // Highlight best match and largest price difference
-    highlightBestMatch(resultItems);
   }
 }, 1000);
 
@@ -221,8 +98,6 @@ function observeDOM(selector, callback) {
 
 // Amazon-specific functionality
 function addIdealoButton(titleElement) {
-  console.log("Adding Idealo button for:", titleElement.innerText.trim());
-
   const productTitle = titleElement.innerText.trim();
   const idealoButton = document.createElement("a");
   idealoButton.innerText = "🔍 Search on Idealo";
