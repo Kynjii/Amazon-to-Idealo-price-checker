@@ -80,6 +80,7 @@ setTimeout(() => {
 
           // Create annotation container
           const annotationContainer = document.createElement("div");
+          annotationContainer.setAttribute("data-extension-ui", "true");
           annotationContainer.style = `
             display: flex;
             flex-direction: column;
@@ -193,38 +194,28 @@ setTimeout(() => {
         navigateToElement(lowestPriceDiff.element, "Best Deal");
 
       const toggleExtensionUI = () => {
-        console.log("Toggling Extension UI...");
-
-        // Select all elements to toggle, excluding the toggle button itself
+        // Select all extension-created elements except the nav buttons
         const extensionElements = document.querySelectorAll(
-          ".highlighted-element, .extension-annotation"
+          '[data-extension-ui="true"]:not([data-product-container="true"]), .extension-annotation'
         );
 
-        if (extensionElements.length === 0) {
+        if (extensionElements.length > 0) {
+          const currentDisplay = extensionElements[0].style.display || "block"; // Default to "block"
+          const newDisplay = currentDisplay === "none" ? "block" : "none";
+
+          extensionElements.forEach((element) => {
+            element.style.display = newDisplay;
+          });
+
+          console.log(`Extension UI toggled to: ${newDisplay}`);
+        } else {
           console.warn("No extension UI elements found to toggle.");
-          return;
         }
-
-        // Determine the current display state of the elements
-        const currentDisplay = extensionElements[0].style.display || "block"; // Default to "block"
-        const newDisplay = currentDisplay === "none" ? "block" : "none";
-
-        console.log(
-          `Current state: ${currentDisplay}, toggling to: ${newDisplay}`
-        );
-
-        // Toggle visibility for all extension UI elements
-        extensionElements.forEach((element, index) => {
-          console.log(`Toggling element #${index + 1}:`, element);
-          element.style.display = newDisplay;
-        });
-
-        console.log(`Extension UI toggled. New state: ${newDisplay}`);
       };
 
       const createNavButtons = () => {
         let controlsContainer = document.querySelector(
-          '[data-extension-ui="true"]'
+          '[data-nav-buttons="true"]'
         );
 
         if (!controlsContainer) {
@@ -239,7 +230,7 @@ setTimeout(() => {
             gap: 10px;
             z-index: 9999;
           `;
-          controlsContainer.setAttribute("data-extension-ui", "true");
+          controlsContainer.setAttribute("data-nav-buttons", "true");
           document.body.appendChild(controlsContainer);
         }
 
@@ -263,7 +254,6 @@ setTimeout(() => {
             font-size: 14px;
             cursor: pointer;
           `;
-          closestMatchButton.classList.add("annotation-element");
           closestMatchButton.addEventListener("click", highlightClosestMatch);
           controlsContainer.appendChild(closestMatchButton);
         }
@@ -279,9 +269,9 @@ setTimeout(() => {
             border: none;
             border-radius: 5px;
             font-size: 14px;
+            margin-top: 5px;
             cursor: pointer;
           `;
-          bestDealButton.classList.add("annotation-element");
           bestDealButton.addEventListener("click", highlightBestDeal);
           controlsContainer.appendChild(bestDealButton);
         }
@@ -289,7 +279,7 @@ setTimeout(() => {
         // Add Toggle UI button if not already present
         if (!document.querySelector('[data-toggle-ui="true"]')) {
           const toggleButton = document.createElement("button");
-          toggleButton.textContent = "Toggle Extension UI";
+          toggleButton.textContent = "Toggle UI";
           toggleButton.style = `
             padding: 10px;
             background-color: #007bff;
@@ -308,14 +298,17 @@ setTimeout(() => {
       // Apply highlights and add specific classes for toggling
       if (highestMatch.element) {
         highestMatch.element.classList.add("highlighted-element");
+        highestMatch.element.setAttribute("data-product-container", "true");
         highestMatch.element.style.border = "3px solid #28a745";
       }
       if (lowestPriceDiff.element) {
         lowestPriceDiff.element.classList.add("highlighted-element");
+        lowestPriceDiff.element.setAttribute("data-product-container", "true");
         lowestPriceDiff.element.style.border = "3px solid #ffc107";
       }
       if (highestMatch.element === lowestPriceDiff.element) {
         highestMatch.element.classList.add("highlighted-element");
+        highestMatch.element.setAttribute("data-product-container", "true");
         highestMatch.element.style.border = "3px solid purple";
       }
 
