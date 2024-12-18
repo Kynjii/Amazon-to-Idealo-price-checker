@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Amazon | Idealo Product Search",
+  "version": "1.0",
+  "description": "Adds a button to Amazon product pages to search for the product on Idealo.",
+  "permissions": ["activeTab"],
+  "host_permissions": ["https://www.amazon.*/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://www.amazon.*/*"],
+      "js": ["contentScript.js"]
+    }
+  ]
+}
