@@ -93,23 +93,25 @@ setTimeout(() => {
 
           // Match Percentage Annotation
           const matchAnnotation = document.createElement("span");
-          matchAnnotation.textContent = `${matchPercentage}% match`;
+          matchAnnotation.textContent = `${matchPercentage}%`;
           matchAnnotation.classList.add("extension-annotation"); // Add class
           matchAnnotation.style = `
-            display: inline-block;
+            display: flex;
             padding: 5px;
             background-color: ${
-              matchPercentage >= 80
+              matchPercentage >= 95
                 ? "#28a745"
-                : matchPercentage >= 60
+                : matchPercentage >= 85
                 ? "#ffc107"
-                : matchPercentage >= 40
+                : matchPercentage >= 0
                 ? "#fd7e14"
                 : "#dc3545"
             };
             color: white;
             font-size: 12px;
             font-weight: bold;
+            align-items: center;
+            justify-content: center;
             border-radius: 3px;
           `;
           annotationContainer.appendChild(matchAnnotation);
@@ -117,15 +119,17 @@ setTimeout(() => {
           // Price Difference Annotation
           if (priceDifference !== null) {
             const priceDiffAnnotation = document.createElement("span");
-            priceDiffAnnotation.textContent = `Price Diff: €${priceDifference}`;
+            priceDiffAnnotation.textContent = `€${priceDifference}`;
             priceDiffAnnotation.classList.add("extension-annotation"); // Add class
             priceDiffAnnotation.style = `
-              display: inline-block;
+              display: flex;
               padding: 5px;
               background-color: ${priceDifference < 0 ? "#28a745" : "#dc3545"};
               color: white;
               font-size: 12px;
               font-weight: bold;
+              align-items: center;
+              justify-content: center;
               border-radius: 3px;
             `;
             annotationContainer.appendChild(priceDiffAnnotation);
@@ -200,8 +204,8 @@ setTimeout(() => {
         );
 
         if (extensionElements.length > 0) {
-          const currentDisplay = extensionElements[0].style.display || "block"; // Default to "block"
-          const newDisplay = currentDisplay === "none" ? "block" : "none";
+          const currentDisplay = extensionElements[0].style.display || "flex"; // Default to "flex"
+          const newDisplay = currentDisplay === "none" ? "flex" : "none";
 
           extensionElements.forEach((element) => {
             element.style.display = newDisplay;
