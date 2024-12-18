@@ -180,6 +180,7 @@ setTimeout(() => {
         navigateToElement(highestMatch.element, "Closest Match");
       const highlightBestDeal = () =>
         navigateToElement(lowestPriceDiff.element, "Best Deal");
+
       const toggleExtensionUI = () => {
         // Select all annotations, highlights, and extension UI elements except the toggle button itself
         const extensionElements = document.querySelectorAll(
