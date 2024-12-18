@@ -38,7 +38,7 @@ function addIdealoButton(titleElement) {
   idealoButton.style = `
     display: inline-block;
     margin-top: 10px;
-    padding: 10px 15px;
+    padding: 10px 15px 10px 8px;
     background-color: #ff6600;
     color: white;
     text-decoration: none;
