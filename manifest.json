@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazon to Idealo",
   "version": "1.0",
-  "description": "Adds a button to Amazon product pages to search for the product on Idealo.",
+  "description": "Adds a button to Amazon product pages to search for the product on Idealo and annotates Idealo search results with match percentages.",
   "permissions": ["activeTab"],
   "host_permissions": [
     "https://www.amazon.de/*",
@@ -12,7 +12,8 @@
     "https://www.amazon.fr/*",
     "https://www.amazon.it/*",
     "https://www.amazon.es/*",
-    "https://www.amazon.nl/*"
+    "https://www.amazon.nl/*",
+    "https://www.idealo.de/preisvergleich/MainSearchProductCategory.html*"
   ],
   "content_scripts": [
     {
@@ -25,6 +26,12 @@
         "https://www.amazon.it/*",
         "https://www.amazon.es/*",
         "https://www.amazon.nl/*"
+      ],
+      "js": ["contentScript.js"]
+    },
+    {
+      "matches": [
+        "https://www.idealo.de/preisvergleich/MainSearchProductCategory.html*"
       ],
       "js": ["contentScript.js"]
     }
