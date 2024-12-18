@@ -1,15 +1,15 @@
 console.log("Amazon to Idealo content script loaded.");
 
-setTimeout(() => {
-  console.log("Checking for product title...");
-  const titleElement = document.getElementById("productTitle");
-  if (titleElement) {
-    console.log("Product title element found:", titleElement.innerText.trim());
-    addIdealoButton(titleElement);
-  } else {
-    console.error("Product title element not found.");
-  }
-}, 1000); // Wait 1 seconds
+// setTimeout(() => {
+//   console.log("Checking for product title...");
+//   const titleElement = document.getElementById("productTitle");
+//   if (titleElement) {
+//     console.log("Product title element found:", titleElement.innerText.trim());
+//     addIdealoButton(titleElement);
+//   } else {
+//     console.error("Product title element not found.");
+//   }
+// }, 1000); // Wait 1 seconds
 
 function checkForTitle() {
   const titleElement = document.getElementById("productTitle");
