@@ -91,6 +91,7 @@ setTimeout(() => {
           // Match Percentage Annotation
           const matchAnnotation = document.createElement("span");
           matchAnnotation.textContent = `${matchPercentage}% match`;
+          matchAnnotation.classList.add("extension-annotation"); // Add class
           matchAnnotation.style = `
             display: inline-block;
             padding: 5px;
@@ -114,6 +115,7 @@ setTimeout(() => {
           if (priceDifference !== null) {
             const priceDiffAnnotation = document.createElement("span");
             priceDiffAnnotation.textContent = `Price Diff: €${priceDifference}`;
+            priceDiffAnnotation.classList.add("extension-annotation"); // Add class
             priceDiffAnnotation.style = `
               display: inline-block;
               padding: 5px;
@@ -178,27 +180,38 @@ setTimeout(() => {
 
       const highlightClosestMatch = () =>
         navigateToElement(highestMatch.element, "Closest Match");
+
       const highlightBestDeal = () =>
         navigateToElement(lowestPriceDiff.element, "Best Deal");
 
       const toggleExtensionUI = () => {
-        // Select all annotations, highlights, and extension UI elements except the toggle button itself
+        console.log("Toggling Extension UI...");
+
+        // Select all elements to toggle, excluding the toggle button itself
         const extensionElements = document.querySelectorAll(
-          ".annotation-element, .highlighted-element, [data-extension-ui='true']:not([data-toggle-ui])"
+          ".highlighted-element, .extension-annotation"
         );
 
-        if (extensionElements.length > 0) {
-          const currentDisplay = extensionElements[0].style.display || "block"; // Default to "block"
-          const newDisplay = currentDisplay === "none" ? "block" : "none";
-
-          extensionElements.forEach((element) => {
-            element.style.display = newDisplay;
-          });
-
-          console.log(`Extension UI toggled to: ${newDisplay}`);
-        } else {
+        if (extensionElements.length === 0) {
           console.warn("No extension UI elements found to toggle.");
+          return;
         }
+
+        // Determine the current display state of the elements
+        const currentDisplay = extensionElements[0].style.display || "block"; // Default to "block"
+        const newDisplay = currentDisplay === "none" ? "block" : "none";
+
+        console.log(
+          `Current state: ${currentDisplay}, toggling to: ${newDisplay}`
+        );
+
+        // Toggle visibility for all extension UI elements
+        extensionElements.forEach((element, index) => {
+          console.log(`Toggling element #${index + 1}:`, element);
+          element.style.display = newDisplay;
+        });
+
+        console.log(`Extension UI toggled. New state: ${newDisplay}`);
       };
 
       const createNavButtons = () => {
