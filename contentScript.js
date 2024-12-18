@@ -117,9 +117,7 @@ setTimeout(() => {
             priceDiffAnnotation.style = `
               display: inline-block;
               padding: 5px;
-              background-color: ${
-                priceDifference < 0 ? "#28a745" : "#dc3545"
-              }; /* Green for negative, red for positive */
+              background-color: ${priceDifference < 0 ? "#28a745" : "#dc3545"};
               color: white;
               font-size: 12px;
               font-weight: bold;
@@ -147,6 +145,148 @@ setTimeout(() => {
         }
       });
 
+      const toggleExtensionUI = () => {
+        const extensionElements = document.querySelectorAll(
+          '[data-extension-ui="true"]'
+        );
+
+        if (extensionElements.length > 0) {
+          const currentDisplay = extensionElements[0].style.display;
+          const newDisplay = currentDisplay === "none" ? "block" : "none";
+
+          extensionElements.forEach((element) => {
+            element.style.display = newDisplay;
+          });
+
+          console.log(`Extension UI toggled to: ${newDisplay}`);
+        } else {
+          console.warn("No extension UI elements found to toggle.");
+        }
+      };
+
+      const navigateToElement = (element, label) => {
+        if (element) {
+          // Try finding an <a> tag first
+          const linkElement = element.querySelector("a");
+          if (linkElement) {
+            console.log(`Navigating to ${label} using <a>:`, linkElement);
+            linkElement.click();
+            return;
+          }
+
+          // Fallback to <button> if no <a> is found
+          const buttonElement = element.querySelector(
+            "button.sr-resultItemLink__button_k3jEE"
+          );
+          if (buttonElement) {
+            console.log(
+              `Navigating to ${label} using <button>:`,
+              buttonElement
+            );
+            buttonElement.click();
+          } else {
+            console.error(
+              `No <a> or <button> found for ${label} inside:`,
+              element
+            );
+          }
+        } else {
+          console.error(`No highlighted ${label} element.`);
+        }
+      };
+
+      const highlightClosestMatch = () =>
+        navigateToElement(highestMatch.element, "Closest Match");
+      const highlightBestDeal = () =>
+        navigateToElement(lowestPriceDiff.element, "Best Deal");
+
+      const createNavButtons = () => {
+        const controlsContainer = document.createElement("div");
+        controlsContainer.style = `
+          display: flex;
+          flex-direction: column;
+          position: fixed;
+          top: 50%;
+          right: 10px;
+          transform: translateY(-50%);
+          gap: 10px;
+          z-index: 9999;
+        `;
+        controlsContainer.setAttribute("data-extension-ui", "true");
+
+        if (highestMatch.element) {
+          const closestMatchButton = document.createElement("button");
+          closestMatchButton.textContent = "Closest Match";
+          closestMatchButton.style = `
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+          `;
+          closestMatchButton.addEventListener("click", highlightClosestMatch);
+          controlsContainer.appendChild(closestMatchButton);
+        }
+
+        if (lowestPriceDiff.element) {
+          const bestDealButton = document.createElement("button");
+          bestDealButton.textContent = "Best Deal";
+          bestDealButton.style = `
+            padding: 10px;
+            background-color: #ffc107;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+          `;
+          bestDealButton.addEventListener("click", highlightBestDeal);
+          controlsContainer.appendChild(bestDealButton);
+        }
+
+        if (
+          highestMatch.element &&
+          lowestPriceDiff.element &&
+          highestMatch.element === lowestPriceDiff.element
+        ) {
+          controlsContainer.innerHTML = ""; // Clear existing buttons
+          const unifiedButton = document.createElement("button");
+          unifiedButton.textContent = "Best Match & Deal";
+          unifiedButton.style = `
+            padding: 10px;
+            background-color: purple;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+          `;
+          unifiedButton.addEventListener("click", () => {
+            navigateToElement(highestMatch.element, "Best Match & Deal");
+          });
+          controlsContainer.appendChild(unifiedButton);
+        }
+
+        // Add the "Toggle Extension UI" button
+        const toggleButton = document.createElement("button");
+        toggleButton.textContent = "Toggle Extension UI";
+        toggleButton.style = `
+          padding: 10px;
+          background-color: #007bff;
+          color: white;
+          border: none;
+          border-radius: 5px;
+          font-size: 14px;
+          cursor: pointer;
+        `;
+        toggleButton.addEventListener("click", toggleExtensionUI);
+        controlsContainer.appendChild(toggleButton);
+
+        document.body.appendChild(controlsContainer);
+      };
+
       // Highlight highest match and lowest price difference
       if (highestMatch.element) {
         highestMatch.element.style.border = "3px solid #28a745";
@@ -171,18 +311,18 @@ function addIdealoButton(titleElement) {
   )}`;
   idealoButton.target = "_blank";
   idealoButton.style = `
-    display: inline-block;
-    margin-top: 10px;
-    padding: 10px 15px;
-    background-color: #ff6600;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    position: relative;
-  `;
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 15px;
+      background-color: #ff6600;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      position: relative;
+    `;
   titleElement.parentElement.appendChild(idealoButton);
 }
