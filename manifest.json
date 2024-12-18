@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Amazon to Idealo",
   "version": "1.1",
-  "description": "Adds a button to Amazon product pages to search for the product on Idealo and annotates Idealo search results with match percentages.",
-  "permissions": ["activeTab"],
+  "description": "Adds a button to Amazon product pages to search for the product on Idealo and annotates Idealo search results with match percentages and price differences.",
+  "permissions": ["activeTab", "storage"],
   "host_permissions": [
     "https://www.amazon.de/*",
     "https://www.amazon.com/*",
