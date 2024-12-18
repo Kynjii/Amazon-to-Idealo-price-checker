@@ -1,13 +1,21 @@
 // Content script for Amazon and Idealo functionality
 
-// Function to dynamically load the string-comparison library (for Idealo-based use)
-function loadLibrary(callback) {
-  const script = document.createElement("script");
-  script.src =
-    "https://cdn.jsdelivr.net/npm/string-comparison@latest/dist/string-comparison.min.js";
-  script.onload = callback;
-  document.head.appendChild(script);
-}
+// Cosine similarity function
+const cosine = {
+  similarity: function (s1, s2) {
+    const terms = Array.from(new Set([...s1.split(""), ...s2.split("")]));
+    const vec1 = terms.map((term) => s1.split(term).length - 1);
+    const vec2 = terms.map((term) => s2.split(term).length - 1);
+
+    const dotProduct = vec1.reduce((acc, cur, i) => acc + cur * vec2[i], 0);
+    const magnitude1 = Math.sqrt(vec1.reduce((acc, cur) => acc + cur ** 2, 0));
+    const magnitude2 = Math.sqrt(vec2.reduce((acc, cur) => acc + cur ** 2, 0));
+
+    return magnitude1 && magnitude2
+      ? dotProduct / (magnitude1 * magnitude2)
+      : 0;
+  },
+};
 
 // Check the current URL to determine functionality
 setTimeout(() => {
@@ -26,72 +34,64 @@ setTimeout(() => {
     }
   } else if (currentUrl.includes("idealo.de/preisvergleich/ProductCategory")) {
     console.log("Idealo page detected");
-    loadLibrary(() => {
-      setTimeout(() => {
-        const searchQuery = new URL(window.location.href).searchParams.get("q"); // Extract the search query
-        if (!searchQuery) {
-          console.error("No search query found in URL");
-          return;
-        }
-        console.log("Search query extracted:", searchQuery);
 
-        // Function to add match percentage to each result
-        function annotateResults() {
-          const resultItems = document.querySelectorAll(
-            ".sr-productSummary__title_f5flP"
-          ); // Adjusted selector for Idealo's DOM
-          console.log("Number of results found:", resultItems.length);
-          const similarity = stringComparison.cosine;
+    setTimeout(() => {
+      const searchQuery = new URL(window.location.href).searchParams.get("q"); // Extract the search query
+      if (!searchQuery) {
+        console.error("No search query found in URL");
+        return;
+      }
+      console.log("Search query extracted:", searchQuery);
 
-          resultItems.forEach((titleElement, index) => {
-            if (titleElement) {
-              const resultTitle = titleElement.textContent.trim();
-              console.log(`Result ${index + 1} title:`, resultTitle);
+      // Function to add match percentage to each result
+      function annotateResults() {
+        const resultItems = document.querySelectorAll(
+          ".sr-productSummary__title_f5flP"
+        );
+        console.log("Number of results found:", resultItems.length);
 
-              // Use string-comparison library to calculate similarity
-              const matchPercentage = Math.round(
-                similarity.similarity(searchQuery, resultTitle) * 100
-              );
-              console.log(
-                `Result ${index + 1} match percentage:`,
-                matchPercentage
-              );
+        resultItems.forEach((titleElement, index) => {
+          if (titleElement) {
+            const resultTitle = titleElement.textContent.trim();
+            console.log(`Result ${index + 1} title:`, resultTitle);
 
-              // Determine color based on percentage
-              let color;
-              if (matchPercentage >= 80) {
-                color = "#28a745"; // Green for high match
-              } else if (matchPercentage >= 60) {
-                color = "#ffc107"; // Yellow for medium match
-              } else if (matchPercentage >= 40) {
-                color = "#fd7e14"; // Orange for low match
-              } else {
-                color = "#dc3545"; // Red for very low match
-              }
+            // Calculate similarity
+            const similarity = cosine.similarity(searchQuery, resultTitle);
+            const matchPercentage = Math.round(similarity * 100);
+            console.log(
+              `Result ${index + 1} match percentage:`,
+              matchPercentage
+            );
 
-              // Add percentage annotation
-              const annotation = document.createElement("span");
-              annotation.textContent = `${matchPercentage}% match`;
-              annotation.style = `
-                display: inline-block;
-                margin-left: 10px;
-                padding: 5px;
-                background-color: ${color};
-                color: white;
-                font-size: 12px;
-                font-weight: bold;
-                border-radius: 3px;
-              `;
-              titleElement.appendChild(annotation);
-            } else {
-              console.error(`Title element not found for result ${index + 1}`);
-            }
-          });
-        }
+            // Determine color based on percentage
+            let color;
+            if (matchPercentage >= 80) color = "#28a745"; // Green
+            else if (matchPercentage >= 60) color = "#ffc107"; // Yellow
+            else if (matchPercentage >= 40) color = "#fd7e14"; // Orange
+            else color = "#dc3545"; // Red
 
-        annotateResults(); // Run the function after DOM is ready
-      }, 1000); // Wait 1 second to ensure Idealo content is fully loaded
-    });
+            // Add annotation
+            const annotation = document.createElement("span");
+            annotation.textContent = `${matchPercentage}% match`;
+            annotation.style = `
+              display: inline-block;
+              margin-left: 10px;
+              padding: 5px;
+              background-color: ${color};
+              color: white;
+              font-size: 12px;
+              font-weight: bold;
+              border-radius: 3px;
+            `;
+            titleElement.appendChild(annotation);
+          } else {
+            console.error(`Title element not found for result ${index + 1}`);
+          }
+        });
+      }
+
+      annotateResults(); // Run the function after DOM is ready
+    }, 1000); // Wait 1 second to ensure Idealo content is fully loaded
   } else {
     console.log("Page not recognized for specific functionality");
   }
