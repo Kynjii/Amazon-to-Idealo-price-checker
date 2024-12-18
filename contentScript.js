@@ -93,12 +93,12 @@ setTimeout(() => {
             display: flex;
             padding: 5px;
             background-color: ${
-              matchPercentage >= 95
-                ? "#28a745"
-                : matchPercentage >= 85
-                ? "#ffc107"
+              matchPercentage >= 90
+                ? "green"
+                : matchPercentage >= 80
+                ? "#FFCC80"
                 : matchPercentage >= 0
-                ? "#fd7e14"
+                ? "#E0E0E0"
                 : "#dc3545"
             };
             color: white;
@@ -118,7 +118,7 @@ setTimeout(() => {
             priceDiffAnnotation.style = `
               display: flex;
               padding: 5px;
-              background-color: ${priceDifference < 0 ? "#28a745" : "#dc3545"};
+              background-color: ${priceDifference < 0 ? "#A5D6A7" : "#EF9A9A"};
               color: white;
               font-size: 12px;
               font-weight: bold;
@@ -186,7 +186,7 @@ setTimeout(() => {
       const toggleExtensionUI = () => {
         // Select all extension-created elements except the nav buttons
         const extensionElements = document.querySelectorAll(
-          '[data-extension-ui="true"]:not([data-product-container="true"]), .extension-annotation'
+          '[data-extension-ui="true"]:not([data-product-container="true"]), .extension-annotation, highlighted-element'
         );
 
         if (extensionElements.length > 0) {
@@ -194,6 +194,23 @@ setTimeout(() => {
           const newDisplay = currentDisplay === "none" ? "flex" : "none";
 
           extensionElements.forEach((element) => {
+            if (newDisplay === "none") {
+              // Reset specific styles for highlights
+              if (element.classList.contains("highlighted-element")) {
+                element.style.border = "none"; // Remove the border
+                element.style.backgroundColor = "transparent"; // Remove background
+              }
+            } else {
+              // Restore styles for highlights
+              if (element.classList.contains("highlighted-element")) {
+                element.style.border = element.dataset.originalBorder || ""; // Restore border
+                element.style.backgroundColor =
+                  element.dataset.originalBackground || ""; // Restore background
+              }
+              if (element.classList.contains("extension-annotation")) {
+                element.style.display = "flex"; // Show annotations
+              }
+            }
             element.style.display = newDisplay;
           });
         } else {
@@ -235,13 +252,32 @@ setTimeout(() => {
           closestMatchButton.textContent = "Closest Match";
           closestMatchButton.style = `
             padding: 10px;
-            background-color: #28a745;
-            color: white;
+            background-color: #A5D6A7;
+            color: #4F4F4F;
             border: none;
             border-radius: 5px;
             font-size: 14px;
             cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
           `;
+          closestMatchButton.addEventListener("mouseover", () => {
+            closestMatchButton.style.backgroundColor = "#45c765"; // Brighter green
+            closestMatchButton.style.color = "black"; // Black text
+            if (highestMatch.element) {
+              highestMatch.element.style.backgroundColor =
+                "rgba(165,214,167, 0.4)"; // Slightly brighter green
+              highestMatch.element.style.border = "3px solid #28a745"; // Green border
+            }
+          });
+          closestMatchButton.addEventListener("mouseout", () => {
+            closestMatchButton.style.backgroundColor = "#A5D6A7"; // Original green
+            closestMatchButton.style.color = "#4F4F4F"; // Original text color
+            if (highestMatch.element) {
+              highestMatch.element.style.backgroundColor =
+                "rgba(165,214,167, 0.2)"; // Restore original background
+              highestMatch.element.style.border = "3px dashed green"; // Restore original border
+            }
+          });
           closestMatchButton.addEventListener("click", highlightClosestMatch);
           controlsContainer.appendChild(closestMatchButton);
         }
@@ -252,14 +288,36 @@ setTimeout(() => {
           bestDealButton.textContent = "Best Deal";
           bestDealButton.style = `
             padding: 10px;
-            background-color: #ffc107;
-            color: white;
+            background-color: #FFD180;
+            color: #4F4F4F;
             border: none;
             border-radius: 5px;
             font-size: 14px;
             margin-top: 5px;
             cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
           `;
+
+          // Add hover effect
+          bestDealButton.addEventListener("mouseover", () => {
+            bestDealButton.style.backgroundColor = "#ffd740"; // Brighter yellow
+            bestDealButton.style.color = "black"; // Black text
+            if (lowestPriceDiff.element) {
+              lowestPriceDiff.element.style.backgroundColor =
+                "rgba(255,209,128, 0.4)"; // Slightly brighter yellow
+              lowestPriceDiff.element.style.border = "3px solid #ffc107"; // Yellow border
+            }
+          });
+          bestDealButton.addEventListener("mouseout", () => {
+            bestDealButton.style.backgroundColor = "#FFD180"; // Original yellow
+            bestDealButton.style.color = "#4F4F4F"; // Original text color
+            if (lowestPriceDiff.element) {
+              lowestPriceDiff.element.style.backgroundColor =
+                "rgba(255,209,128, 0.2)"; // Restore original background
+              lowestPriceDiff.element.style.border = "3px dashed orange"; // Restore original border
+            }
+          });
+
           bestDealButton.addEventListener("click", highlightBestDeal);
           controlsContainer.appendChild(bestDealButton);
         }
@@ -270,13 +328,26 @@ setTimeout(() => {
           toggleButton.textContent = "Toggle UI";
           toggleButton.style = `
             padding: 10px;
-            background-color: #007bff;
-            color: white;
+            background-color: #BBDEFB;
+            color: #4F4F4F;
             border: none;
             border-radius: 5px;
             font-size: 14px;
             cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
           `;
+
+          // Add hover effect
+          toggleButton.setAttribute("data-toggle-ui", "true");
+          toggleButton.addEventListener("mouseover", () => {
+            toggleButton.style.backgroundColor = "#3399ff"; // Brighter blue
+            toggleButton.style.color = "black"; // Black text
+          });
+          toggleButton.addEventListener("mouseout", () => {
+            toggleButton.style.backgroundColor = "#BBDEFB"; // Original blue
+            toggleButton.style.color = "#4F4F4F"; // Original text color
+          });
+
           toggleButton.setAttribute("data-toggle-ui", "true");
           toggleButton.addEventListener("click", toggleExtensionUI);
           controlsContainer.appendChild(toggleButton);
@@ -287,17 +358,24 @@ setTimeout(() => {
       if (highestMatch.element) {
         highestMatch.element.classList.add("highlighted-element");
         highestMatch.element.setAttribute("data-product-container", "true");
-        highestMatch.element.style.border = "3px solid #28a745";
+        highestMatch.element.style.border = "3px dashed green";
+        highestMatch.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
+        highestMatch.element.style.backgroundColor = "rgba(165,214,167, 0.2)";
       }
       if (lowestPriceDiff.element) {
         lowestPriceDiff.element.classList.add("highlighted-element");
         lowestPriceDiff.element.setAttribute("data-product-container", "true");
-        lowestPriceDiff.element.style.border = "3px solid #ffc107";
+        lowestPriceDiff.element.style.border = "3px dashed orange";
+        lowestPriceDiff.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
+        lowestPriceDiff.element.style.backgroundColor =
+          "rgba(255,209,128, 0.2)";
       }
       if (highestMatch.element === lowestPriceDiff.element) {
         highestMatch.element.classList.add("highlighted-element");
         highestMatch.element.setAttribute("data-product-container", "true");
-        highestMatch.element.style.border = "3px solid purple";
+        highestMatch.element.style.border = "3px dashed #800080";
+        highestMatch.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
+        highestMatch.element.style.backgroundColor = "rgba(128, 0, 128, 0.2)";
       }
 
       createNavButtons();
@@ -316,17 +394,30 @@ function addIdealoButton(titleElement) {
   idealoButton.target = "_blank";
   idealoButton.style = `
       display: inline-block;
-      margin-top: 10px;
-      padding: 10px 15px;
-      background-color: #ff6600;
-      color: white;
+      margin: 8px 2px;
+      padding: 0px 8px;
+      background-color: #FFD180;
+      color: #4F4F4F;
       text-decoration: none;
       border-radius: 5px;
       font-weight: bold;
-      font-size: 1rem;
+      font-size: 0.75rem;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: all 0.3s ease;
       position: relative;
     `;
+
+  // Add hover effect
+  idealoButton.addEventListener("mouseover", () => {
+    idealoButton.style.backgroundColor = "#FF8C00"; // orange
+    idealoButton.style.color = "black"; // Black text
+    idealoButton.style.transform = "scale(1.05)"; // Slightly enlarge
+  });
+  idealoButton.addEventListener("mouseout", () => {
+    idealoButton.style.backgroundColor = "#FFD180"; // Original orange
+    idealoButton.style.color = "#4F4F4F"; // Original text color
+    idealoButton.style.transform = "scale(1)"; // Restore original size
+  });
+
   titleElement.parentElement.appendChild(idealoButton);
 }
