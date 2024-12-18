@@ -114,7 +114,10 @@ setTimeout(() => {
           if (priceDifference !== null) {
             const priceDiffAnnotation = document.createElement("span");
             priceDiffAnnotation.textContent = `€${priceDifference}`;
-            priceDiffAnnotation.classList.add("extension-annotation"); // Add class
+            priceDiffAnnotation.classList.add(
+              "extension-annotation",
+              "lowest-price-highlight"
+            ); // Add class
             priceDiffAnnotation.style = `
               display: flex;
               padding: 5px;
@@ -128,14 +131,33 @@ setTimeout(() => {
             `;
             annotationContainer.appendChild(priceDiffAnnotation);
 
+            // Reset previous lowestPriceDiff styling
+            if (lowestPriceDiff.element) {
+              lowestPriceDiff.element.classList.remove(
+                "lowest-price-highlight"
+              );
+              lowestPriceDiff.element.style.backgroundColor = "transparent"; // Reset background
+            }
+
             // Update lowest price difference
             if (priceDifference !== null && !isNaN(priceDifference)) {
               const numericPriceDifference = parseFloat(priceDifference);
               if (numericPriceDifference < lowestPriceDiff.value) {
+                // Remove old styling from the previous lowest element
+                if (lowestPriceDiff.element) {
+                  lowestPriceDiff.element.classList.remove(
+                    "lowest-price-highlight"
+                  );
+                  lowestPriceDiff.element.style.backgroundColor = "transparent";
+                }
+
                 lowestPriceDiff = {
                   element: resultItem,
                   value: numericPriceDifference,
                 };
+                // Apply highlight styling
+                lowestPriceDiff.element.classList.add("lowest-price-highlight");
+                lowestPriceDiff.element.style.backgroundColor = "#A5D6A7"; // Bright green
               }
             }
           }
@@ -186,7 +208,7 @@ setTimeout(() => {
       const toggleExtensionUI = () => {
         // Select all extension-created elements except the nav buttons
         const extensionElements = document.querySelectorAll(
-          '[data-extension-ui="true"]:not([data-product-container="true"]), .extension-annotation, highlighted-element'
+          '[data-extension-ui="true"]:not([data-product-container="true"]), .extension-annotation'
         );
 
         if (extensionElements.length > 0) {
@@ -197,7 +219,7 @@ setTimeout(() => {
             if (newDisplay === "none") {
               // Reset specific styles for highlights
               if (element.classList.contains("highlighted-element")) {
-                element.style.border = "none"; // Remove the border
+                element.style.border = "0"; // Remove the border
                 element.style.backgroundColor = "transparent"; // Remove background
               }
             } else {
