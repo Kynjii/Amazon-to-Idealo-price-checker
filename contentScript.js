@@ -145,25 +145,6 @@ setTimeout(() => {
         }
       });
 
-      const toggleExtensionUI = () => {
-        const extensionElements = document.querySelectorAll(
-          '[data-extension-ui="true"]'
-        );
-
-        if (extensionElements.length > 0) {
-          const currentDisplay = extensionElements[0].style.display;
-          const newDisplay = currentDisplay === "none" ? "block" : "none";
-
-          extensionElements.forEach((element) => {
-            element.style.display = newDisplay;
-          });
-
-          console.log(`Extension UI toggled to: ${newDisplay}`);
-        } else {
-          console.warn("No extension UI elements found to toggle.");
-        }
-      };
-
       const navigateToElement = (element, label) => {
         if (element) {
           // Try finding an <a> tag first
@@ -199,21 +180,55 @@ setTimeout(() => {
         navigateToElement(highestMatch.element, "Closest Match");
       const highlightBestDeal = () =>
         navigateToElement(lowestPriceDiff.element, "Best Deal");
+      const toggleExtensionUI = () => {
+        // Select all annotations, highlights, and extension UI elements except the toggle button itself
+        const extensionElements = document.querySelectorAll(
+          ".annotation-element, .highlighted-element, [data-extension-ui='true']:not([data-toggle-ui])"
+        );
+
+        if (extensionElements.length > 0) {
+          const currentDisplay = extensionElements[0].style.display || "block"; // Default to "block"
+          const newDisplay = currentDisplay === "none" ? "block" : "none";
+
+          extensionElements.forEach((element) => {
+            element.style.display = newDisplay;
+          });
+
+          console.log(`Extension UI toggled to: ${newDisplay}`);
+        } else {
+          console.warn("No extension UI elements found to toggle.");
+        }
+      };
 
       const createNavButtons = () => {
-        const controlsContainer = document.createElement("div");
-        controlsContainer.style = `
-          display: flex;
-          flex-direction: column;
-          position: fixed;
-          top: 50%;
-          right: 10px;
-          transform: translateY(-50%);
-          gap: 10px;
-          z-index: 9999;
-        `;
-        controlsContainer.setAttribute("data-extension-ui", "true");
+        let controlsContainer = document.querySelector(
+          '[data-extension-ui="true"]'
+        );
 
+        if (!controlsContainer) {
+          controlsContainer = document.createElement("div");
+          controlsContainer.style = `
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            gap: 10px;
+            z-index: 9999;
+          `;
+          controlsContainer.setAttribute("data-extension-ui", "true");
+          document.body.appendChild(controlsContainer);
+        }
+
+        // Remove existing buttons except for the toggle button
+        [...controlsContainer.children].forEach((child) => {
+          if (!child.getAttribute("data-toggle-ui")) {
+            controlsContainer.removeChild(child);
+          }
+        });
+
+        // Add Closest Match button
         if (highestMatch.element) {
           const closestMatchButton = document.createElement("button");
           closestMatchButton.textContent = "Closest Match";
@@ -226,10 +241,12 @@ setTimeout(() => {
             font-size: 14px;
             cursor: pointer;
           `;
+          closestMatchButton.classList.add("annotation-element");
           closestMatchButton.addEventListener("click", highlightClosestMatch);
           controlsContainer.appendChild(closestMatchButton);
         }
 
+        // Add Best Deal button
         if (lowestPriceDiff.element) {
           const bestDealButton = document.createElement("button");
           bestDealButton.textContent = "Best Deal";
@@ -242,61 +259,45 @@ setTimeout(() => {
             font-size: 14px;
             cursor: pointer;
           `;
+          bestDealButton.classList.add("annotation-element");
           bestDealButton.addEventListener("click", highlightBestDeal);
           controlsContainer.appendChild(bestDealButton);
         }
 
-        if (
-          highestMatch.element &&
-          lowestPriceDiff.element &&
-          highestMatch.element === lowestPriceDiff.element
-        ) {
-          controlsContainer.innerHTML = ""; // Clear existing buttons
-          const unifiedButton = document.createElement("button");
-          unifiedButton.textContent = "Best Match & Deal";
-          unifiedButton.style = `
+        // Add Toggle UI button if not already present
+        if (!document.querySelector('[data-toggle-ui="true"]')) {
+          const toggleButton = document.createElement("button");
+          toggleButton.textContent = "Toggle Extension UI";
+          toggleButton.style = `
             padding: 10px;
-            background-color: purple;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
             font-size: 14px;
             cursor: pointer;
           `;
-          unifiedButton.addEventListener("click", () => {
-            navigateToElement(highestMatch.element, "Best Match & Deal");
-          });
-          controlsContainer.appendChild(unifiedButton);
+          toggleButton.setAttribute("data-toggle-ui", "true");
+          toggleButton.addEventListener("click", toggleExtensionUI);
+          controlsContainer.appendChild(toggleButton);
         }
-
-        // Add the "Toggle Extension UI" button
-        const toggleButton = document.createElement("button");
-        toggleButton.textContent = "Toggle Extension UI";
-        toggleButton.style = `
-          padding: 10px;
-          background-color: #007bff;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          font-size: 14px;
-          cursor: pointer;
-        `;
-        toggleButton.addEventListener("click", toggleExtensionUI);
-        controlsContainer.appendChild(toggleButton);
-
-        document.body.appendChild(controlsContainer);
       };
 
-      // Highlight highest match and lowest price difference
+      // Apply highlights and add specific classes for toggling
       if (highestMatch.element) {
+        highestMatch.element.classList.add("highlighted-element");
         highestMatch.element.style.border = "3px solid #28a745";
       }
       if (lowestPriceDiff.element) {
+        lowestPriceDiff.element.classList.add("highlighted-element");
         lowestPriceDiff.element.style.border = "3px solid #ffc107";
       }
       if (highestMatch.element === lowestPriceDiff.element) {
+        highestMatch.element.classList.add("highlighted-element");
         highestMatch.element.style.border = "3px solid purple";
       }
+
+      createNavButtons();
     });
   }
 }, 1000);
