@@ -117,7 +117,9 @@ setTimeout(() => {
             priceDiffAnnotation.style = `
               display: inline-block;
               padding: 5px;
-              background-color: #007bff;
+              background-color: ${
+                priceDifference < 0 ? "#28a745" : "#dc3545"
+              }; /* Green for negative, red for positive */
               color: white;
               font-size: 12px;
               font-weight: bold;
