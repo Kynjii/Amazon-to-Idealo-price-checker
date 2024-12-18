@@ -53,7 +53,7 @@ setTimeout(() => {
       );
 
       let highestMatch = { element: null, value: 0 };
-      let lowestPriceDiff = { element: null, value: Infinity };
+      let lowestPriceDiff = { element: null, value: Number.POSITIVE_INFINITY };
 
       resultItems.forEach((resultItem) => {
         const titleElement = resultItem.querySelector(
@@ -75,6 +75,8 @@ setTimeout(() => {
             !isNaN(amazonPrice) && !isNaN(idealoPrice)
               ? (idealoPrice - amazonPrice).toFixed(2)
               : null;
+
+          console.log(`Result: ${resultTitle}, Price Diff: ${priceDifference}`);
 
           // Create annotation container
           const annotationContainer = document.createElement("div");
@@ -127,12 +129,18 @@ setTimeout(() => {
             `;
             annotationContainer.appendChild(priceDiffAnnotation);
 
-            // Update lowest price difference (most negative value)
-            if (priceDifference < lowestPriceDiff.value) {
-              lowestPriceDiff = {
-                element: resultItem,
-                value: priceDifference,
-              };
+            // Update lowest price difference
+            if (priceDifference !== null && !isNaN(priceDifference)) {
+              const numericPriceDifference = parseFloat(priceDifference);
+              if (numericPriceDifference < lowestPriceDiff.value) {
+                console.log(
+                  `New Lowest Price Difference Found: ${numericPriceDifference}`
+                );
+                lowestPriceDiff = {
+                  element: resultItem,
+                  value: numericPriceDifference,
+                };
+              }
             }
           }
 
