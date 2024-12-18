@@ -10,93 +10,92 @@ function loadLibrary(callback) {
 }
 
 // Check the current URL to determine functionality
-document.addEventListener("DOMContentLoaded", () => {
+setTimeout(() => {
+  console.log("Checking URL after timeout");
   const currentUrl = window.location.href;
+  console.log("Current URL:", currentUrl);
 
   if (currentUrl.includes("amazon")) {
-    // Amazon functionality
     console.log("Amazon page detected");
-    setTimeout(() => {
-      const titleElement = document.getElementById("productTitle");
-      if (titleElement) {
-        console.log("Product title found:", titleElement.innerText.trim());
-        addIdealoButton(titleElement);
-      } else {
-        console.error("Product title element not found");
-      }
-    }, 1000); // Wait 1 second to ensure the DOM is fully loaded
-  } else if (
-    currentUrl.includes("idealo.de/preisvergleich/MainSearchProductCategory")
-  ) {
-    // Idealo functionality
+    const titleElement = document.getElementById("productTitle");
+    if (titleElement) {
+      console.log("Product title found:", titleElement.innerText.trim());
+      addIdealoButton(titleElement);
+    } else {
+      console.error("Product title element not found");
+    }
+  } else if (currentUrl.includes("idealo.de/preisvergleich/ProductCategory")) {
     console.log("Idealo page detected");
     loadLibrary(() => {
-      const searchQuery = new URL(window.location.href).searchParams.get("q"); // Extract the search query
-      if (!searchQuery) {
-        console.error("No search query found in URL");
-        return;
-      }
-      console.log("Search query extracted:", searchQuery);
+      setTimeout(() => {
+        const searchQuery = new URL(window.location.href).searchParams.get("q"); // Extract the search query
+        if (!searchQuery) {
+          console.error("No search query found in URL");
+          return;
+        }
+        console.log("Search query extracted:", searchQuery);
 
-      // Function to add match percentage to each result
-      function annotateResults() {
-        const resultItems = document.querySelectorAll(".offer-list-item"); // Adjust selector to match Idealo's DOM
-        console.log("Number of results found:", resultItems.length);
-        const similarity = stringComparison.cosine;
+        // Function to add match percentage to each result
+        function annotateResults() {
+          const resultItems = document.querySelectorAll(
+            ".sr-productSummary__title_f5flP"
+          ); // Adjusted selector for Idealo's DOM
+          console.log("Number of results found:", resultItems.length);
+          const similarity = stringComparison.cosine;
 
-        resultItems.forEach((item, index) => {
-          const titleElement = item.querySelector(".offer-title"); // Adjust selector to match Idealo's DOM
-          if (titleElement) {
-            const resultTitle = titleElement.textContent.trim();
-            console.log(`Result ${index + 1} title:`, resultTitle);
+          resultItems.forEach((titleElement, index) => {
+            if (titleElement) {
+              const resultTitle = titleElement.textContent.trim();
+              console.log(`Result ${index + 1} title:`, resultTitle);
 
-            // Use string-comparison library to calculate similarity
-            const matchPercentage = Math.round(
-              similarity.similarity(searchQuery, resultTitle) * 100
-            );
-            console.log(
-              `Result ${index + 1} match percentage:`,
-              matchPercentage
-            );
+              // Use string-comparison library to calculate similarity
+              const matchPercentage = Math.round(
+                similarity.similarity(searchQuery, resultTitle) * 100
+              );
+              console.log(
+                `Result ${index + 1} match percentage:`,
+                matchPercentage
+              );
 
-            // Determine color based on percentage
-            let color;
-            if (matchPercentage >= 80) {
-              color = "#28a745"; // Green for high match
-            } else if (matchPercentage >= 60) {
-              color = "#ffc107"; // Yellow for medium match
-            } else if (matchPercentage >= 40) {
-              color = "#fd7e14"; // Orange for low match
+              // Determine color based on percentage
+              let color;
+              if (matchPercentage >= 80) {
+                color = "#28a745"; // Green for high match
+              } else if (matchPercentage >= 60) {
+                color = "#ffc107"; // Yellow for medium match
+              } else if (matchPercentage >= 40) {
+                color = "#fd7e14"; // Orange for low match
+              } else {
+                color = "#dc3545"; // Red for very low match
+              }
+
+              // Add percentage annotation
+              const annotation = document.createElement("span");
+              annotation.textContent = `${matchPercentage}% match`;
+              annotation.style = `
+                display: inline-block;
+                margin-left: 10px;
+                padding: 5px;
+                background-color: ${color};
+                color: white;
+                font-size: 12px;
+                font-weight: bold;
+                border-radius: 3px;
+              `;
+              titleElement.appendChild(annotation);
             } else {
-              color = "#dc3545"; // Red for very low match
+              console.error(`Title element not found for result ${index + 1}`);
             }
+          });
+        }
 
-            // Add percentage annotation
-            const annotation = document.createElement("span");
-            annotation.textContent = `${matchPercentage}% match`;
-            annotation.style = `
-              display: inline-block;
-              margin-left: 10px;
-              padding: 5px;
-              background-color: ${color};
-              color: white;
-              font-size: 12px;
-              font-weight: bold;
-              border-radius: 3px;
-            `;
-            titleElement.appendChild(annotation);
-          } else {
-            console.error(`Result ${index + 1} title element not found`);
-          }
-        });
-      }
-
-      annotateResults(); // Run the function after DOM is ready
+        annotateResults(); // Run the function after DOM is ready
+      }, 1000); // Wait 1 second to ensure Idealo content is fully loaded
     });
   } else {
     console.log("Page not recognized for specific functionality");
   }
-});
+}, 1000); // Wait 3 seconds to ensure the DOM is fully loaded
 
 // Amazon-specific functionality
 function addIdealoButton(titleElement) {
