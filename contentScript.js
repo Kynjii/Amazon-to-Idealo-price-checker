@@ -9,7 +9,7 @@ setTimeout(() => {
   } else {
     console.error("Product title element not found.");
   }
-}, 1500); // Wait 3 seconds
+}, 1000); // Wait 1 seconds
 
 function checkForTitle() {
   const titleElement = document.getElementById("productTitle");
