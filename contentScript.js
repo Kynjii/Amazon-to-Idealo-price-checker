@@ -30,11 +30,11 @@ setTimeout(() => {
     const fractionElement = document.querySelector(".a-price-fraction");
 
     if (titleElement && priceElement && fractionElement) {
-      const amazonPrice = parseFloat(
-        `${priceElement.textContent
-          .trim()
-          .replace(",", ".")}.${fractionElement.textContent.trim()}`
-      );
+      const wholePart = priceElement.textContent.trim().replace(",", ".");
+      const fractionPart = fractionElement.textContent.trim();
+      const amazonPrice = parseFloat(`${wholePart}${fractionPart}`);
+      console.log(amazonPrice);
+
       chrome.storage.local.set({ amazonPrice }, () => {
         console.log("Amazon price saved to storage:", amazonPrice);
       });
@@ -48,7 +48,9 @@ setTimeout(() => {
       const searchQuery = new URL(window.location.href).searchParams.get("q");
       if (!searchQuery) return;
 
-      const resultItems = document.querySelectorAll('[class*="resultPanel"]');
+      const resultItems = document.querySelectorAll(
+        '[data-testid="resultItem"]:has(.sr-productSummary__title_f5flP)'
+      );
 
       let highestMatch = { element: null, value: 0 };
       let lowestPriceDiff = { element: null, value: Infinity };
@@ -115,7 +117,9 @@ setTimeout(() => {
             priceDiffAnnotation.style = `
               display: inline-block;
               padding: 5px;
-              background-color: ${priceDifference < 0 ? "#28a745" : "#dc3545"};
+              background-color: ${
+                priceDifference < 0 ? "#28a745" : "#dc3545"
+              }; /* Green for negative, red for positive */
               color: white;
               font-size: 12px;
               font-weight: bold;
@@ -142,86 +146,6 @@ setTimeout(() => {
           }
         }
       });
-
-      // Add buttons to navigate to highlighted items
-      const controlsContainer = document.createElement("div");
-      controlsContainer.style = `
-        display: flex;
-        gap: 10px;
-        margin-bottom: 10px;
-      `;
-
-      const highlightClosestMatch = () => {
-        if (highestMatch.element) {
-          highestMatch.element.scrollIntoView({ behavior: "smooth" });
-        }
-      };
-
-      const highlightBestDeal = () => {
-        if (lowestPriceDiff.element) {
-          lowestPriceDiff.element.scrollIntoView({ behavior: "smooth" });
-        }
-      };
-
-      if (highestMatch.element) {
-        const closestMatchButton = document.createElement("button");
-        closestMatchButton.textContent = "Closest Match";
-        closestMatchButton.style = `
-          padding: 10px;
-          background-color: #28a745;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          font-size: 14px;
-          cursor: pointer;
-        `;
-        closestMatchButton.addEventListener("click", highlightClosestMatch);
-        controlsContainer.appendChild(closestMatchButton);
-      }
-
-      if (lowestPriceDiff.element) {
-        const bestDealButton = document.createElement("button");
-        bestDealButton.textContent = "Best Deal";
-        bestDealButton.style = `
-          padding: 10px;
-          background-color: #ffc107;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          font-size: 14px;
-          cursor: pointer;
-        `;
-        bestDealButton.addEventListener("click", highlightBestDeal);
-        controlsContainer.appendChild(bestDealButton);
-      }
-
-      if (
-        highestMatch.element &&
-        lowestPriceDiff.element &&
-        highestMatch.element === lowestPriceDiff.element
-      ) {
-        controlsContainer.innerHTML = ""; // Clear existing buttons
-        const unifiedButton = document.createElement("button");
-        unifiedButton.textContent = "Best Match & Deal";
-        unifiedButton.style = `
-          padding: 10px;
-          background-color: purple;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          font-size: 14px;
-          cursor: pointer;
-        `;
-        unifiedButton.addEventListener("click", () => {
-          highestMatch.element.scrollIntoView({ behavior: "smooth" });
-        });
-        controlsContainer.appendChild(unifiedButton);
-      }
-
-      const resultPanel = document.querySelector("[class*='resultPanel']");
-      if (resultPanel) {
-        resultPanel.parentElement.insertBefore(controlsContainer, resultPanel);
-      }
 
       // Highlight highest match and lowest price difference
       if (highestMatch.element) {
