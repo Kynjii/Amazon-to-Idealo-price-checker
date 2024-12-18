@@ -32,7 +32,7 @@ setTimeout(() => {
     if (titleElement && priceElement && fractionElement) {
       const wholePart = priceElement.textContent.trim().replace(",", ".");
       const fractionPart = fractionElement.textContent.trim();
-      const amazonPrice = parseFloat(`${wholePart}${fractionPart}`);
+      const amazonPrice = parseFloat(`${wholePart}.${fractionPart}`);
       console.log(amazonPrice);
 
       chrome.storage.local.set({ amazonPrice }, () => {
@@ -76,71 +76,14 @@ setTimeout(() => {
               ? (idealoPrice - amazonPrice).toFixed(2)
               : null;
 
-          // Create annotation container
-          const annotationContainer = document.createElement("div");
-          annotationContainer.style = `
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            position: absolute;
-            top: 0.5rem;
-            left: 0.3rem;
-            z-index: 9999;
-          `;
-
-          // Match Percentage Annotation
-          const matchAnnotation = document.createElement("span");
-          matchAnnotation.textContent = `${matchPercentage}% match`;
-          matchAnnotation.style = `
-            display: inline-block;
-            padding: 5px;
-            background-color: ${
-              matchPercentage >= 80
-                ? "#28a745"
-                : matchPercentage >= 60
-                ? "#ffc107"
-                : matchPercentage >= 40
-                ? "#fd7e14"
-                : "#dc3545"
-            };
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            border-radius: 3px;
-          `;
-          annotationContainer.appendChild(matchAnnotation);
-
-          // Price Difference Annotation
-          if (priceDifference !== null) {
-            const priceDiffAnnotation = document.createElement("span");
-            priceDiffAnnotation.textContent = `Price Diff: €${priceDifference}`;
-            priceDiffAnnotation.style = `
-              display: inline-block;
-              padding: 5px;
-              background-color: ${priceDifference < 0 ? "#28a745" : "#dc3545"};
-              color: white;
-              font-size: 12px;
-              font-weight: bold;
-              border-radius: 3px;
-            `;
-            annotationContainer.appendChild(priceDiffAnnotation);
-
-            // Update lowest price difference (most negative value)
-            if (priceDifference < lowestPriceDiff.value) {
-              lowestPriceDiff = {
-                element: resultItem,
-                value: priceDifference,
-              };
-            }
-          }
-
-          // Ensure the resultItem container has relative positioning
-          resultItem.style.position = "relative";
-          resultItem.appendChild(annotationContainer);
-
           // Update highest match percentage
           if (matchPercentage > highestMatch.value) {
             highestMatch = { element: resultItem, value: matchPercentage };
+          }
+
+          // Update lowest price difference (most negative value)
+          if (priceDifference < lowestPriceDiff.value) {
+            lowestPriceDiff = { element: resultItem, value: priceDifference };
           }
         }
       });
@@ -166,7 +109,6 @@ setTimeout(() => {
 
       const navigateToElement = (element, label) => {
         if (element) {
-          // Try finding an <a> tag first
           const linkElement = element.querySelector("a");
           if (linkElement) {
             console.log(`Navigating to ${label} using <a>:`, linkElement);
@@ -174,21 +116,11 @@ setTimeout(() => {
             return;
           }
 
-          // Fallback to <button> if no <a> is found
           const buttonElement = element.querySelector(
             "button.sr-resultItemLink__button_k3jEE"
           );
           if (buttonElement) {
-            console.log(
-              `Navigating to ${label} using <button>:`,
-              buttonElement
-            );
             buttonElement.click();
-          } else {
-            console.error(
-              `No <a> or <button> found for ${label} inside:`,
-              element
-            );
           }
         } else {
           console.error(`No highlighted ${label} element.`);
@@ -201,18 +133,25 @@ setTimeout(() => {
         navigateToElement(lowestPriceDiff.element, "Best Deal");
 
       const createNavButtons = () => {
-        const controlsContainer = document.createElement("div");
-        controlsContainer.style = `
-          display: flex;
-          flex-direction: column;
-          position: fixed;
-          top: 50%;
-          right: 10px;
-          transform: translateY(-50%);
-          gap: 10px;
-          z-index: 9999;
-        `;
-        controlsContainer.setAttribute("data-extension-ui", "true");
+        const controlsContainer =
+          document.querySelector('[data-extension-ui="true"]') ||
+          document.createElement("div");
+        if (!controlsContainer.parentElement) {
+          controlsContainer.style = `
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            gap: 10px;
+            z-index: 9999;
+          `;
+          controlsContainer.setAttribute("data-extension-ui", "true");
+          document.body.appendChild(controlsContainer);
+        }
+
+        controlsContainer.innerHTML = "";
 
         if (highestMatch.element) {
           const closestMatchButton = document.createElement("button");
@@ -246,30 +185,6 @@ setTimeout(() => {
           controlsContainer.appendChild(bestDealButton);
         }
 
-        if (
-          highestMatch.element &&
-          lowestPriceDiff.element &&
-          highestMatch.element === lowestPriceDiff.element
-        ) {
-          controlsContainer.innerHTML = ""; // Clear existing buttons
-          const unifiedButton = document.createElement("button");
-          unifiedButton.textContent = "Best Match & Deal";
-          unifiedButton.style = `
-            padding: 10px;
-            background-color: purple;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 14px;
-            cursor: pointer;
-          `;
-          unifiedButton.addEventListener("click", () => {
-            navigateToElement(highestMatch.element, "Best Match & Deal");
-          });
-          controlsContainer.appendChild(unifiedButton);
-        }
-
-        // Add the "Toggle Extension UI" button
         const toggleButton = document.createElement("button");
         toggleButton.textContent = "Toggle Extension UI";
         toggleButton.style = `
@@ -283,11 +198,11 @@ setTimeout(() => {
         `;
         toggleButton.addEventListener("click", toggleExtensionUI);
         controlsContainer.appendChild(toggleButton);
-
-        document.body.appendChild(controlsContainer);
       };
 
-      // Highlight highest match and lowest price difference
+      createNavButtons();
+
+      // Highlight elements
       if (highestMatch.element) {
         highestMatch.element.style.border = "3px solid #28a745";
       }
