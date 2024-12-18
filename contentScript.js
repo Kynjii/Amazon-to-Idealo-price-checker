@@ -1,9 +1,15 @@
 console.log("Amazon to Idealo content script loaded.");
 
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("DOMContentLoaded event fired.");
-  checkForTitle();
-});
+setTimeout(() => {
+  console.log("Checking for product title...");
+  const titleElement = document.getElementById("productTitle");
+  if (titleElement) {
+    console.log("Product title element found:", titleElement.innerText.trim());
+    addIdealoButton(titleElement);
+  } else {
+    console.error("Product title element not found.");
+  }
+}, 3000); // Wait 3 seconds
 
 function checkForTitle() {
   const titleElement = document.getElementById("productTitle");
