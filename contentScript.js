@@ -200,7 +200,7 @@ setTimeout(() => {
       };
 
       const highlightClosestMatch = () =>
-        navigateToElement(highestMatch.element, "Closest Match");
+        navigateToElement(highestMatch.element, "Bester Match");
 
       const highlightBestDeal = () =>
         navigateToElement(lowestPriceDiff.element, "Best Deal");
@@ -307,7 +307,7 @@ setTimeout(() => {
         // Add Best Deal button
         if (lowestPriceDiff.element) {
           const bestDealButton = document.createElement("button");
-          bestDealButton.textContent = "Best Deal";
+          bestDealButton.textContent = "Bestes Deal";
           bestDealButton.style = `
             padding: 10px;
             background-color: #FFD180;
@@ -347,7 +347,7 @@ setTimeout(() => {
         // Add Toggle UI button if not already present
         if (!document.querySelector('[data-toggle-ui="true"]')) {
           const toggleButton = document.createElement("button");
-          toggleButton.textContent = "Toggle UI";
+          toggleButton.textContent = "An/Aus";
           toggleButton.style = `
             padding: 10px;
             background-color: #BBDEFB;
