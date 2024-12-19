@@ -88,7 +88,7 @@ setTimeout(() => {
           // Match Percentage Annotation
           const matchAnnotation = document.createElement("span");
           matchAnnotation.textContent = `${matchPercentage}%`;
-          matchAnnotation.classList.add("extension-annotation"); // Add class
+          matchAnnotation.classList.add("extension-annotation");
           matchAnnotation.style = `
             display: flex;
             padding: 5px;
@@ -117,7 +117,7 @@ setTimeout(() => {
             priceDiffAnnotation.classList.add(
               "extension-annotation",
               "lowest-price-highlight"
-            ); // Add class
+            );
             priceDiffAnnotation.style = `
               display: flex;
               padding: 5px;
@@ -136,14 +136,13 @@ setTimeout(() => {
               lowestPriceDiff.element.classList.remove(
                 "lowest-price-highlight"
               );
-              lowestPriceDiff.element.style.backgroundColor = "transparent"; // Reset background
+              lowestPriceDiff.element.style.backgroundColor = "transparent";
             }
 
             // Update lowest price difference
             if (priceDifference !== null && !isNaN(priceDifference)) {
               const numericPriceDifference = parseFloat(priceDifference);
               if (numericPriceDifference < lowestPriceDiff.value) {
-                // Remove old styling from the previous lowest element
                 if (lowestPriceDiff.element) {
                   lowestPriceDiff.element.classList.remove(
                     "lowest-price-highlight"
@@ -155,9 +154,9 @@ setTimeout(() => {
                   element: resultItem,
                   value: numericPriceDifference,
                 };
-                // Apply highlight styling
+
                 lowestPriceDiff.element.classList.add("lowest-price-highlight");
-                lowestPriceDiff.element.style.backgroundColor = "#A5D6A7"; // Bright green
+                lowestPriceDiff.element.style.backgroundColor = "#A5D6A7";
               }
             }
           }
@@ -212,25 +211,25 @@ setTimeout(() => {
         );
 
         if (extensionElements.length > 0) {
-          const currentDisplay = extensionElements[0].style.display || "flex"; // Default to "flex"
+          const currentDisplay = extensionElements[0].style.display || "flex";
           const newDisplay = currentDisplay === "none" ? "flex" : "none";
 
           extensionElements.forEach((element) => {
             if (newDisplay === "none") {
               // Reset specific styles for highlights
               if (element.classList.contains("highlighted-element")) {
-                element.style.border = "0"; // Remove the border
-                element.style.backgroundColor = "transparent"; // Remove background
+                element.style.border = "0";
+                element.style.backgroundColor = "transparent";
               }
             } else {
               // Restore styles for highlights
               if (element.classList.contains("highlighted-element")) {
-                element.style.border = element.dataset.originalBorder || ""; // Restore border
+                element.style.border = element.dataset.originalBorder || "";
                 element.style.backgroundColor =
-                  element.dataset.originalBackground || ""; // Restore background
+                  element.dataset.originalBackground || "";
               }
               if (element.classList.contains("extension-annotation")) {
-                element.style.display = "flex"; // Show annotations
+                element.style.display = "flex";
               }
             }
             element.style.display = newDisplay;
@@ -283,21 +282,21 @@ setTimeout(() => {
             transition: background-color 0.2s ease-in-out;
           `;
           closestMatchButton.addEventListener("mouseover", () => {
-            closestMatchButton.style.backgroundColor = "#45c765"; // Brighter green
-            closestMatchButton.style.color = "black"; // Black text
+            closestMatchButton.style.backgroundColor = "#45c765";
+            closestMatchButton.style.color = "black";
             if (highestMatch.element) {
               highestMatch.element.style.backgroundColor =
-                "rgba(165,214,167, 0.4)"; // Slightly brighter green
-              highestMatch.element.style.border = "3px solid #28a745"; // Green border
+                "rgba(165,214,167, 0.4)";
+              highestMatch.element.style.border = "3px solid #28a745";
             }
           });
           closestMatchButton.addEventListener("mouseout", () => {
-            closestMatchButton.style.backgroundColor = "#A5D6A7"; // Original green
-            closestMatchButton.style.color = "#4F4F4F"; // Original text color
+            closestMatchButton.style.backgroundColor = "#A5D6A7";
+            closestMatchButton.style.color = "#4F4F4F";
             if (highestMatch.element) {
               highestMatch.element.style.backgroundColor =
-                "rgba(165,214,167, 0.2)"; // Restore original background
-              highestMatch.element.style.border = "3px dashed green"; // Restore original border
+                "rgba(165,214,167, 0.2)";
+              highestMatch.element.style.border = "3px dashed green";
             }
           });
           closestMatchButton.addEventListener("click", highlightClosestMatch);
@@ -322,21 +321,21 @@ setTimeout(() => {
 
           // Add hover effect
           bestDealButton.addEventListener("mouseover", () => {
-            bestDealButton.style.backgroundColor = "#ffd740"; // Brighter yellow
-            bestDealButton.style.color = "black"; // Black text
+            bestDealButton.style.backgroundColor = "#ffd740";
+            bestDealButton.style.color = "black";
             if (lowestPriceDiff.element) {
               lowestPriceDiff.element.style.backgroundColor =
-                "rgba(255,209,128, 0.4)"; // Slightly brighter yellow
-              lowestPriceDiff.element.style.border = "3px solid #ffc107"; // Yellow border
+                "rgba(255,209,128, 0.4)";
+              lowestPriceDiff.element.style.border = "3px solid #ffc107";
             }
           });
           bestDealButton.addEventListener("mouseout", () => {
-            bestDealButton.style.backgroundColor = "#FFD180"; // Original yellow
-            bestDealButton.style.color = "#4F4F4F"; // Original text color
+            bestDealButton.style.backgroundColor = "#FFD180";
+            bestDealButton.style.color = "#4F4F4F";
             if (lowestPriceDiff.element) {
               lowestPriceDiff.element.style.backgroundColor =
-                "rgba(255,209,128, 0.2)"; // Restore original background
-              lowestPriceDiff.element.style.border = "3px dashed orange"; // Restore original border
+                "rgba(255,209,128, 0.2)";
+              lowestPriceDiff.element.style.border = "3px dashed orange";
             }
           });
 
@@ -362,12 +361,12 @@ setTimeout(() => {
           // Add hover effect
           toggleButton.setAttribute("data-toggle-ui", "true");
           toggleButton.addEventListener("mouseover", () => {
-            toggleButton.style.backgroundColor = "#3399ff"; // Brighter blue
-            toggleButton.style.color = "black"; // Black text
+            toggleButton.style.backgroundColor = "#3399ff";
+            toggleButton.style.color = "black";
           });
           toggleButton.addEventListener("mouseout", () => {
-            toggleButton.style.backgroundColor = "#BBDEFB"; // Original blue
-            toggleButton.style.color = "#4F4F4F"; // Original text color
+            toggleButton.style.backgroundColor = "#BBDEFB";
+            toggleButton.style.color = "#4F4F4F";
           });
 
           toggleButton.setAttribute("data-toggle-ui", "true");
@@ -419,7 +418,7 @@ function extractArtikelnummer() {
       return td.textContent.trim();
     }
   }
-  return null; // Return null if Artikelnummer is not found
+  return null;
 }
 
 // Function to extract the unique identifier from the Amazon URL
@@ -431,14 +430,14 @@ function extractAmazonIdentifier() {
 // Function to add Idealo button
 function addIdealoButton(titleElement) {
   const productTitle = titleElement.innerText.trim();
-  const artikelnummer = extractArtikelnummer(); // Extract Artikelnummer
-  const amazonIdentifier = extractAmazonIdentifier(); // Extract Amazon identifier
+  const artikelnummer = extractArtikelnummer();
+  const amazonIdentifier = extractAmazonIdentifier();
 
   // Construct the search query with the new queries at the start
   const searchQueryParts = [];
   if (artikelnummer) searchQueryParts.push(artikelnummer);
   if (amazonIdentifier) searchQueryParts.push(amazonIdentifier);
-  searchQueryParts.push(productTitle); // Add product title at the end
+  searchQueryParts.push(productTitle);
   const searchQuery = searchQueryParts.map(encodeURIComponent).join(" ");
 
   const idealoButton = document.createElement("a");
@@ -462,14 +461,14 @@ function addIdealoButton(titleElement) {
 
   // Add hover effect
   idealoButton.addEventListener("mouseover", () => {
-    idealoButton.style.backgroundColor = "#FF8C00"; // orange
-    idealoButton.style.color = "black"; // Black text
-    idealoButton.style.transform = "scale(1.05)"; // Slightly enlarge
+    idealoButton.style.backgroundColor = "#FF8C00";
+    idealoButton.style.color = "black";
+    idealoButton.style.transform = "scale(1.05)";
   });
   idealoButton.addEventListener("mouseout", () => {
-    idealoButton.style.backgroundColor = "#FFD180"; // Original orange
-    idealoButton.style.color = "#4F4F4F"; // Original text color
-    idealoButton.style.transform = "scale(1)"; // Restore original size
+    idealoButton.style.backgroundColor = "#FFD180";
+    idealoButton.style.color = "#4F4F4F";
+    idealoButton.style.transform = "scale(1)";
   });
 
   titleElement.parentElement.appendChild(idealoButton);
