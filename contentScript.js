@@ -132,7 +132,7 @@ setTimeout(() => {
             annotationContainer.appendChild(priceDiffAnnotation);
 
             // Reset previous lowestPriceDiff styling
-            if (lowestPriceDiff.element && lowestPriceDiff.element.classList) {
+            if (lowestPriceDiff.element) {
               lowestPriceDiff.element.classList.remove(
                 "lowest-price-highlight"
               );
@@ -144,10 +144,7 @@ setTimeout(() => {
               const numericPriceDifference = parseFloat(priceDifference);
               if (numericPriceDifference < lowestPriceDiff.value) {
                 // Remove old styling from the previous lowest element
-                if (
-                  lowestPriceDiff.element &&
-                  lowestPriceDiff.element.classList
-                ) {
+                if (lowestPriceDiff.element) {
                   lowestPriceDiff.element.classList.remove(
                     "lowest-price-highlight"
                   );
@@ -158,17 +155,9 @@ setTimeout(() => {
                   element: resultItem,
                   value: numericPriceDifference,
                 };
-
-                // Apply highlight styling if the element is valid
-                if (
-                  lowestPriceDiff.element &&
-                  lowestPriceDiff.element.classList
-                ) {
-                  lowestPriceDiff.element.classList.add(
-                    "lowest-price-highlight"
-                  );
-                  lowestPriceDiff.element.style.backgroundColor = "#A5D6A7"; // Bright green
-                }
+                // Apply highlight styling
+                lowestPriceDiff.element.classList.add("lowest-price-highlight");
+                lowestPriceDiff.element.style.backgroundColor = "#A5D6A7"; // Bright green
               }
             }
           }
@@ -251,194 +240,166 @@ setTimeout(() => {
         }
       };
 
-      // Initialize the controlsContainer globally
-      let controlsContainer = null;
+      const createNavButtons = () => {
+        let controlsContainer = document.querySelector(
+          '[data-nav-buttons="true"]'
+        );
 
-      // Function to create or get the controls container
-      const getOrCreateControlsContainer = () => {
         if (!controlsContainer) {
           controlsContainer = document.createElement("div");
           controlsContainer.style = `
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      top: 50%;
-      right: 10px;
-      transform: translateY(-50%);
-      gap: 10px;
-      z-index: 9999;
-    `;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            gap: 10px;
+            z-index: 9999;
+          `;
           controlsContainer.setAttribute("data-nav-buttons", "true");
           document.body.appendChild(controlsContainer);
         }
-        return controlsContainer;
-      };
 
-      // Function to create and append a button
-      const createButton = (text, style, onClick, isDisabled = false) => {
-        const button = document.createElement("button");
-        button.textContent = text;
-        button.style = style;
-        if (isDisabled) {
-          button.disabled = true;
-          button.style.opacity = "0.5";
-          button.style.cursor = "not-allowed";
-        } else {
-          button.addEventListener("click", onClick);
-        }
-        return button;
-      };
-
-      // Function to create navigation buttons
-      function createNavButtons() {
-        const container = getOrCreateControlsContainer();
-
-        // Clear existing buttons (except Toggle UI button)
-        [...container.children].forEach((child) => {
+        // Remove existing buttons except for the toggle button
+        [...controlsContainer.children].forEach((child) => {
           if (!child.getAttribute("data-toggle-ui")) {
-            container.removeChild(child);
+            controlsContainer.removeChild(child);
           }
         });
 
-        // Add "Remove Amazon ID" button
-        const removeAmazonIdButton = createButton(
-          "Ohne ASIN",
-          `
-      padding: 10px;
-      background-color: #FFAB91;
-      color: #4F4F4F;
-      border: none;
-      border-radius: 5px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background-color 0.2s ease-in-out;
-    `,
-          rerunQueryWithoutAmazonID
-        );
-        container.appendChild(removeAmazonIdButton);
-
-        // Add "Closest Match" button
-        if (highestMatch?.element) {
-          const closestMatchButton = createButton(
-            "Bester Match",
-            `
-        padding: 10px;
-        background-color: #A5D6A7;
-        color: #4F4F4F;
-        border: none;
-        border-radius: 5px;
-        font-size: 14px;
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out;
-      `,
-            highlightClosestMatch
-          );
-          container.appendChild(closestMatchButton);
-        } else {
-          const disabledClosestMatchButton = createButton(
-            "Bester Match (Keine Ergebnisse)",
-            `
-        padding: 10px;
-        background-color: #E0E0E0;
-        color: #A0A0A0;
-        border: none;
-        border-radius: 5px;
-        font-size: 14px;
-        cursor: not-allowed;
-        opacity: 0.5;
-      `,
-            null,
-            true
-          );
-          container.appendChild(disabledClosestMatchButton);
+        // Add Closest Match button
+        if (highestMatch.element) {
+          const closestMatchButton = document.createElement("button");
+          closestMatchButton.textContent = "Bester Match";
+          closestMatchButton.style = `
+            padding: 10px;
+            background-color: #A5D6A7;
+            color: #4F4F4F;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+          `;
+          closestMatchButton.addEventListener("mouseover", () => {
+            closestMatchButton.style.backgroundColor = "#45c765"; // Brighter green
+            closestMatchButton.style.color = "black"; // Black text
+            if (highestMatch.element) {
+              highestMatch.element.style.backgroundColor =
+                "rgba(165,214,167, 0.4)"; // Slightly brighter green
+              highestMatch.element.style.border = "3px solid #28a745"; // Green border
+            }
+          });
+          closestMatchButton.addEventListener("mouseout", () => {
+            closestMatchButton.style.backgroundColor = "#A5D6A7"; // Original green
+            closestMatchButton.style.color = "#4F4F4F"; // Original text color
+            if (highestMatch.element) {
+              highestMatch.element.style.backgroundColor =
+                "rgba(165,214,167, 0.2)"; // Restore original background
+              highestMatch.element.style.border = "3px dashed green"; // Restore original border
+            }
+          });
+          closestMatchButton.addEventListener("click", highlightClosestMatch);
+          controlsContainer.appendChild(closestMatchButton);
         }
 
-        // Add "Best Deal" button
-        if (lowestPriceDiff?.element) {
-          const bestDealButton = createButton(
-            "Bestes Deal",
-            `
-        padding: 10px;
-        background-color: #FFD180;
-        color: #4F4F4F;
-        border: none;
-        border-radius: 5px;
-        font-size: 14px;
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out;
-      `,
-            highlightBestDeal
-          );
-          container.appendChild(bestDealButton);
-        } else {
-          const disabledBestDealButton = createButton(
-            "Bestes Deal (Keine Ergebnisse)",
-            `
-        padding: 10px;
-        background-color: #E0E0E0;
-        color: #A0A0A0;
-        border: none;
-        border-radius: 5px;
-        font-size: 14px;
-        cursor: not-allowed;
-        opacity: 0.5;
-      `,
-            null,
-            true
-          );
-          container.appendChild(disabledBestDealButton);
+        // Add Best Deal button
+        if (lowestPriceDiff.element) {
+          const bestDealButton = document.createElement("button");
+          bestDealButton.textContent = "Bestes Deal";
+          bestDealButton.style = `
+            padding: 10px;
+            background-color: #FFD180;
+            color: #4F4F4F;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            margin-top: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+          `;
+
+          // Add hover effect
+          bestDealButton.addEventListener("mouseover", () => {
+            bestDealButton.style.backgroundColor = "#ffd740"; // Brighter yellow
+            bestDealButton.style.color = "black"; // Black text
+            if (lowestPriceDiff.element) {
+              lowestPriceDiff.element.style.backgroundColor =
+                "rgba(255,209,128, 0.4)"; // Slightly brighter yellow
+              lowestPriceDiff.element.style.border = "3px solid #ffc107"; // Yellow border
+            }
+          });
+          bestDealButton.addEventListener("mouseout", () => {
+            bestDealButton.style.backgroundColor = "#FFD180"; // Original yellow
+            bestDealButton.style.color = "#4F4F4F"; // Original text color
+            if (lowestPriceDiff.element) {
+              lowestPriceDiff.element.style.backgroundColor =
+                "rgba(255,209,128, 0.2)"; // Restore original background
+              lowestPriceDiff.element.style.border = "3px dashed orange"; // Restore original border
+            }
+          });
+
+          bestDealButton.addEventListener("click", highlightBestDeal);
+          controlsContainer.appendChild(bestDealButton);
         }
 
-        // Add "Toggle UI" button if not already present
+        // Add Toggle UI button if not already present
         if (!document.querySelector('[data-toggle-ui="true"]')) {
-          const toggleButton = createButton(
-            "An/Aus",
-            `
-        padding: 10px;
-        background-color: #BBDEFB;
-        color: #4F4F4F;
-        border: none;
-        border-radius: 5px;
-        font-size: 14px;
-        cursor: pointer;
-        transition: background-color 0.2s ease-in-out;
-      `,
-            toggleExtensionUI
-          );
+          const toggleButton = document.createElement("button");
+          toggleButton.textContent = "An/Aus";
+          toggleButton.style = `
+            padding: 10px;
+            background-color: #BBDEFB;
+            color: #4F4F4F;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+          `;
+
+          // Add hover effect
           toggleButton.setAttribute("data-toggle-ui", "true");
           toggleButton.addEventListener("mouseover", () => {
-            toggleButton.style.backgroundColor = "#3399ff";
-            toggleButton.style.color = "black";
+            toggleButton.style.backgroundColor = "#3399ff"; // Brighter blue
+            toggleButton.style.color = "black"; // Black text
           });
           toggleButton.addEventListener("mouseout", () => {
-            toggleButton.style.backgroundColor = "#BBDEFB";
-            toggleButton.style.color = "#4F4F4F";
+            toggleButton.style.backgroundColor = "#BBDEFB"; // Original blue
+            toggleButton.style.color = "#4F4F4F"; // Original text color
           });
-          container.appendChild(toggleButton);
-        }
-      }
 
-      // Apply highlights and add specific classes
-      if (highestMatch?.element) {
+          toggleButton.setAttribute("data-toggle-ui", "true");
+          toggleButton.addEventListener("click", toggleExtensionUI);
+          controlsContainer.appendChild(toggleButton);
+        }
+      };
+
+      // Apply highlights and add specific classes for toggling
+      if (highestMatch.element) {
         highestMatch.element.classList.add("highlighted-element");
+        highestMatch.element.setAttribute("data-product-container", "true");
         highestMatch.element.style.border = "3px dashed green";
+        highestMatch.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
         highestMatch.element.style.backgroundColor = "rgba(165,214,167, 0.2)";
       }
-
-      if (lowestPriceDiff?.element) {
+      if (lowestPriceDiff.element) {
         lowestPriceDiff.element.classList.add("highlighted-element");
+        lowestPriceDiff.element.setAttribute("data-product-container", "true");
         lowestPriceDiff.element.style.border = "3px dashed orange";
+        lowestPriceDiff.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
         lowestPriceDiff.element.style.backgroundColor =
           "rgba(255,209,128, 0.2)";
       }
-
-      // Check if the same element is the highest match and lowest price difference
-      if (highestMatch?.element === lowestPriceDiff?.element) {
+      if (highestMatch.element === lowestPriceDiff.element) {
+        highestMatch.element.classList.add("highlighted-element");
+        highestMatch.element.setAttribute("data-product-container", "true");
         highestMatch.element.style.border = "3px dashed #800080";
+        highestMatch.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
         highestMatch.element.style.backgroundColor = "rgba(128, 0, 128, 0.2)";
       }
 
-      // Create navigation buttons
       createNavButtons();
     });
   }
@@ -469,14 +430,15 @@ function extractAmazonIdentifier() {
 
 // Function to add Idealo button
 function addIdealoButton(titleElement) {
-  const artikelnummer = extractArtikelnummer() || "";
-  const amazonIdentifier = extractAmazonIdentifier() || "";
-  const productTitle = titleElement?.innerText.trim(); // Ensure productTitle is defined
-  const searchQueryParts = [];
+  const productTitle = titleElement.innerText.trim();
+  const artikelnummer = extractArtikelnummer(); // Extract Artikelnummer
+  const amazonIdentifier = extractAmazonIdentifier(); // Extract Amazon identifier
 
+  // Construct the search query with the new queries at the start
+  const searchQueryParts = [];
   if (artikelnummer) searchQueryParts.push(artikelnummer);
   if (amazonIdentifier) searchQueryParts.push(amazonIdentifier);
-  searchQueryParts.push(productTitle);
+  searchQueryParts.push(productTitle); // Add product title at the end
   const searchQuery = searchQueryParts.map(encodeURIComponent).join(" ");
 
   const idealoButton = document.createElement("a");
@@ -512,35 +474,3 @@ function addIdealoButton(titleElement) {
 
   titleElement.parentElement.appendChild(idealoButton);
 }
-
-const rerunQueryWithoutAmazonID = () => {
-  const queryParams = new URLSearchParams(window.location.search);
-  const currentQuery = queryParams.get("q");
-
-  if (currentQuery) {
-    if (currentQuery.includes(" ")) {
-      // Remove the Amazon ID (first part of the query)
-      const updatedQuery = currentQuery.split(" ").slice(1).join(" ");
-      queryParams.set("q", updatedQuery);
-      const newUrl = `${window.location.origin}${
-        window.location.pathname
-      }?${queryParams.toString()}`;
-
-      // Redirect to the updated URL
-      window.location.href = newUrl;
-    } else {
-      console.warn("The query does not contain an Amazon ID to remove.");
-    }
-  } else {
-    console.warn("No query parameter 'q' found in the URL.");
-  }
-};
-
-// Periodically ensure navigation buttons are added
-setInterval(() => {
-  try {
-    createNavButtons();
-  } catch (error) {
-    console.error("Error creating navigation buttons:", error);
-  }
-}, 500);
