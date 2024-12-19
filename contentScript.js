@@ -203,7 +203,7 @@ setTimeout(() => {
         navigateToElement(highestMatch.element, "Bester Match");
 
       const highlightBestDeal = () =>
-        navigateToElement(lowestPriceDiff.element, "Best Deal");
+        navigateToElement(lowestPriceDiff.element, "Bestes Deal");
 
       const toggleExtensionUI = () => {
         // Select all extension-created elements except the nav buttons
@@ -271,7 +271,7 @@ setTimeout(() => {
         // Add Closest Match button
         if (highestMatch.element) {
           const closestMatchButton = document.createElement("button");
-          closestMatchButton.textContent = "Closest Match";
+          closestMatchButton.textContent = "Bester Match";
           closestMatchButton.style = `
             padding: 10px;
             background-color: #A5D6A7;
@@ -405,14 +405,45 @@ setTimeout(() => {
   }
 }, 1000);
 
+// Function to extract the Artikelnummer from the Amazon product page
+function extractArtikelnummer() {
+  const tableRows = document.querySelectorAll(
+    "#productDetails_techSpec_section_1 tr"
+  );
+
+  for (const row of tableRows) {
+    const th = row.querySelector("th");
+    const td = row.querySelector("td");
+
+    if (th && td && th.textContent.trim() === "Artikelnummer") {
+      return td.textContent.trim();
+    }
+  }
+  return null; // Return null if Artikelnummer is not found
+}
+
+// Function to extract the unique identifier from the Amazon URL
+function extractAmazonIdentifier() {
+  const match = window.location.href.match(/\/dp\/([A-Z0-9]+)/);
+  return match ? match[1] : null; // Return the matched identifier or null if not found
+}
+
 // Function to add Idealo button
 function addIdealoButton(titleElement) {
   const productTitle = titleElement.innerText.trim();
+  const artikelnummer = extractArtikelnummer(); // Extract Artikelnummer
+  const amazonIdentifier = extractAmazonIdentifier(); // Extract Amazon identifier
+
+  // Construct the search query with the new queries at the start
+  const searchQueryParts = [];
+  if (artikelnummer) searchQueryParts.push(artikelnummer);
+  if (amazonIdentifier) searchQueryParts.push(amazonIdentifier);
+  searchQueryParts.push(productTitle); // Add product title at the end
+  const searchQuery = searchQueryParts.map(encodeURIComponent).join(" ");
+
   const idealoButton = document.createElement("a");
   idealoButton.innerText = "🔍 Search on Idealo";
-  idealoButton.href = `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${encodeURIComponent(
-    productTitle
-  )}`;
+  idealoButton.href = `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${searchQuery}`;
   idealoButton.target = "_blank";
   idealoButton.style = `
       display: inline-block;
