@@ -441,7 +441,7 @@ function addIdealoButton(titleElement) {
   const searchQuery = searchQueryParts.map(encodeURIComponent).join(" ");
 
   const idealoButton = document.createElement("a");
-  idealoButton.innerText = "🔍 Search on Idealo";
+  idealoButton.innerText = "🔍 Suche auf Idealo";
   idealoButton.href = `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${searchQuery}`;
   idealoButton.target = "_blank";
   idealoButton.style = `
