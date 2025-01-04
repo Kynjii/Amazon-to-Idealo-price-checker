@@ -205,7 +205,6 @@ setTimeout(() => {
         navigateToElement(lowestPriceDiff.element, "Bestes Deal");
 
       const toggleExtensionUI = () => {
-        // Select all extension-created elements except the nav buttons
         const extensionElements = document.querySelectorAll(
           '[data-extension-ui="true"], [data-product-container="true"], .extension-annotation'
         );
@@ -216,12 +215,15 @@ setTimeout(() => {
 
           extensionElements.forEach((element) => {
             if (newDisplay === "none") {
-              // Reset specific styles for highlights
+              // Store current styles before hiding
               if (element.classList.contains("highlighted-element")) {
+                element.dataset.originalBorder = element.style.border;
+                element.dataset.originalBackground =
+                  element.style.backgroundColor;
                 element.style.border = "0";
                 element.style.backgroundColor = "transparent";
               }
-              // Only hide elements that do not have data-product-container="true"
+              // Only hide non-product-container elements
               if (!element.hasAttribute("data-product-container")) {
                 element.style.display = newDisplay;
               }
@@ -235,7 +237,10 @@ setTimeout(() => {
               if (element.classList.contains("extension-annotation")) {
                 element.style.display = "flex";
               }
-              element.style.display = newDisplay;
+              // Only update display for non-product-container elements
+              if (!element.hasAttribute("data-product-container")) {
+                element.style.display = newDisplay;
+              }
             }
           });
         } else {
