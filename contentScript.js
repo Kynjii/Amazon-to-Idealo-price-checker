@@ -221,6 +221,10 @@ setTimeout(() => {
                 element.style.border = "0";
                 element.style.backgroundColor = "transparent";
               }
+              // Only hide elements that do not have data-product-container="true"
+              if (!element.hasAttribute("data-product-container")) {
+                element.style.display = newDisplay;
+              }
             } else {
               // Restore styles for highlights
               if (element.classList.contains("highlighted-element")) {
@@ -231,8 +235,8 @@ setTimeout(() => {
               if (element.classList.contains("extension-annotation")) {
                 element.style.display = "flex";
               }
+              element.style.display = newDisplay;
             }
-            element.style.display = newDisplay;
           });
         } else {
           console.warn("No extension UI elements found to toggle.");
