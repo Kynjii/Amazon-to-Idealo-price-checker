@@ -207,7 +207,7 @@ setTimeout(() => {
       const toggleExtensionUI = () => {
         // Select all extension-created elements except the nav buttons
         const extensionElements = document.querySelectorAll(
-          '[data-extension-ui="true"]:not([data-product-container="true"]), .extension-annotation'
+          '[data-extension-ui="true"], [data-product-container="true"], .extension-annotation'
         );
 
         if (extensionElements.length > 0) {
