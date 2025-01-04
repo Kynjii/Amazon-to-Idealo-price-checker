@@ -205,42 +205,39 @@ setTimeout(() => {
         navigateToElement(lowestPriceDiff.element, "Bestes Deal");
 
       const toggleExtensionUI = () => {
-    // Select all extension-created elements except the nav buttons
-    const extensionElements = document.querySelectorAll(
-        '[data-extension-ui="true"]:not([data-product-container="true"]), .extension-annotation'
-    );
+        // Select all extension-created elements except the nav buttons
+        const extensionElements = document.querySelectorAll(
+          '[data-extension-ui="true"]:not([data-product-container="true"]), .extension-annotation'
+        );
 
-    if (extensionElements.length > 0) {
-        const currentDisplay = extensionElements[0].style.display || "flex";
-        const newDisplay = currentDisplay === "none" ? "flex" : "none";
+        if (extensionElements.length > 0) {
+          const currentDisplay = extensionElements[0].style.display || "flex";
+          const newDisplay = currentDisplay === "none" ? "flex" : "none";
 
-        extensionElements.forEach((element) => {
+          extensionElements.forEach((element) => {
             if (newDisplay === "none") {
-                // Save original styles before hiding
-                element.dataset.originalBorder = element.style.border;
-                element.dataset.originalBackground = element.style.backgroundColor;
-
-                // Reset specific styles for highlights
-                if (element.classList.contains("highlighted-element")) {
-                    element.style.border = "0";
-                    element.style.backgroundColor = "transparent";
-                }
+              // Reset specific styles for highlights
+              if (element.classList.contains("highlighted-element")) {
+                element.style.border = "0";
+                element.style.backgroundColor = "transparent";
+              }
             } else {
-                // Restore styles for highlights
-                if (element.classList.contains("highlighted-element")) {
-                    element.style.border = element.dataset.originalBorder || "";
-                    element.style.backgroundColor = element.dataset.originalBackground || "";
-                }
-                if (element.classList.contains("extension-annotation")) {
-                    element.style.display = "flex";
-                }
+              // Restore styles for highlights
+              if (element.classList.contains("highlighted-element")) {
+                element.style.border = element.dataset.originalBorder || "";
+                element.style.backgroundColor =
+                  element.dataset.originalBackground || "";
+              }
+              if (element.classList.contains("extension-annotation")) {
+                element.style.display = "flex";
+              }
             }
             element.style.display = newDisplay;
-        });
-    } else {
-        console.warn("No extension UI elements found to toggle.");
-    }
-};
+          });
+        } else {
+          console.warn("No extension UI elements found to toggle.");
+        }
+      };
 
       const createNavButtons = () => {
         let controlsContainer = document.querySelector(
