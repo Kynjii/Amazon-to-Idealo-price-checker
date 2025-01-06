@@ -43,19 +43,6 @@ The following dependencies and tools are required for this extension:
 - **Browser Storage API**: To store and retrieve Amazon price details locally.
 - **DOM Manipulation**: For dynamically injecting buttons and highlights into Amazon and Idealo pages.
 
-## Features
-1. **Amazon Integration**:
-   - Extracts the product title, price, Artikelnummer, and ASIN from Amazon pages.
-   - Adds a "Search on Idealo" button directly to the Amazon product page.
-
-2. **Idealo Integration**:
-   - Automatically highlights the closest match to the Amazon product.
-   - Identifies and visually emphasizes the best deal (lowest price).
-
-3. **Navigation Bar**:
-   - Includes buttons to toggle highlights, jump to the best match or best deal, and remove the Amazon identifier (ASIN) to broaden search results.
-
-
 ## How It Works
 1. **On Amazon Pages**:
    - The extension extracts product details such as the title, price, ASIN, and Artikelnummer.
@@ -65,14 +52,10 @@ The following dependencies and tools are required for this extension:
    - The extension performs a structured search using Amazon product details.
    - Highlights the closest match based on cosine similarity of product titles.
    - Highlights the best deal by comparing prices and emphasizing the most favorable result.
-   - Provides a navigation bar for quick actions, such as removing ASIN for broader searches or toggling highlights.
+   - Provides a navigation bar for quick actions, such as navigating to the best deal or toggling highlights.
 
 ## Installation and Usage
 1. Clone or download the repository.
 2. Load the extension in developer mode on your Chrome browser via the Extensions menu.
 3. Use the extension on Amazon and Idealo pages to simplify price comparison workflows.
-
----
-
-By creating this extension, I aimed to bridge the gap between manual effort and automation, improving workflows for professionals like my wife while offering a scalable tool for anyone seeking to compare Amazon and Idealo prices efficiently.
 
