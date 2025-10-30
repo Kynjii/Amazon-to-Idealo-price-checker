@@ -20,6 +20,266 @@ function extractPrice(priceText) {
 }
 
 setTimeout(() => {
+  // Helper to refresh mydealz merchant filter
+  function refreshMyDealzMerchantFilter() {
+    try {
+      const productCards = Array.from(document.querySelectorAll('article[data-t="thread"]'));
+      const merchantNames = new Set();
+      const cardMerchantMap = new Map();
+
+      productCards.forEach((card) => {
+        const merchantLink = card.querySelector('a[data-t="merchantLink"]');
+        if (merchantLink) {
+          const merchantName = merchantLink.textContent.trim();
+          merchantNames.add(merchantName);
+          cardMerchantMap.set(card, merchantName);
+        }
+      });
+
+      console.log("Mydealz: Found", merchantNames.size, "merchants");
+
+      // Remove old filter container and icon if present
+      const oldContainer = document.querySelector('[data-mydealz-merchant-filter="true"]');
+      if (oldContainer) oldContainer.remove();
+      const oldIcon = document.querySelector('[data-mydealz-merchant-filter-icon="true"]');
+      if (oldIcon) oldIcon.remove();
+
+      // Load saved state
+      chrome.storage.local.get(["mydealzFilterOpen", "mydealzSelectedMerchants"], (result) => {
+        const savedOpen = result.mydealzFilterOpen || false;
+        const savedSelections = result.mydealzSelectedMerchants || [];
+
+        // Create filter icon
+        const iconBtn = document.createElement("button");
+        iconBtn.setAttribute("data-mydealz-merchant-filter-icon", "true");
+        iconBtn.title = "Imi Filter öffnen";
+        iconBtn.style = `
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1001;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      cursor: pointer;
+      padding: 0;
+    `;
+        iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("DeanHead.png")}" width="25" height="25" style="border-radius: 50%;">`;
+        document.body.appendChild(iconBtn);
+
+        // Add a simple click handler for debugging
+        iconBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        });
+
+        // Create filter panel (hidden by default)
+        if (merchantNames.size > 0) {
+          let filterContainer = document.createElement("div");
+          filterContainer.setAttribute("data-mydealz-merchant-filter", "true");
+          filterContainer.setAttribute("data-mydealz-merchant-filter-panel", "true");
+          filterContainer.style = `
+        position: fixed;
+        top: 60px;
+        right: 16px;
+        z-index: 1000;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-size: 14px;
+        color: #333;
+        width: 280px;
+        max-height: 400px;
+        display: none;
+        flex-direction: column;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      `;
+
+          const label = document.createElement("label");
+          label.textContent = "Imi Filter";
+          label.style = `
+        font-weight: bold;
+        margin-bottom: 12px;
+        color: #333;
+        font-size: 16px;
+      `;
+          filterContainer.appendChild(label);
+
+          const closeBtn = document.createElement("button");
+          closeBtn.textContent = "×";
+          closeBtn.title = "Schließen";
+          closeBtn.style = `
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #666;
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+          filterContainer.appendChild(closeBtn);
+
+          const checkboxList = document.createElement("div");
+          checkboxList.style = `
+        overflow-y: auto;
+        max-height: 300px;
+        width: 100%;
+      `;
+
+          // Sort merchant names: selected ones first, then alphabetical
+          const sortedMerchantNames = Array.from(merchantNames).sort((a, b) => {
+            const aSelected = savedSelections.includes(a);
+            const bSelected = savedSelections.includes(b);
+
+            if (aSelected && !bSelected) return -1;
+            if (!aSelected && bSelected) return 1;
+            return a.localeCompare(b);
+          });
+
+          sortedMerchantNames.forEach((name) => {
+            const wrapper = document.createElement("div");
+            wrapper.style = `
+          display: flex;
+          align-items: center;
+          margin-bottom: 8px;
+          padding: 4px 0;
+        `;
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.value = name;
+            checkbox.id = `mydealz-merchant-filter-${name.replace(/\s+/g, "-")}`;
+            checkbox.checked = savedSelections.includes(name);
+
+            const checkboxLabel = document.createElement("label");
+            checkboxLabel.textContent = name;
+            checkboxLabel.setAttribute("for", checkbox.id);
+            checkboxLabel.style = `
+          margin-left: 8px;
+          color: #333;
+          cursor: pointer;
+          flex: 1;
+        `;
+
+            // Add visual indicator for selected items
+            if (savedSelections.includes(name)) {
+              wrapper.style.fontWeight = "bold";
+              wrapper.style.backgroundColor = "#f0f8ff";
+              wrapper.style.borderRadius = "4px";
+              wrapper.style.padding = "6px 4px";
+            }
+
+            wrapper.appendChild(checkbox);
+            wrapper.appendChild(checkboxLabel);
+            checkboxList.appendChild(wrapper);
+          });
+          filterContainer.appendChild(checkboxList);
+          document.body.appendChild(filterContainer);
+
+          function updateFilter() {
+            const checked = Array.from(checkboxList.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
+            // Save selections
+            chrome.storage.local.set({ mydealzSelectedMerchants: checked });
+
+            productCards.forEach((card) => {
+              if (checked.length === 0 || checked.includes(cardMerchantMap.get(card))) {
+                card.style.display = "";
+              } else {
+                card.style.display = "none";
+              }
+            });
+          }
+          checkboxList.addEventListener("change", updateFilter);
+
+          // Apply initial filter based on saved selections
+          updateFilter();
+
+          // Restore open state
+          if (savedOpen) {
+            filterContainer.style.display = "flex";
+            setTimeout(() => {
+              filterContainer.style.opacity = "1";
+              filterContainer.style.transform = "translateY(0)";
+            }, 10);
+            iconBtn.title = "Imi Filter schließen";
+          }
+
+          // Show/hide logic with toggle functionality
+          iconBtn.addEventListener("click", () => {
+            const isVisible = filterContainer.style.display === "flex";
+            if (isVisible) {
+              // Hide the filter
+              filterContainer.style.opacity = "0";
+              filterContainer.style.transform = "translateY(-10px)";
+              setTimeout(() => {
+                filterContainer.style.display = "none";
+              }, 300);
+              iconBtn.title = "Imi Filter öffnen";
+              chrome.storage.local.set({ mydealzFilterOpen: false });
+            } else {
+              // Show the filter
+              filterContainer.style.display = "flex";
+              setTimeout(() => {
+                filterContainer.style.opacity = "1";
+                filterContainer.style.transform = "translateY(0)";
+              }, 10);
+              iconBtn.title = "Imi Filter schließen";
+              chrome.storage.local.set({ mydealzFilterOpen: true });
+            }
+          });
+
+          closeBtn.addEventListener("click", () => {
+            filterContainer.style.opacity = "0";
+            filterContainer.style.transform = "translateY(-10px)";
+            setTimeout(() => {
+              filterContainer.style.display = "none";
+            }, 300);
+            iconBtn.title = "Imi Filter öffnen";
+            chrome.storage.local.set({ mydealzFilterOpen: false });
+          });
+
+          // Click outside to close (but not on navigation/pagination elements)
+          document.addEventListener("mousedown", (e) => {
+            if (filterContainer.style.display === "flex" && !filterContainer.contains(e.target) && !iconBtn.contains(e.target)) {
+              // Don't close if clicking on pagination or navigation elements
+              const isPaginationClick = e.target.closest("a[href]") || e.target.closest('[class*="pagination"]') || e.target.closest('[class*="nav"]') || e.target.closest("button");
+
+              if (!isPaginationClick) {
+                filterContainer.style.opacity = "0";
+                filterContainer.style.transform = "translateY(-10px)";
+                setTimeout(() => {
+                  filterContainer.style.display = "none";
+                }, 300);
+                iconBtn.title = "Imi Filter öffnen";
+                chrome.storage.local.set({ mydealzFilterOpen: false });
+              } else {
+                console.log("Mydealz: Ignoring pagination/navigation click");
+              }
+            }
+          });
+        }
+      }); // Close chrome.storage.local.get callback
+    } catch (error) {
+      console.error("Mydealz filter error:", error);
+    }
+  }
+
   // Helper to refresh filter dropdown
   function refreshBestDealFilter() {
     const productCards = Array.from(document.querySelectorAll(".sr-resultList__item_m6xdA"));
@@ -41,78 +301,304 @@ setTimeout(() => {
       }
     });
 
-    // Remove old filter container if present
+    // Preserve current state before removing old elements
     const oldContainer = document.querySelector('[data-best-deal-filter="true"]');
-    if (oldContainer) oldContainer.remove();
+    const oldIcon = document.querySelector('[data-best-deal-filter-icon="true"]');
 
-    // Create filter dropdown UI
-    if (filterNames.size > 0) {
-      let filterContainer = document.createElement("div");
-      filterContainer.setAttribute("data-best-deal-filter", "true");
-      filterContainer.style = `
-  position: fixed;
-  top: 10px;
-  right: 10px;
-        z-index: 10000;
+    if (oldContainer && oldIcon) {
+      // Check if filter is currently open
+      const currentOpen = oldContainer.style.display === "flex";
+      // Get current checkbox selections
+      const checkboxes = oldContainer.querySelectorAll('input[type="checkbox"]:checked');
+      const currentSelections = Array.from(checkboxes).map((cb) => cb.value);
+
+      // Save current state before removal
+      chrome.storage.local.set({
+        idealoBestDealFilterOpen: currentOpen,
+        idealoSelectedProviders: currentSelections,
+      });
+    }
+
+    // Remove old filter container and icon if present
+    if (oldContainer) oldContainer.remove();
+    if (oldIcon) oldIcon.remove();
+
+    // Load saved state (like mydealz does)
+    chrome.storage.local.get(["idealoBestDealFilterOpen", "idealoSelectedProviders"], (result) => {
+      const savedOpen = result.idealoBestDealFilterOpen || false;
+      const savedSelections = result.idealoSelectedProviders || [];
+
+      // Create filter icon
+      const iconBtn = document.createElement("button");
+      iconBtn.setAttribute("data-best-deal-filter-icon", "true");
+      iconBtn.title = "Imi Filter öffnen";
+      iconBtn.style = `
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1001;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      cursor: pointer;
+      padding: 0;
+    `;
+      iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("DeanHead.png")}" width="25" height="25" style="border-radius: 50%;">`;
+      document.body.appendChild(iconBtn);
+
+      // Create filter panel (hidden by default)
+      if (filterNames.size > 0) {
+        let filterContainer = document.createElement("div");
+        filterContainer.setAttribute("data-best-deal-filter", "true");
+        filterContainer.setAttribute("data-best-deal-filter-panel", "true");
+        filterContainer.style = `
+        position: fixed;
+        top: 60px;
+        right: 16px;
+        z-index: 1000;
         background: #fff;
         border: 1px solid #ccc;
-        border-radius: 6px;
-        padding: 10px 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-        font-size: 15px;
-        display: flex;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        font-size: 14px;
+        color: #333;
+        width: 280px;
+        max-height: 400px;
+        display: none;
         flex-direction: column;
-        align-items: flex-start;
-        max-width: 220px;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
       `;
-      const label = document.createElement("label");
-      label.textContent = "Best-Deal Filter:";
-      label.style.marginBottom = "8px";
-      filterContainer.appendChild(label);
 
-      const checkboxList = document.createElement("div");
-      checkboxList.style.overflowY = "auto";
-      checkboxList.style.maxHeight = "160px";
-      checkboxList.style.width = "100%";
+        const label = document.createElement("label");
+        label.textContent = "Imi Filter";
+        label.style = `
+        font-weight: bold;
+        margin-bottom: 12px;
+        color: #333;
+        font-size: 16px;
+      `;
+        filterContainer.appendChild(label);
 
-      Array.from(filterNames).forEach((name) => {
-        const wrapper = document.createElement("div");
-        wrapper.style.display = "flex";
-        wrapper.style.alignItems = "center";
-        wrapper.style.marginBottom = "4px";
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "×";
+        closeBtn.title = "Schließen";
+        closeBtn.style = `
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #666;
+        cursor: pointer;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+        filterContainer.appendChild(closeBtn);
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.value = name;
-        checkbox.id = `bestdeal-filter-${name}`;
+        const checkboxList = document.createElement("div");
+        checkboxList.style = `
+        overflow-y: auto;
+        max-height: 300px;
+        width: 100%;
+      `;
 
-        const checkboxLabel = document.createElement("label");
-        checkboxLabel.textContent = name;
-        checkboxLabel.setAttribute("for", checkbox.id);
-        checkboxLabel.style.marginLeft = "6px";
+        // Sort filter names: selected ones first, then alphabetical
+        const sortedFilterNames = Array.from(filterNames).sort((a, b) => {
+          const aSelected = savedSelections.includes(a);
+          const bSelected = savedSelections.includes(b);
 
-        wrapper.appendChild(checkbox);
-        wrapper.appendChild(checkboxLabel);
-        checkboxList.appendChild(wrapper);
-      });
-      filterContainer.appendChild(checkboxList);
+          if (aSelected && !bSelected) return -1;
+          if (!aSelected && bSelected) return 1;
+          return a.localeCompare(b);
+        });
 
-      document.body.appendChild(filterContainer);
+        sortedFilterNames.forEach((name) => {
+          const wrapper = document.createElement("div");
+          wrapper.style = `
+          display: flex;
+          align-items: center;
+          margin-bottom: 8px;
+          padding: 4px 0;
+        `;
 
-      function updateFilter() {
-        const checked = Array.from(checkboxList.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
-        productCards.forEach((card) => {
-          if (checked.length === 0 || checked.includes(cardFilterMap.get(card))) {
-            card.style.display = "";
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = name;
+          checkbox.id = `bestdeal-filter-${name.replace(/\s+/g, "-")}`;
+          checkbox.checked = savedSelections.includes(name);
+
+          const checkboxLabel = document.createElement("label");
+          checkboxLabel.textContent = name;
+          checkboxLabel.setAttribute("for", checkbox.id);
+          checkboxLabel.style = `
+          margin-left: 8px;
+          color: #333;
+          cursor: pointer;
+          flex: 1;
+        `;
+
+          // Add visual indicator for selected items
+          if (savedSelections.includes(name)) {
+            wrapper.style.fontWeight = "bold";
+            wrapper.style.backgroundColor = "#f0f8ff";
+            wrapper.style.borderRadius = "4px";
+            wrapper.style.padding = "6px 4px";
+          }
+
+          wrapper.appendChild(checkbox);
+          wrapper.appendChild(checkboxLabel);
+          checkboxList.appendChild(wrapper);
+        });
+        filterContainer.appendChild(checkboxList);
+        document.body.appendChild(filterContainer);
+
+        function updateFilter() {
+          const checked = Array.from(checkboxList.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
+          // Save selections
+          chrome.storage.local.set({ idealoSelectedProviders: checked });
+
+          productCards.forEach((card) => {
+            if (checked.length === 0 || checked.includes(cardFilterMap.get(card))) {
+              card.style.display = "";
+            } else {
+              card.style.display = "none";
+            }
+          });
+        }
+        checkboxList.addEventListener("change", updateFilter);
+
+        // Apply initial filter based on saved selections
+        updateFilter();
+
+        // Restore open state
+        if (savedOpen) {
+          filterContainer.style.display = "flex";
+          setTimeout(() => {
+            filterContainer.style.opacity = "1";
+            filterContainer.style.transform = "translateY(0)";
+          }, 10);
+          iconBtn.title = "Imi Filter schließen";
+        }
+
+        // Show/hide logic with toggle functionality
+        iconBtn.addEventListener("click", () => {
+          const isVisible = filterContainer.style.display === "flex";
+          if (isVisible) {
+            // Hide the filter
+            filterContainer.style.opacity = "0";
+            filterContainer.style.transform = "translateY(-10px)";
+            setTimeout(() => {
+              filterContainer.style.display = "none";
+            }, 300);
+            iconBtn.title = "Imi Filter öffnen";
+            chrome.storage.local.set({ idealoBestDealFilterOpen: false });
           } else {
-            card.style.display = "none";
+            // Show the filter
+            filterContainer.style.display = "flex";
+            setTimeout(() => {
+              filterContainer.style.opacity = "1";
+              filterContainer.style.transform = "translateY(0)";
+            }, 10);
+            iconBtn.title = "Imi Filter schließen";
+            chrome.storage.local.set({ idealoBestDealFilterOpen: true });
+          }
+        });
+
+        closeBtn.addEventListener("click", () => {
+          filterContainer.style.opacity = "0";
+          filterContainer.style.transform = "translateY(-10px)";
+          setTimeout(() => {
+            filterContainer.style.display = "none";
+          }, 300);
+          iconBtn.title = "Imi Filter öffnen";
+
+          // Save closed state
+          chrome.storage.local.set({ idealoBestDealFilterOpen: false });
+        });
+
+        // Click outside to close (but not on navigation/pagination elements)
+        document.addEventListener("mousedown", (e) => {
+          if (filterContainer.style.display === "flex" && !filterContainer.contains(e.target) && !iconBtn.contains(e.target)) {
+            // Don't close if clicking on pagination or navigation elements
+            const isPaginationClick = e.target.closest("a.sr-pageArrow_HufQY") || e.target.closest('[class*="pagination"]') || e.target.closest('[class*="nav"]') || e.target.closest("a[href]");
+
+            if (!isPaginationClick) {
+              filterContainer.style.opacity = "0";
+              filterContainer.style.transform = "translateY(-10px)";
+              setTimeout(() => {
+                filterContainer.style.display = "none";
+              }, 300);
+              iconBtn.title = "Imi Filter öffnen";
+
+              // Save closed state
+              chrome.storage.local.set({ idealoBestDealFilterOpen: false });
+            } else {
+              console.log("Idealo: Ignoring pagination/navigation click");
+            }
           }
         });
       }
-      checkboxList.addEventListener("change", updateFilter);
-    }
+    }); // Close chrome.storage.local.get callback
   }
   const currentUrl = window.location.href;
+
+  // mydealz.de hot deals page: filter by merchant
+  if (currentUrl.includes("mydealz.de/heisseste")) {
+    refreshMyDealzMerchantFilter();
+
+    // Set up throttled MutationObserver to refresh filter when content changes
+    let observerTimeout;
+    let isRefreshing = false;
+
+    const observer = new MutationObserver((mutations) => {
+      // Skip if we're already refreshing to prevent infinite loops
+      if (isRefreshing) return;
+
+      // Check if any mutations involve article elements (the actual content we care about)
+      const hasRelevantChanges = mutations.some((mutation) => {
+        // Ignore changes to our own filter elements
+        if (mutation.target.hasAttribute && (mutation.target.hasAttribute("data-mydealz-merchant-filter") || mutation.target.hasAttribute("data-mydealz-merchant-filter-icon") || mutation.target.hasAttribute("data-mydealz-merchant-filter-panel"))) {
+          return false;
+        }
+
+        // Look for changes to article elements or their parents
+        return Array.from(mutation.addedNodes).some((node) => node.nodeType === Node.ELEMENT_NODE && (node.tagName === "ARTICLE" || (node.querySelector && node.querySelector('article[data-t="thread"]'))));
+      });
+
+      if (!hasRelevantChanges) return;
+
+      // Clear existing timeout and set new one (throttling)
+      clearTimeout(observerTimeout);
+      observerTimeout = setTimeout(() => {
+        isRefreshing = true;
+        refreshMyDealzMerchantFilter();
+        // Reset flag after a delay
+        setTimeout(() => {
+          isRefreshing = false;
+        }, 100);
+      }, 1000); // Increased delay to reduce frequency
+    });
+
+    // Only observe the main content area, not the entire body
+    const contentArea = document.querySelector("main") || document.body;
+    observer.observe(contentArea, {
+      childList: true,
+      subtree: true,
+    });
+  }
 
   // Idealo Deals page: extract filter names from Best-Deal cards
   if (currentUrl.includes("idealo.de/preisvergleich/deals")) {

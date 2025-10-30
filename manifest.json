@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Amazon to Idealo",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Adds a button to Amazon product pages to search for the product on Idealo and annotates Idealo search results with match percentages and price differences.",
   "permissions": ["activeTab", "storage"],
   "host_permissions": ["https://www.amazon.de/*", "https://www.amazon.com/*", "https://www.amazon.co.uk/*", "https://www.amazon.ca/*", "https://www.amazon.fr/*", "https://www.amazon.it/*", "https://www.amazon.es/*", "https://www.amazon.nl/*", "https://www.idealo.de/preisvergleich/*"],
@@ -12,9 +12,15 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://www.idealo.de/preisvergleich/ProductCategory/*", "https://www.idealo.de/preisvergleich/deals/*", "https://www.idealo.de/preisvergleich/MainSearchProductCategory.html*"],
+      "matches": ["https://www.idealo.de/preisvergleich/ProductCategory/*", "https://www.idealo.de/preisvergleich/deals/*", "https://www.mydealz.de/heisseste*", "https://www.idealo.de/preisvergleich/MainSearchProductCategory.html*"],
       "js": ["contentScript.js"],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["DeanHead.png"],
+      "matches": ["https://www.idealo.de/*", "https://www.mydealz.de/*"]
     }
   ]
 }
