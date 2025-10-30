@@ -9,9 +9,7 @@ const cosine = {
     const magnitude1 = Math.sqrt(vec1.reduce((acc, cur) => acc + cur ** 2, 0));
     const magnitude2 = Math.sqrt(vec2.reduce((acc, cur) => acc + cur ** 2, 0));
 
-    return magnitude1 && magnitude2
-      ? dotProduct / (magnitude1 * magnitude2)
-      : 0;
+    return magnitude1 && magnitude2 ? dotProduct / (magnitude1 * magnitude2) : 0;
   },
 };
 
@@ -22,7 +20,120 @@ function extractPrice(priceText) {
 }
 
 setTimeout(() => {
+  // Helper to refresh filter dropdown
+  function refreshBestDealFilter() {
+    const productCards = Array.from(document.querySelectorAll(".sr-resultList__item_m6xdA"));
+    const filterNames = new Set();
+    const cardFilterMap = new Map();
+    productCards.forEach((card) => {
+      const bestDealElement = card.querySelector('[aria-label="Best-Deal"]');
+      if (bestDealElement) {
+        const img = bestDealElement.querySelector('img[alt^="Best-Deal von "]');
+        if (img) {
+          const altText = img.getAttribute("alt");
+          const match = altText.match(/Best-Deal von (.+)/);
+          if (match) {
+            const filterName = match[1];
+            filterNames.add(filterName);
+            cardFilterMap.set(card, filterName);
+          }
+        }
+      }
+    });
+
+    // Remove old filter container if present
+    const oldContainer = document.querySelector('[data-best-deal-filter="true"]');
+    if (oldContainer) oldContainer.remove();
+
+    // Create filter dropdown UI
+    if (filterNames.size > 0) {
+      let filterContainer = document.createElement("div");
+      filterContainer.setAttribute("data-best-deal-filter", "true");
+      filterContainer.style = `
+        position: fixed;
+        top: 30%;
+        right: 10px;
+        z-index: 10000;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 10px 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        font-size: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        max-width: 220px;
+      `;
+      const label = document.createElement("label");
+      label.textContent = "Best-Deal Filter:";
+      label.style.marginBottom = "8px";
+      filterContainer.appendChild(label);
+
+      const checkboxList = document.createElement("div");
+      checkboxList.style.overflowY = "auto";
+      checkboxList.style.maxHeight = "160px";
+      checkboxList.style.width = "100%";
+
+      Array.from(filterNames).forEach((name) => {
+        const wrapper = document.createElement("div");
+        wrapper.style.display = "flex";
+        wrapper.style.alignItems = "center";
+        wrapper.style.marginBottom = "4px";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = name;
+        checkbox.id = `bestdeal-filter-${name}`;
+
+        const checkboxLabel = document.createElement("label");
+        checkboxLabel.textContent = name;
+        checkboxLabel.setAttribute("for", checkbox.id);
+        checkboxLabel.style.marginLeft = "6px";
+
+        wrapper.appendChild(checkbox);
+        wrapper.appendChild(checkboxLabel);
+        checkboxList.appendChild(wrapper);
+      });
+      filterContainer.appendChild(checkboxList);
+
+      document.body.appendChild(filterContainer);
+
+      function updateFilter() {
+        const checked = Array.from(checkboxList.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
+        productCards.forEach((card) => {
+          if (checked.length === 0 || checked.includes(cardFilterMap.get(card))) {
+            card.style.display = "";
+          } else {
+            card.style.display = "none";
+          }
+        });
+      }
+      checkboxList.addEventListener("change", updateFilter);
+    }
+  }
   const currentUrl = window.location.href;
+
+  // Idealo Deals page: extract filter names from Best-Deal cards
+  if (currentUrl.includes("idealo.de/preisvergleich/deals")) {
+    refreshBestDealFilter();
+    // Listen for pagination arrow clicks to refresh filter
+    function addPaginationListener() {
+      document.querySelectorAll('a.sr-pageArrow_HufQY[aria-label="Nächste Seite"]').forEach((arrow) => {
+        arrow.addEventListener("click", () => {
+          // Wait for new content to load, then refresh filter
+          setTimeout(() => refreshBestDealFilter(), 500);
+        });
+      });
+    }
+    addPaginationListener();
+    // Also re-add listeners after filter refresh
+    const origRefresh = refreshBestDealFilter;
+    refreshBestDealFilter = function () {
+      origRefresh();
+      addPaginationListener();
+    };
+  }
 
   if (currentUrl.includes("amazon")) {
     const titleElement = document.getElementById("productTitle");
@@ -44,33 +155,22 @@ setTimeout(() => {
       const searchQuery = new URL(window.location.href).searchParams.get("q");
       if (!searchQuery) return;
 
-      const resultItems = document.querySelectorAll(
-        '[data-testid="resultItem"]:has(.sr-productSummary__title_f5flP)'
-      );
+      const resultItems = document.querySelectorAll('[data-testid="resultItem"]:has(.sr-productSummary__title_f5flP)');
 
       let highestMatch = { element: null, value: 0 };
       let lowestPriceDiff = { element: null, value: Number.POSITIVE_INFINITY };
 
       resultItems.forEach((resultItem) => {
-        const titleElement = resultItem.querySelector(
-          ".sr-productSummary__title_f5flP"
-        );
-        const priceElement = resultItem.querySelector(
-          "[data-testid='detailedPriceInfo__price']"
-        );
+        const titleElement = resultItem.querySelector(".sr-productSummary__title_f5flP");
+        const priceElement = resultItem.querySelector("[data-testid='detailedPriceInfo__price']");
 
         if (titleElement && priceElement) {
           const resultTitle = titleElement.textContent.trim();
           const similarity = cosine.similarity(searchQuery, resultTitle);
           const matchPercentage = Math.round(similarity * 100);
 
-          const idealoPrice = extractPrice(
-            priceElement.textContent.replace("ab", "").trim()
-          );
-          const priceDifference =
-            !isNaN(amazonPrice) && !isNaN(idealoPrice)
-              ? (idealoPrice - amazonPrice).toFixed(2)
-              : null;
+          const idealoPrice = extractPrice(priceElement.textContent.replace("ab", "").trim());
+          const priceDifference = !isNaN(amazonPrice) && !isNaN(idealoPrice) ? (idealoPrice - amazonPrice).toFixed(2) : null;
 
           // Create annotation container
           const annotationContainer = document.createElement("div");
@@ -92,15 +192,7 @@ setTimeout(() => {
           matchAnnotation.style = `
             display: flex;
             padding: 5px;
-            background-color: ${
-              matchPercentage >= 90
-                ? "green"
-                : matchPercentage >= 80
-                ? "#FFCC80"
-                : matchPercentage >= 0
-                ? "#E0E0E0"
-                : "#dc3545"
-            };
+            background-color: ${matchPercentage >= 90 ? "green" : matchPercentage >= 80 ? "#FFCC80" : matchPercentage >= 0 ? "#E0E0E0" : "#dc3545"};
             color: white;
             font-size: 12px;
             font-weight: bold;
@@ -114,10 +206,7 @@ setTimeout(() => {
           if (priceDifference !== null) {
             const priceDiffAnnotation = document.createElement("span");
             priceDiffAnnotation.textContent = `€${priceDifference}`;
-            priceDiffAnnotation.classList.add(
-              "extension-annotation",
-              "lowest-price-highlight"
-            );
+            priceDiffAnnotation.classList.add("extension-annotation", "lowest-price-highlight");
             priceDiffAnnotation.style = `
               display: flex;
               padding: 5px;
@@ -133,9 +222,7 @@ setTimeout(() => {
 
             // Reset previous lowestPriceDiff styling
             if (lowestPriceDiff.element) {
-              lowestPriceDiff.element.classList.remove(
-                "lowest-price-highlight"
-              );
+              lowestPriceDiff.element.classList.remove("lowest-price-highlight");
               lowestPriceDiff.element.style.backgroundColor = "transparent";
             }
 
@@ -144,9 +231,7 @@ setTimeout(() => {
               const numericPriceDifference = parseFloat(priceDifference);
               if (numericPriceDifference < lowestPriceDiff.value) {
                 if (lowestPriceDiff.element) {
-                  lowestPriceDiff.element.classList.remove(
-                    "lowest-price-highlight"
-                  );
+                  lowestPriceDiff.element.classList.remove("lowest-price-highlight");
                   lowestPriceDiff.element.style.backgroundColor = "transparent";
                 }
 
@@ -182,32 +267,23 @@ setTimeout(() => {
           }
 
           // Fallback to <button> if no <a> is found
-          const buttonElement = element.querySelector(
-            "button.sr-resultItemLink__button_k3jEE"
-          );
+          const buttonElement = element.querySelector("button.sr-resultItemLink__button_k3jEE");
           if (buttonElement) {
             buttonElement.click();
           } else {
-            console.error(
-              `No <a> or <button> found for ${label} inside:`,
-              element
-            );
+            console.error(`No <a> or <button> found for ${label} inside:`, element);
           }
         } else {
           console.error(`No highlighted ${label} element.`);
         }
       };
 
-      const highlightClosestMatch = () =>
-        navigateToElement(highestMatch.element, "Bester Match");
+      const highlightClosestMatch = () => navigateToElement(highestMatch.element, "Bester Match");
 
-      const highlightBestDeal = () =>
-        navigateToElement(lowestPriceDiff.element, "Bestes Deal");
+      const highlightBestDeal = () => navigateToElement(lowestPriceDiff.element, "Bestes Deal");
 
       const toggleExtensionUI = () => {
-        const extensionElements = document.querySelectorAll(
-          '[data-extension-ui="true"], [data-product-container="true"], .extension-annotation'
-        );
+        const extensionElements = document.querySelectorAll('[data-extension-ui="true"], [data-product-container="true"], .extension-annotation');
 
         if (extensionElements.length > 0) {
           const currentDisplay = extensionElements[0].style.display || "flex";
@@ -218,8 +294,7 @@ setTimeout(() => {
               // Store current styles before hiding
               if (element.classList.contains("highlighted-element")) {
                 element.dataset.originalBorder = element.style.border;
-                element.dataset.originalBackground =
-                  element.style.backgroundColor;
+                element.dataset.originalBackground = element.style.backgroundColor;
                 element.style.border = "0";
                 element.style.backgroundColor = "transparent";
               }
@@ -231,8 +306,7 @@ setTimeout(() => {
               // Restore styles for highlights
               if (element.classList.contains("highlighted-element")) {
                 element.style.border = element.dataset.originalBorder || "";
-                element.style.backgroundColor =
-                  element.dataset.originalBackground || "";
+                element.style.backgroundColor = element.dataset.originalBackground || "";
               }
               if (element.classList.contains("extension-annotation")) {
                 element.style.display = "flex";
@@ -249,9 +323,7 @@ setTimeout(() => {
       };
 
       const createNavButtons = () => {
-        let controlsContainer = document.querySelector(
-          '[data-nav-buttons="true"]'
-        );
+        let controlsContainer = document.querySelector('[data-nav-buttons="true"]');
 
         if (!controlsContainer) {
           controlsContainer = document.createElement("div");
@@ -294,8 +366,7 @@ setTimeout(() => {
             closestMatchButton.style.backgroundColor = "#45c765";
             closestMatchButton.style.color = "black";
             if (highestMatch.element) {
-              highestMatch.element.style.backgroundColor =
-                "rgba(165,214,167, 0.4)";
+              highestMatch.element.style.backgroundColor = "rgba(165,214,167, 0.4)";
               highestMatch.element.style.border = "3px solid #28a745";
             }
           });
@@ -303,8 +374,7 @@ setTimeout(() => {
             closestMatchButton.style.backgroundColor = "#A5D6A7";
             closestMatchButton.style.color = "#4F4F4F";
             if (highestMatch.element) {
-              highestMatch.element.style.backgroundColor =
-                "rgba(165,214,167, 0.2)";
+              highestMatch.element.style.backgroundColor = "rgba(165,214,167, 0.2)";
               highestMatch.element.style.border = "3px dashed green";
             }
           });
@@ -333,8 +403,7 @@ setTimeout(() => {
             bestDealButton.style.backgroundColor = "#ffd740";
             bestDealButton.style.color = "black";
             if (lowestPriceDiff.element) {
-              lowestPriceDiff.element.style.backgroundColor =
-                "rgba(255,209,128, 0.4)";
+              lowestPriceDiff.element.style.backgroundColor = "rgba(255,209,128, 0.4)";
               lowestPriceDiff.element.style.border = "3px solid #ffc107";
             }
           });
@@ -342,8 +411,7 @@ setTimeout(() => {
             bestDealButton.style.backgroundColor = "#FFD180";
             bestDealButton.style.color = "#4F4F4F";
             if (lowestPriceDiff.element) {
-              lowestPriceDiff.element.style.backgroundColor =
-                "rgba(255,209,128, 0.2)";
+              lowestPriceDiff.element.style.backgroundColor = "rgba(255,209,128, 0.2)";
               lowestPriceDiff.element.style.border = "3px dashed orange";
             }
           });
@@ -397,8 +465,7 @@ setTimeout(() => {
         lowestPriceDiff.element.setAttribute("data-product-container", "true");
         lowestPriceDiff.element.style.border = "3px dashed orange";
         lowestPriceDiff.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
-        lowestPriceDiff.element.style.backgroundColor =
-          "rgba(255,209,128, 0.2)";
+        lowestPriceDiff.element.style.backgroundColor = "rgba(255,209,128, 0.2)";
       }
       if (highestMatch.element === lowestPriceDiff.element) {
         highestMatch.element.classList.add("highlighted-element");
@@ -415,9 +482,7 @@ setTimeout(() => {
 
 // Function to extract the Artikelnummer from the Amazon product page
 function extractArtikelnummer() {
-  const tableRows = document.querySelectorAll(
-    "#productDetails_techSpec_section_1 tr"
-  );
+  const tableRows = document.querySelectorAll("#productDetails_techSpec_section_1 tr");
 
   for (const row of tableRows) {
     const th = row.querySelector("th");
