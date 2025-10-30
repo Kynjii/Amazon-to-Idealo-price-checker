@@ -635,6 +635,18 @@ setTimeout(() => {
       addIdealoButton(titleElement);
     }
   } else if (currentUrl.includes("idealo.de/preisvergleich/")) {
+    // Check if URL has #pricechart for price history analysis
+    if (currentUrl.includes("#pricechart")) {
+      console.log("Price chart URL detected, waiting for content to load...");
+      // Wait a bit for content to load, then try multiple times
+      setTimeout(() => addPriceHistoryPercentages(), 1000);
+      setTimeout(() => addPriceHistoryPercentages(), 2000);
+      setTimeout(() => addPriceHistoryPercentages(), 3000);
+
+      // Add listeners to time period buttons to refresh when clicked
+      setTimeout(() => addTimeButtonListeners(), 1500);
+    }
+
     chrome.storage.local.get(["amazonPrice"], (result) => {
       const amazonPrice = result.amazonPrice;
 
@@ -965,6 +977,159 @@ setTimeout(() => {
     });
   }
 }, 1000);
+
+// Function to add listeners to time period buttons
+function addTimeButtonListeners() {
+  const timeButtons = document.querySelectorAll('ul[data-testid="header-links-modal-list"] button');
+  console.log("Found time period buttons:", timeButtons.length);
+
+  timeButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      console.log(`Time period button ${index} clicked:`, button.textContent);
+      // Clear existing percentages first
+      document.querySelectorAll(".price-percentage-change").forEach((el) => el.remove());
+      // Refresh percentages after a delay to allow content to update
+      setTimeout(() => addPriceHistoryPercentages(), 1000);
+      setTimeout(() => addPriceHistoryPercentages(), 2000);
+    });
+  });
+}
+
+// Function to add percentage calculations to price history statistics
+function addPriceHistoryPercentages() {
+  console.log("Running addPriceHistoryPercentages function...");
+
+  // Clear any existing percentage elements from previous runs
+  document.querySelectorAll(".price-percentage-change").forEach((el) => {
+    console.log("Removing old percentage element:", el);
+    el.remove();
+  });
+
+  const priceHistorySection = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
+  if (!priceHistorySection) {
+    console.log("Price history statistics section not found");
+    console.log("Available elements:", document.querySelectorAll('[class*="priceHistory"]'));
+    return;
+  }
+
+  console.log("Found price history section:", priceHistorySection);
+  const rows = priceHistorySection.querySelectorAll(".priceHistoryStatistics-row");
+  console.log("Found rows:", rows.length);
+
+  rows.forEach((row, index) => {
+    console.log(`Processing row ${index}:`, row);
+    const titleElement = row.querySelector(".priceHistoryStatistics-title");
+    const valueElement = row.querySelector(".priceHistoryStatistics-amount");
+    const changeElement = row.querySelector(".priceHistoryStatistics-change");
+    const statusDiv = row.querySelector(".priceHistoryStatistics-status");
+
+    console.log("Elements found:", { titleElement, valueElement, changeElement, statusDiv });
+
+    if (!titleElement || !valueElement || !changeElement || !statusDiv) {
+      console.log("Missing required elements in row", index);
+      return;
+    }
+
+    const title = titleElement.textContent.trim();
+    const valueText = valueElement.textContent.replace(/[^\d,]/g, "").replace(",", ".");
+    const changeText = changeElement.textContent.replace(/[^\d,]/g, "").replace(",", ".");
+
+    console.log(`Row ${index} - Title: ${title}`);
+    console.log(`Raw texts - Value: "${valueElement.textContent}", Change: "${changeElement.textContent}"`);
+    console.log(`Parsed texts - Value: "${valueText}", Change: "${changeText}"`);
+    console.log(`Change element classes:`, changeElement.classList.toString());
+
+    const currentValue = parseFloat(valueText);
+    const changeAmount = parseFloat(changeText);
+
+    console.log(`Parsed numbers - Current: ${currentValue}, Change: ${changeAmount}`);
+
+    if (isNaN(currentValue) || isNaN(changeAmount)) {
+      console.log("Failed to parse numbers, skipping");
+      return;
+    }
+
+    // The "amount" value is the historical price, "change" is how much it changed to today
+    const historicalPrice = currentValue; // This is actually the historical price (0.79€)
+    const isIncrease = changeElement.classList.contains("increased");
+    const isDecrease = changeElement.classList.contains("decreased");
+    const isNeutral = changeElement.classList.contains("neutral");
+
+    if (isNeutral || changeAmount === 0) {
+      console.log("No change detected, skipping percentage calculation");
+      return;
+    }
+
+    // Calculate current price based on historical price + change
+    let currentPrice;
+    if (isIncrease) {
+      currentPrice = historicalPrice + changeAmount; // Today's price = 0.79 + 4.19 = 4.98€
+    } else if (isDecrease) {
+      currentPrice = historicalPrice - changeAmount; // Today's price = historical - change
+    } else {
+      console.log("Cannot determine price direction, skipping");
+      return;
+    } // Calculate percentage change from historical price to current price
+    const percentageChange = (changeAmount / historicalPrice) * 100;
+
+    // Check if percentage div already exists in this specific row
+    const existingPercentage = row.querySelector(".price-percentage-change");
+    if (existingPercentage) {
+      console.log("Percentage already exists for row", index, "- removing old one");
+      existingPercentage.remove();
+    }
+
+    console.log(`Values: historicalPrice=${historicalPrice}, changeAmount=${changeAmount}, currentPrice=${currentPrice}`);
+    console.log(`Calculated percentage: ${percentageChange.toFixed(1)}% (${isIncrease ? "increase" : "decrease"})`);
+
+    // Skip if the calculation results in invalid numbers
+    if (!isFinite(percentageChange) || historicalPrice <= 0) {
+      console.log("Invalid percentage calculation, skipping");
+      return;
+    }
+
+    // Create percentage div
+    const percentageDiv = document.createElement("div");
+    percentageDiv.className = "price-percentage-change";
+    percentageDiv.style = `
+      font-size: 12px;
+      font-weight: bold;
+      color: ${isIncrease ? "#dc3545" : "#28a745"};
+      margin-bottom: 4px;
+    `;
+
+    // Format percentage display properly, handling large numbers
+    const formattedPercentage = Math.abs(percentageChange).toFixed(1);
+    percentageDiv.textContent = `${isIncrease ? "+" : "-"}${formattedPercentage}%`;
+
+    console.log("Inserting percentage div:", percentageDiv);
+    // Make the row container relative and add percentage as centered overlay
+    row.style.position = "relative";
+
+    // Position it absolutely relative to the row, centered but shifted 15% left
+    percentageDiv.style = `
+      position: absolute;
+      top: 50%;
+      left: 35%;
+      transform: translate(-50%, -50%);
+      font-size: 14px;
+      font-weight: bold;
+      color: ${isIncrease ? "#dc3545" : "#28a745"};
+      background: rgba(255, 255, 255, 0.95);
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid ${isIncrease ? "#dc3545" : "#28a745"};
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 10;
+      pointer-events: none;
+    `;
+
+    row.appendChild(percentageDiv);
+    console.log("Percentage div inserted successfully");
+
+    console.log(`${title}: ${percentageChange.toFixed(1)}% ${isIncrease ? "increase" : "decrease"}`);
+  });
+}
 
 // Function to extract the Artikelnummer from the Amazon product page
 function extractArtikelnummer() {
