@@ -635,17 +635,8 @@ setTimeout(() => {
       addIdealoButton(titleElement);
     }
   } else if (currentUrl.includes("idealo.de/preisvergleich/")) {
-    // Check if URL has #pricechart for price history analysis
-    if (currentUrl.includes("#pricechart")) {
-      console.log("Price chart URL detected, waiting for content to load...");
-      // Wait a bit for content to load, then try multiple times
-      setTimeout(() => addPriceHistoryPercentages(), 1000);
-      setTimeout(() => addPriceHistoryPercentages(), 2000);
-      setTimeout(() => addPriceHistoryPercentages(), 3000);
-
-      // Add listeners to time period buttons to refresh when clicked
-      setTimeout(() => addTimeButtonListeners(), 1500);
-    }
+    // Set up price chart detection
+    setTimeout(() => setupPriceChartDetection(), 1000);
 
     chrome.storage.local.get(["amazonPrice"], (result) => {
       const amazonPrice = result.amazonPrice;
@@ -978,74 +969,76 @@ setTimeout(() => {
   }
 }, 1000);
 
+// Function to set up price chart detection
+function setupPriceChartDetection() {
+  // Watch for clicks in the price chart area
+  const priceChartContainer = document.querySelector(".oopStage-price-chart");
+  if (priceChartContainer) {
+    priceChartContainer.addEventListener("click", () => {
+      // Add percentages when price chart is clicked
+      setTimeout(() => addPriceHistoryPercentages(), 500);
+      setTimeout(() => addPriceHistoryPercentages(), 1500);
+      setTimeout(() => addPriceHistoryPercentages(), 3000);
+
+      // Set up time button listeners
+      setTimeout(() => addTimeButtonListeners(), 1000);
+    });
+  }
+
+  // Also check if price chart modal is already open
+  if (document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]')) {
+    addPriceHistoryPercentages();
+    addTimeButtonListeners();
+  }
+}
+
 // Function to add listeners to time period buttons
 function addTimeButtonListeners() {
-  const timeButtons = document.querySelectorAll('ul[data-testid="header-links-modal-list"] button');
-  console.log("Found time period buttons:", timeButtons.length);
+  const timeButtons = document.querySelectorAll('ul[data-testid="header-links-modal-list"] button, ul[data-testid="header-buttons-embedded-list"] button');
 
-  timeButtons.forEach((button, index) => {
-    button.addEventListener("click", () => {
-      console.log(`Time period button ${index} clicked:`, button.textContent);
-      // Clear existing percentages first
-      document.querySelectorAll(".price-percentage-change").forEach((el) => el.remove());
-      // Refresh percentages after a delay to allow content to update
-      setTimeout(() => addPriceHistoryPercentages(), 1000);
-      setTimeout(() => addPriceHistoryPercentages(), 2000);
-    });
+  timeButtons.forEach((button) => {
+    if (!button.hasAttribute("data-percentage-listener")) {
+      button.setAttribute("data-percentage-listener", "true");
+      button.addEventListener("click", () => {
+        // Clear existing percentages first
+        document.querySelectorAll(".price-percentage-change").forEach((el) => el.remove());
+        // Refresh percentages after a delay to allow content to update
+        setTimeout(() => addPriceHistoryPercentages(), 1000);
+        setTimeout(() => addPriceHistoryPercentages(), 2000);
+      });
+    }
   });
 }
 
 // Function to add percentage calculations to price history statistics
 function addPriceHistoryPercentages() {
-  console.log("Running addPriceHistoryPercentages function...");
-
   // Clear any existing percentage elements from previous runs
-  document.querySelectorAll(".price-percentage-change").forEach((el) => {
-    console.log("Removing old percentage element:", el);
-    el.remove();
-  });
+  document.querySelectorAll(".price-percentage-change").forEach((el) => el.remove());
 
   const priceHistorySection = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
   if (!priceHistorySection) {
-    console.log("Price history statistics section not found");
-    console.log("Available elements:", document.querySelectorAll('[class*="priceHistory"]'));
     return;
   }
 
-  console.log("Found price history section:", priceHistorySection);
   const rows = priceHistorySection.querySelectorAll(".priceHistoryStatistics-row");
-  console.log("Found rows:", rows.length);
 
   rows.forEach((row, index) => {
-    console.log(`Processing row ${index}:`, row);
     const titleElement = row.querySelector(".priceHistoryStatistics-title");
     const valueElement = row.querySelector(".priceHistoryStatistics-amount");
     const changeElement = row.querySelector(".priceHistoryStatistics-change");
     const statusDiv = row.querySelector(".priceHistoryStatistics-status");
 
-    console.log("Elements found:", { titleElement, valueElement, changeElement, statusDiv });
-
     if (!titleElement || !valueElement || !changeElement || !statusDiv) {
-      console.log("Missing required elements in row", index);
       return;
     }
 
-    const title = titleElement.textContent.trim();
     const valueText = valueElement.textContent.replace(/[^\d,]/g, "").replace(",", ".");
     const changeText = changeElement.textContent.replace(/[^\d,]/g, "").replace(",", ".");
-
-    console.log(`Row ${index} - Title: ${title}`);
-    console.log(`Raw texts - Value: "${valueElement.textContent}", Change: "${changeElement.textContent}"`);
-    console.log(`Parsed texts - Value: "${valueText}", Change: "${changeText}"`);
-    console.log(`Change element classes:`, changeElement.classList.toString());
 
     const currentValue = parseFloat(valueText);
     const changeAmount = parseFloat(changeText);
 
-    console.log(`Parsed numbers - Current: ${currentValue}, Change: ${changeAmount}`);
-
     if (isNaN(currentValue) || isNaN(changeAmount)) {
-      console.log("Failed to parse numbers, skipping");
       return;
     }
 
@@ -1056,35 +1049,29 @@ function addPriceHistoryPercentages() {
     const isNeutral = changeElement.classList.contains("neutral");
 
     if (isNeutral || changeAmount === 0) {
-      console.log("No change detected, skipping percentage calculation");
       return;
     }
 
     // Calculate current price based on historical price + change
-    let currentPrice;
     if (isIncrease) {
-      currentPrice = historicalPrice + changeAmount; // Today's price = 0.79 + 4.19 = 4.98€
+      // Today's price = historical + change (0.79 + 4.19 = 4.98€)
     } else if (isDecrease) {
-      currentPrice = historicalPrice - changeAmount; // Today's price = historical - change
+      // Today's price = historical - change
     } else {
-      console.log("Cannot determine price direction, skipping");
       return;
-    } // Calculate percentage change from historical price to current price
+    }
+
+    // Calculate percentage change from historical price to current price
     const percentageChange = (changeAmount / historicalPrice) * 100;
 
     // Check if percentage div already exists in this specific row
     const existingPercentage = row.querySelector(".price-percentage-change");
     if (existingPercentage) {
-      console.log("Percentage already exists for row", index, "- removing old one");
       existingPercentage.remove();
     }
 
-    console.log(`Values: historicalPrice=${historicalPrice}, changeAmount=${changeAmount}, currentPrice=${currentPrice}`);
-    console.log(`Calculated percentage: ${percentageChange.toFixed(1)}% (${isIncrease ? "increase" : "decrease"})`);
-
     // Skip if the calculation results in invalid numbers
     if (!isFinite(percentageChange) || historicalPrice <= 0) {
-      console.log("Invalid percentage calculation, skipping");
       return;
     }
 
@@ -1102,7 +1089,6 @@ function addPriceHistoryPercentages() {
     const formattedPercentage = Math.abs(percentageChange).toFixed(1);
     percentageDiv.textContent = `${isIncrease ? "+" : "-"}${formattedPercentage}%`;
 
-    console.log("Inserting percentage div:", percentageDiv);
     // Make the row container relative and add percentage as centered overlay
     row.style.position = "relative";
 
@@ -1125,9 +1111,6 @@ function addPriceHistoryPercentages() {
     `;
 
     row.appendChild(percentageDiv);
-    console.log("Percentage div inserted successfully");
-
-    console.log(`${title}: ${percentageChange.toFixed(1)}% ${isIncrease ? "increase" : "decrease"}`);
   });
 }
 
