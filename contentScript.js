@@ -50,9 +50,9 @@ setTimeout(() => {
       let filterContainer = document.createElement("div");
       filterContainer.setAttribute("data-best-deal-filter", "true");
       filterContainer.style = `
-        position: fixed;
-        top: 30%;
-        right: 10px;
+  position: fixed;
+  top: 10px;
+  right: 10px;
         z-index: 10000;
         background: #fff;
         border: 1px solid #ccc;
