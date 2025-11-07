@@ -49,6 +49,9 @@ setTimeout(() => {
         const savedOpen = result.mydealzFilterOpen || false;
         const savedSelections = result.mydealzSelectedMerchants || [];
 
+        // Combine current merchants with saved selections to always show saved items
+        const allMerchantNames = new Set([...merchantNames, ...savedSelections]);
+
         // Create filter icon
         const iconBtn = document.createElement("button");
         iconBtn.setAttribute("data-mydealz-merchant-filter-icon", "true");
@@ -80,7 +83,7 @@ setTimeout(() => {
         });
 
         // Create filter panel (hidden by default)
-        if (merchantNames.size > 0) {
+        if (allMerchantNames.size > 0) {
           let filterContainer = document.createElement("div");
           filterContainer.setAttribute("data-mydealz-merchant-filter", "true");
           filterContainer.setAttribute("data-mydealz-merchant-filter-panel", "true");
@@ -143,7 +146,7 @@ setTimeout(() => {
       `;
 
           // Sort merchant names: selected ones first, then alphabetical
-          const sortedMerchantNames = Array.from(merchantNames).sort((a, b) => {
+          const sortedMerchantNames = Array.from(allMerchantNames).sort((a, b) => {
             const aSelected = savedSelections.includes(a);
             const bSelected = savedSelections.includes(b);
 
@@ -153,6 +156,12 @@ setTimeout(() => {
           });
 
           sortedMerchantNames.forEach((name) => {
+            // Count current results for this merchant
+            const resultCount = Array.from(productCards).filter((card) => {
+              const merchantLink = card.querySelector('a[data-t="merchantLink"]');
+              return merchantLink && merchantLink.textContent.trim() === name;
+            }).length;
+
             const wrapper = document.createElement("div");
             wrapper.style = `
           display: flex;
@@ -168,7 +177,7 @@ setTimeout(() => {
             checkbox.checked = savedSelections.includes(name);
 
             const checkboxLabel = document.createElement("label");
-            checkboxLabel.textContent = name;
+            checkboxLabel.textContent = `${name} (${resultCount})`;
             checkboxLabel.setAttribute("for", checkbox.id);
             checkboxLabel.style = `
           margin-left: 8px;
@@ -328,6 +337,9 @@ setTimeout(() => {
       const savedOpen = result.idealoBestDealFilterOpen || false;
       const savedSelections = result.idealoSelectedProviders || [];
 
+      // Combine current filter names with saved selections to always show saved items
+      const allFilterNames = new Set([...filterNames, ...savedSelections]);
+
       // Create filter icon
       const iconBtn = document.createElement("button");
       iconBtn.setAttribute("data-best-deal-filter-icon", "true");
@@ -353,7 +365,7 @@ setTimeout(() => {
       document.body.appendChild(iconBtn);
 
       // Create filter panel (hidden by default)
-      if (filterNames.size > 0) {
+      if (allFilterNames.size > 0) {
         let filterContainer = document.createElement("div");
         filterContainer.setAttribute("data-best-deal-filter", "true");
         filterContainer.setAttribute("data-best-deal-filter-panel", "true");
@@ -416,7 +428,7 @@ setTimeout(() => {
       `;
 
         // Sort filter names: selected ones first, then alphabetical
-        const sortedFilterNames = Array.from(filterNames).sort((a, b) => {
+        const sortedFilterNames = Array.from(allFilterNames).sort((a, b) => {
           const aSelected = savedSelections.includes(a);
           const bSelected = savedSelections.includes(b);
 
@@ -426,6 +438,20 @@ setTimeout(() => {
         });
 
         sortedFilterNames.forEach((name) => {
+          // Count current results for this provider
+          const resultCount = Array.from(productCards).filter((card) => {
+            const bestDealElement = card.querySelector('[aria-label="Best-Deal"]');
+            if (bestDealElement) {
+              const img = bestDealElement.querySelector('img[alt^="Best-Deal von "]');
+              if (img) {
+                const altText = img.getAttribute("alt");
+                const match = altText.match(/Best-Deal von (.+)/);
+                return match && match[1] === name;
+              }
+            }
+            return false;
+          }).length;
+
           const wrapper = document.createElement("div");
           wrapper.style = `
           display: flex;
@@ -441,7 +467,7 @@ setTimeout(() => {
           checkbox.checked = savedSelections.includes(name);
 
           const checkboxLabel = document.createElement("label");
-          checkboxLabel.textContent = name;
+          checkboxLabel.textContent = `${name} (${resultCount})`;
           checkboxLabel.setAttribute("for", checkbox.id);
           checkboxLabel.style = `
           margin-left: 8px;
@@ -603,10 +629,19 @@ setTimeout(() => {
   // Idealo Deals page: extract filter names from Best-Deal cards
   if (currentUrl.includes("idealo.de/preisvergleich/deals")) {
     refreshBestDealFilter();
-    // Listen for pagination arrow clicks to refresh filter
+    // Listen for pagination clicks (both arrows and page numbers) to refresh filter
     function addPaginationListener() {
-      document.querySelectorAll('a.sr-pageArrow_HufQY[aria-label="Nächste Seite"]').forEach((arrow) => {
+      // Listen for arrow clicks
+      document.querySelectorAll("a.sr-pageArrow_HufQY").forEach((arrow) => {
         arrow.addEventListener("click", () => {
+          // Wait for new content to load, then refresh filter
+          setTimeout(() => refreshBestDealFilter(), 500);
+        });
+      });
+
+      // Listen for page number clicks
+      document.querySelectorAll("a.sr-pageElement_S1HzJ").forEach((pageLink) => {
+        pageLink.addEventListener("click", () => {
           // Wait for new content to load, then refresh filter
           setTimeout(() => refreshBestDealFilter(), 500);
         });
