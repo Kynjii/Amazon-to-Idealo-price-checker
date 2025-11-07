@@ -631,8 +631,8 @@ setTimeout(() => {
     refreshBestDealFilter();
     // Listen for pagination clicks (both arrows and page numbers) to refresh filter
     function addPaginationListener() {
-      // Listen for arrow clicks
-      document.querySelectorAll("a.sr-pageArrow_HufQY").forEach((arrow) => {
+      // Listen for arrow clicks (both next and previous)
+      document.querySelectorAll("a.sr-pageArrow_HufQY, a.sr-pageArrow--left_zcrnF").forEach((arrow) => {
         arrow.addEventListener("click", () => {
           // Wait for new content to load, then refresh filter
           setTimeout(() => refreshBestDealFilter(), 500);
