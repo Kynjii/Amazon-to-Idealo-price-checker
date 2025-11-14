@@ -939,50 +939,51 @@ function createPriceChartForm() {
         return;
     }
 
-    const productNameElement = document.querySelector('[data-testid="price-chart-modal-product-name"]');
-    const productName = productNameElement ? productNameElement.textContent.trim() : "Unknown Product";
+    setTimeout(() => {
+        const productNameElement = document.querySelector('[data-testid="price-chart-modal-product-name"]');
+        const productName = productNameElement ? productNameElement.textContent.trim() : "Unknown Product";
 
-    const currentPriceElement = document.querySelector(".priceHistoryStatistics-amount");
-    const currentPrice = currentPriceElement ? currentPriceElement.textContent.trim() : "Unknown Price";
+        const currentPriceElement = document.querySelector(".priceHistoryStatistics-amount");
+        const currentPrice = currentPriceElement ? currentPriceElement.textContent.trim() : "Unknown Price";
 
-    const currentUrl = window.location.href.split("#")[0] + "#pricechart";
+        const currentUrl = window.location.href.split("#")[0] + "#pricechart";
 
-    const priceStats = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
-    let priceReduction = "No data available";
-    let priceReductionPercent = "";
+        const priceStats = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
+        let priceReduction = "No data available";
+        let priceReductionPercent = "";
 
-    if (priceStats) {
-        let targetRow = Array.from(priceStats.querySelectorAll(".priceHistoryStatistics-row")).find((row) => {
-            const title = row.querySelector(".priceHistoryStatistics-title");
-            return title && title.textContent.includes("Jahr");
-        });
-
-        if (!targetRow) {
-            targetRow = Array.from(priceStats.querySelectorAll(".priceHistoryStatistics-row")).find((row) => {
-                const changeElement = row.querySelector(".priceHistoryStatistics-change.decreased");
-                return changeElement;
+        if (priceStats) {
+            let targetRow = Array.from(priceStats.querySelectorAll(".priceHistoryStatistics-row")).find((row) => {
+                const title = row.querySelector(".priceHistoryStatistics-title");
+                return title && title.textContent.includes("Jahr");
             });
-        }
 
-        if (targetRow) {
-            const changeElement = targetRow.querySelector(".priceHistoryStatistics-change.decreased");
-            const percentageElement = targetRow.querySelector(".price-percentage-change");
-
-            if (changeElement) {
-                priceReduction = changeElement.textContent.trim();
-                priceReductionPercent = percentageElement ? ` (${percentageElement.textContent.trim()})` : "";
+            if (!targetRow) {
+                targetRow = Array.from(priceStats.querySelectorAll(".priceHistoryStatistics-row")).find((row) => {
+                    const changeElement = row.querySelector(".priceHistoryStatistics-change.decreased");
+                    return changeElement;
+                });
             }
-        } else {
-            priceReduction = "No price reduction";
+
+            if (targetRow) {
+                const changeElement = targetRow.querySelector(".priceHistoryStatistics-change.decreased");
+                const percentageElement = targetRow.querySelector(".price-percentage-change");
+
+                if (changeElement) {
+                    priceReduction = changeElement.textContent.trim();
+                    priceReductionPercent = percentageElement ? ` (${percentageElement.textContent.trim()})` : "";
+                }
+            } else {
+                priceReduction = "No price reduction";
+            }
         }
-    }
 
-    const formContainer = document.createElement("div");
-    formContainer.setAttribute("data-price-form", "true");
+        const formContainer = document.createElement("div");
+        formContainer.setAttribute("data-price-form", "true");
 
-    const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
+        const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
 
-    formContainer.style = `
+        formContainer.style = `
     position: fixed;
     top: 50%;
     transform: translateY(-50%);
@@ -1001,36 +1002,11 @@ function createPriceChartForm() {
     flex-direction: column;
   `;
 
-    if (priceModal) {
-        const modalRect = priceModal.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const formWidth = Math.min(400, Math.max(300, viewportWidth * 0.25));
-        const gap = 15;
-
-        const leftPosition = modalRect.left - formWidth - gap;
-
-        if (leftPosition >= 0) {
-            formContainer.style.left = `${leftPosition}px`;
-        } else {
-            const rightPosition = modalRect.right + gap;
-            if (rightPosition + formWidth <= viewportWidth) {
-                formContainer.style.left = `${rightPosition}px`;
-            } else {
-                formContainer.style.left = "20px";
-            }
-        }
-    } else {
-        formContainer.style.left = "20px";
-    }
-
-    function updateFormPosition() {
         if (priceModal) {
             const modalRect = priceModal.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
             const formWidth = Math.min(400, Math.max(300, viewportWidth * 0.25));
             const gap = 15;
-
-            formContainer.style.width = `${Math.max(300, Math.min(400, viewportWidth * 0.25))}px`;
 
             const leftPosition = modalRect.left - formWidth - gap;
 
@@ -1044,35 +1020,60 @@ function createPriceChartForm() {
                     formContainer.style.left = "20px";
                 }
             }
+        } else {
+            formContainer.style.left = "20px";
         }
-    }
 
-    window.addEventListener("resize", updateFormPosition);
+        function updateFormPosition() {
+            if (priceModal) {
+                const modalRect = priceModal.getBoundingClientRect();
+                const viewportWidth = window.innerWidth;
+                const formWidth = Math.min(400, Math.max(300, viewportWidth * 0.25));
+                const gap = 15;
 
-    const title = document.createElement("h3");
-    title.textContent = "Product Information";
-    title.style = `
+                formContainer.style.width = `${Math.max(300, Math.min(400, viewportWidth * 0.25))}px`;
+
+                const leftPosition = modalRect.left - formWidth - gap;
+
+                if (leftPosition >= 0) {
+                    formContainer.style.left = `${leftPosition}px`;
+                } else {
+                    const rightPosition = modalRect.right + gap;
+                    if (rightPosition + formWidth <= viewportWidth) {
+                        formContainer.style.left = `${rightPosition}px`;
+                    } else {
+                        formContainer.style.left = "20px";
+                    }
+                }
+            }
+        }
+
+        window.addEventListener("resize", updateFormPosition);
+
+        const title = document.createElement("h3");
+        title.textContent = "Product Information";
+        title.style = `
     margin: 0 0 15px 0;
     color: #333;
     font-size: 16px;
   `;
-    formContainer.appendChild(title);
+        formContainer.appendChild(title);
 
-    const shopLabel = document.createElement("label");
-    shopLabel.textContent = "Shop Name:";
-    shopLabel.style = `
+        const shopLabel = document.createElement("label");
+        shopLabel.textContent = "Shop Name:";
+        shopLabel.style = `
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
     color: #333;
   `;
-    formContainer.appendChild(shopLabel);
+        formContainer.appendChild(shopLabel);
 
-    const shopInput = document.createElement("input");
-    shopInput.type = "text";
-    shopInput.value = "Amazon";
-    shopInput.placeholder = "Enter shop name";
-    shopInput.style = `
+        const shopInput = document.createElement("input");
+        shopInput.type = "text";
+        shopInput.value = "Amazon";
+        shopInput.placeholder = "Enter shop name";
+        shopInput.style = `
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
@@ -1080,22 +1081,22 @@ function createPriceChartForm() {
     margin-bottom: 15px;
     box-sizing: border-box;
   `;
-    formContainer.appendChild(shopInput);
+        formContainer.appendChild(shopInput);
 
-    const slackLabel = document.createElement("label");
-    slackLabel.textContent = "Slack Webhook URL (optional):";
-    slackLabel.style = `
+        const slackLabel = document.createElement("label");
+        slackLabel.textContent = "Slack Webhook URL (optional):";
+        slackLabel.style = `
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
     color: #333;
   `;
-    formContainer.appendChild(slackLabel);
+        formContainer.appendChild(slackLabel);
 
-    const slackInput = document.createElement("input");
-    slackInput.type = "text";
-    slackInput.placeholder = "https://hooks.slack.com/services/...";
-    slackInput.style = `
+        const slackInput = document.createElement("input");
+        slackInput.type = "text";
+        slackInput.placeholder = "https://hooks.slack.com/services/...";
+        slackInput.style = `
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
@@ -1104,45 +1105,88 @@ function createPriceChartForm() {
     box-sizing: border-box;
   `;
 
-    chrome.storage.local.get(["slackWebhookUrl"], (result) => {
-        if (result.slackWebhookUrl) {
-            slackInput.value = "*****";
-            slackInput.dataset.actualUrl = result.slackWebhookUrl;
-            slackInput.style.color = "#666";
-        }
-    });
+        chrome.storage.local.get(["slackWebhookUrl"], (result) => {
+            if (result.slackWebhookUrl) {
+                slackInput.value = "*****";
+                slackInput.dataset.actualUrl = result.slackWebhookUrl;
+                slackInput.style.color = "#666";
+            }
+        });
 
-    slackInput.addEventListener("focus", () => {
-        if (slackInput.value === "*****" && slackInput.dataset.actualUrl) {
-            slackInput.value = slackInput.dataset.actualUrl;
-            slackInput.style.color = "#333";
-        }
-    });
+        slackInput.addEventListener("focus", () => {
+            if (slackInput.value === "*****" && slackInput.dataset.actualUrl) {
+                slackInput.value = slackInput.dataset.actualUrl;
+                slackInput.style.color = "#333";
+            }
+        });
 
-    slackInput.addEventListener("blur", () => {
-        if (slackInput.dataset.actualUrl && slackInput.value === slackInput.dataset.actualUrl) {
-            slackInput.value = "*****";
-            slackInput.style.color = "#666";
-        }
-    });
+        slackInput.addEventListener("blur", () => {
+            if (slackInput.dataset.actualUrl && slackInput.value === slackInput.dataset.actualUrl) {
+                slackInput.value = "*****";
+                slackInput.style.color = "#666";
+            }
+        });
 
-    formContainer.appendChild(slackInput);
+        formContainer.appendChild(slackInput);
 
-    const messageLabel = document.createElement("label");
-    messageLabel.textContent = "Message Body:";
-    messageLabel.style = `
+        const messageLabel = document.createElement("label");
+        messageLabel.textContent = "Message Body:";
+        messageLabel.style = `
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
     color: #333;
   `;
-    formContainer.appendChild(messageLabel);
+        formContainer.appendChild(messageLabel);
 
-    const messageBody = `${productName} zum Rekordpreis von ${currentPrice} ${currentUrl}\n${priceReduction}${priceReductionPercent} unter dem Durchschnittspreis.`;
+        const emojiContainer = document.createElement("div");
+        emojiContainer.style = `
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+  `;
 
-    const messageTextarea = document.createElement("textarea");
-    messageTextarea.value = messageBody;
-    messageTextarea.style = `
+        const emojis = ["🔥", "☕️", "☀️", "🥷", "❄️", "🎄", "🛍️", "🍫", "✨", "💸"];
+        const selectedEmojis = new Set();
+
+        emojis.forEach((emoji) => {
+            const emojiBtn = document.createElement("button");
+            emojiBtn.textContent = emoji;
+            emojiBtn.type = "button";
+            emojiBtn.style = `
+      padding: 8px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    `;
+
+            emojiBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                if (selectedEmojis.has(emoji)) {
+                    selectedEmojis.delete(emoji);
+                    emojiBtn.style.border = "2px solid #ddd";
+                    emojiBtn.style.background = "white";
+                } else {
+                    selectedEmojis.add(emoji);
+                    emojiBtn.style.border = "2px solid #007bff";
+                    emojiBtn.style.background = "#e7f3ff";
+                }
+            });
+
+            emojiContainer.appendChild(emojiBtn);
+        });
+
+        formContainer.appendChild(emojiContainer);
+
+        const messageBody = `${productName} zum Rekordpreis von ${currentPrice} ${currentUrl}\n${priceReduction}${priceReductionPercent} unter dem Durchschnittspreis.`;
+
+        const messageTextarea = document.createElement("textarea");
+        messageTextarea.value = messageBody;
+        messageTextarea.style = `
     width: 100%;
     height: 120px;
     padding: 8px;
@@ -1154,11 +1198,11 @@ function createPriceChartForm() {
     font-family: Arial, sans-serif;
     font-size: 12px;
   `;
-    formContainer.appendChild(messageTextarea);
+        formContainer.appendChild(messageTextarea);
 
-    const slackButton = document.createElement("button");
-    slackButton.textContent = "Send to Slack";
-    slackButton.style = `
+        const slackButton = document.createElement("button");
+        slackButton.textContent = "Send to Slack";
+        slackButton.style = `
     width: 100%;
     padding: 10px;
     background-color: #4a154b;
@@ -1170,63 +1214,64 @@ function createPriceChartForm() {
     margin-bottom: 10px;
   `;
 
-    slackButton.addEventListener("click", async () => {
-        const webhookUrl = slackInput.value === "*****" ? slackInput.dataset.actualUrl : slackInput.value.trim();
-        if (!webhookUrl) {
-            alert("Please enter a Slack webhook URL");
-            return;
-        }
+        slackButton.addEventListener("click", async () => {
+            const webhookUrl = slackInput.value === "*****" ? slackInput.dataset.actualUrl : slackInput.value.trim();
+            if (!webhookUrl) {
+                alert("Please enter a Slack webhook URL");
+                return;
+            }
 
-        const shopName = shopInput.value || "Amazon";
-        const originalMessage = messageTextarea.value;
+            const shopName = shopInput.value || "Amazon";
+            const originalMessage = messageTextarea.value;
+            const emojiPrefix = Array.from(selectedEmojis).join("") + (selectedEmojis.size > 0 ? " " : "");
 
-        const slackFormattedMessage = `${shopName}: ${originalMessage}`;
+            const slackFormattedMessage = `${emojiPrefix}${shopName}: ${originalMessage}`;
 
-        const payload = JSON.stringify({
-            text: slackFormattedMessage,
-            unfurl_links: false,
-            unfurl_media: false
-        });
-
-        try {
-            const response = await fetch(webhookUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                },
-                body: `payload=${encodeURIComponent(payload)}`
+            const payload = JSON.stringify({
+                text: slackFormattedMessage,
+                unfurl_links: false,
+                unfurl_media: false
             });
 
-            if (response.ok) {
-                chrome.storage.local.set({ slackWebhookUrl: webhookUrl });
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: `payload=${encodeURIComponent(payload)}`
+                });
 
-                slackButton.textContent = "Sent!";
-                slackButton.style.backgroundColor = "#28a745";
+                if (response.ok) {
+                    chrome.storage.local.set({ slackWebhookUrl: webhookUrl });
+
+                    slackButton.textContent = "Sent!";
+                    slackButton.style.backgroundColor = "#28a745";
+
+                    setTimeout(() => {
+                        slackButton.textContent = "Send to Slack";
+                        slackButton.style.backgroundColor = "#4a154b";
+                    }, 2000);
+                } else {
+                    throw new Error("Failed to send message");
+                }
+            } catch (err) {
+                slackButton.textContent = "Error!";
+                slackButton.style.backgroundColor = "#dc3545";
+                console.error("Slack error:", err);
 
                 setTimeout(() => {
                     slackButton.textContent = "Send to Slack";
                     slackButton.style.backgroundColor = "#4a154b";
                 }, 2000);
-            } else {
-                throw new Error("Failed to send message");
             }
-        } catch (err) {
-            slackButton.textContent = "Error!";
-            slackButton.style.backgroundColor = "#dc3545";
-            console.error("Slack error:", err);
+        });
 
-            setTimeout(() => {
-                slackButton.textContent = "Send to Slack";
-                slackButton.style.backgroundColor = "#4a154b";
-            }, 2000);
-        }
-    });
+        formContainer.appendChild(slackButton);
 
-    formContainer.appendChild(slackButton);
-
-    const copyButton = document.createElement("button");
-    copyButton.textContent = "Copy to Clipboard";
-    copyButton.style = `
+        const copyButton = document.createElement("button");
+        copyButton.textContent = "Copy to Clipboard";
+        copyButton.style = `
     width: 100%;
     padding: 10px;
     background-color: #007bff;
@@ -1238,44 +1283,45 @@ function createPriceChartForm() {
     margin-bottom: 10px;
   `;
 
-    copyButton.addEventListener("click", async () => {
-        const shopName = shopInput.value || "Amazon";
-        const originalMessage = messageTextarea.value;
+        copyButton.addEventListener("click", async () => {
+            const shopName = shopInput.value || "Amazon";
+            const originalMessage = messageTextarea.value;
+            const emojiPrefix = Array.from(selectedEmojis).join("") + (selectedEmojis.size > 0 ? " " : "");
 
-        const finalMessage = `${shopName}: ${originalMessage}`;
+            const finalMessage = `${emojiPrefix}${shopName}: ${originalMessage}`;
 
-        try {
-            await navigator.clipboard.writeText(finalMessage);
-            copyButton.textContent = "Copied!";
-            copyButton.style.backgroundColor = "#28a745";
+            try {
+                await navigator.clipboard.writeText(finalMessage);
+                copyButton.textContent = "Copied!";
+                copyButton.style.backgroundColor = "#28a745";
 
-            setTimeout(() => {
-                copyButton.textContent = "Copy to Clipboard";
-                copyButton.style.backgroundColor = "#007bff";
-            }, 2000);
-        } catch (err) {
-            const textArea = document.createElement("textarea");
-            textArea.value = finalMessage;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textArea);
+                setTimeout(() => {
+                    copyButton.textContent = "Copy to Clipboard";
+                    copyButton.style.backgroundColor = "#007bff";
+                }, 2000);
+            } catch (err) {
+                const textArea = document.createElement("textarea");
+                textArea.value = finalMessage;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
 
-            copyButton.textContent = "Copied!";
-            copyButton.style.backgroundColor = "#28a745";
+                copyButton.textContent = "Copied!";
+                copyButton.style.backgroundColor = "#28a745";
 
-            setTimeout(() => {
-                copyButton.textContent = "Copy to Clipboard";
-                copyButton.style.backgroundColor = "#007bff";
-            }, 2000);
-        }
-    });
+                setTimeout(() => {
+                    copyButton.textContent = "Copy to Clipboard";
+                    copyButton.style.backgroundColor = "#007bff";
+                }, 2000);
+            }
+        });
 
-    formContainer.appendChild(copyButton);
+        formContainer.appendChild(copyButton);
 
-    const closeButton = document.createElement("button");
-    closeButton.textContent = "Close";
-    closeButton.style = `
+        const closeButton = document.createElement("button");
+        closeButton.textContent = "Close";
+        closeButton.style = `
     width: 100%;
     padding: 8px;
     background-color: #6c757d;
@@ -1285,41 +1331,42 @@ function createPriceChartForm() {
     cursor: pointer;
   `;
 
-    closeButton.addEventListener("click", () => {
-        window.removeEventListener("resize", updateFormPosition);
-        formContainer.remove();
-    });
+        closeButton.addEventListener("click", () => {
+            window.removeEventListener("resize", updateFormPosition);
+            formContainer.remove();
+        });
 
-    formContainer.appendChild(closeButton);
+        formContainer.appendChild(closeButton);
 
-    document.body.appendChild(formContainer);
+        document.body.appendChild(formContainer);
 
-    function closeFormOnOutsideClick(e) {
-        const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
-        const formButton = document.querySelector('[data-form-button="true"]');
+        function closeFormOnOutsideClick(e) {
+            const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
+            const formButton = document.querySelector('[data-form-button="true"]');
 
-        if (!formContainer.contains(e.target) && !formButton?.contains(e.target) && modal?.contains(e.target)) {
-            cleanup();
+            if (!formContainer.contains(e.target) && !formButton?.contains(e.target) && modal?.contains(e.target)) {
+                cleanup();
+            }
         }
-    }
 
-    function cleanup() {
-        window.removeEventListener("resize", updateFormPosition);
-        modalObserver.disconnect();
-        formContainer.remove();
-        document.removeEventListener("click", closeFormOnOutsideClick);
-    }
-
-    document.addEventListener("click", closeFormOnOutsideClick);
-
-    const modalObserver = new MutationObserver((mutations) => {
-        const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
-        if (!modal) {
-            cleanup();
+        function cleanup() {
+            window.removeEventListener("resize", updateFormPosition);
+            modalObserver.disconnect();
+            formContainer.remove();
+            document.removeEventListener("click", closeFormOnOutsideClick);
         }
-    });
 
-    modalObserver.observe(document.body, { childList: true, subtree: true });
+        document.addEventListener("click", closeFormOnOutsideClick);
+
+        const modalObserver = new MutationObserver((mutations) => {
+            const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
+            if (!modal) {
+                cleanup();
+            }
+        });
+
+        modalObserver.observe(document.body, { childList: true, subtree: true });
+    }, 500);
 }
 
 function setupPriceChartDetection() {
