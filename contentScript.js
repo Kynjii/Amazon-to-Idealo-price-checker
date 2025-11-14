@@ -1184,8 +1184,8 @@ function createPriceChartForm() {
 
         const payload = JSON.stringify({
             text: slackFormattedMessage,
-            unfurl_links: true,
-            unfurl_media: true
+            unfurl_links: false,
+            unfurl_media: false
         });
 
         try {
