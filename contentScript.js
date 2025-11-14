@@ -1091,19 +1091,83 @@ function createPriceChartForm() {
   `;
         formContainer.appendChild(shopLabel);
 
-        const shopInput = document.createElement("input");
-        shopInput.type = "text";
-        shopInput.value = "Amazon";
-        shopInput.placeholder = "Shop-Namen eingeben";
-        shopInput.style = `
+        const shopContainer = document.createElement("div");
+        shopContainer.style = `
+    position: relative;
+    margin-bottom: 15px;
+  `;
+
+        const shopSelect = document.createElement("select");
+        shopSelect.style = `
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    background-color: white;
+    cursor: pointer;
+    font-size: 14px;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23999" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    padding-right: 5px;
+  `;
+
+        const shopOptions = [
+            { value: "Amazon", text: "Amazon" },
+            { value: "Mediamarkt", text: "Mediamarkt" },
+            { value: "Lidl", text: "Lidl" },
+            { value: "Kaufland", text: "Kaufland" },
+            { value: "Ninja", text: "Ninja" },
+            { value: "Juskys", text: "Juskys" },
+            { value: "Otto", text: "Otto" },
+            { value: "custom", text: "Eigener Name..." }
+        ];
+
+        shopOptions.forEach((option) => {
+            const optionElement = document.createElement("option");
+            optionElement.value = option.value;
+            optionElement.textContent = option.text;
+            if (option.value === "Amazon") {
+                optionElement.selected = true;
+            }
+            shopSelect.appendChild(optionElement);
+        });
+
+        const customShopInput = document.createElement("input");
+        customShopInput.type = "text";
+        customShopInput.placeholder = "Shop-Namen eingeben";
+        customShopInput.style = `
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    margin-bottom: 15px;
     box-sizing: border-box;
+    display: none;
+    margin-top: 5px;
   `;
-        formContainer.appendChild(shopInput);
+
+        shopSelect.addEventListener("change", () => {
+            if (shopSelect.value === "custom") {
+                customShopInput.style.display = "block";
+                customShopInput.focus();
+            } else {
+                customShopInput.style.display = "none";
+            }
+        });
+
+        function getSelectedShopName() {
+            if (shopSelect.value === "custom") {
+                return customShopInput.value.trim() || "Custom Shop";
+            }
+            return shopSelect.value;
+        }
+
+        shopContainer.appendChild(shopSelect);
+        shopContainer.appendChild(customShopInput);
+        formContainer.appendChild(shopContainer);
 
         const slackLabel = document.createElement("label");
         slackLabel.textContent = "Slack Webhook URL (optional):";
@@ -1441,7 +1505,7 @@ function createPriceChartForm() {
                 return;
             }
 
-            const shopName = shopInput.value || "Amazon";
+            const shopName = getSelectedShopName();
             const originalMessage = messageTextarea.value;
             const emojiPrefix = Array.from(selectedEmojis).join("") + (selectedEmojis.size > 0 ? " " : "");
 
@@ -1505,7 +1569,7 @@ function createPriceChartForm() {
   `;
 
         copyButton.addEventListener("click", async () => {
-            const shopName = shopInput.value || "Amazon";
+            const shopName = getSelectedShopName();
             const originalMessage = messageTextarea.value;
             const emojiPrefix = Array.from(selectedEmojis).join("") + (selectedEmojis.size > 0 ? " " : "");
 
