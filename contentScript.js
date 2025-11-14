@@ -933,13 +933,19 @@ function createPriceChartForm() {
         existingForm.remove();
     }
 
+    const priceModal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
+    if (!priceModal) {
+        console.log("No modal found, cannot create form");
+        return;
+    }
+
     const productNameElement = document.querySelector('[data-testid="price-chart-modal-product-name"]');
     const productName = productNameElement ? productNameElement.textContent.trim() : "Unknown Product";
 
     const currentPriceElement = document.querySelector(".priceHistoryStatistics-amount");
     const currentPrice = currentPriceElement ? currentPriceElement.textContent.trim() : "Unknown Price";
 
-    const currentUrl = window.location.href;
+    const currentUrl = window.location.href.split("#")[0];
 
     const priceStats = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
     let priceReduction = "No data available";
@@ -995,8 +1001,8 @@ function createPriceChartForm() {
     flex-direction: column;
   `;
 
-    if (modal) {
-        const modalRect = modal.getBoundingClientRect();
+    if (priceModal) {
+        const modalRect = priceModal.getBoundingClientRect();
         const viewportWidth = window.innerWidth;
         const formWidth = Math.min(400, Math.max(300, viewportWidth * 0.25));
         const gap = 15;
@@ -1016,6 +1022,32 @@ function createPriceChartForm() {
     } else {
         formContainer.style.left = "20px";
     }
+
+    function updateFormPosition() {
+        if (priceModal) {
+            const modalRect = priceModal.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const formWidth = Math.min(400, Math.max(300, viewportWidth * 0.25));
+            const gap = 15;
+
+            formContainer.style.width = `${Math.max(300, Math.min(400, viewportWidth * 0.25))}px`;
+
+            const leftPosition = modalRect.left - formWidth - gap;
+
+            if (leftPosition >= 0) {
+                formContainer.style.left = `${leftPosition}px`;
+            } else {
+                const rightPosition = modalRect.right + gap;
+                if (rightPosition + formWidth <= viewportWidth) {
+                    formContainer.style.left = `${rightPosition}px`;
+                } else {
+                    formContainer.style.left = "20px";
+                }
+            }
+        }
+    }
+
+    window.addEventListener("resize", updateFormPosition);
 
     const title = document.createElement("h3");
     title.textContent = "Product Information";
@@ -1050,6 +1082,52 @@ function createPriceChartForm() {
   `;
     formContainer.appendChild(shopInput);
 
+    const slackLabel = document.createElement("label");
+    slackLabel.textContent = "Slack Webhook URL (optional):";
+    slackLabel.style = `
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+  `;
+    formContainer.appendChild(slackLabel);
+
+    const slackInput = document.createElement("input");
+    slackInput.type = "text";
+    slackInput.placeholder = "https://hooks.slack.com/services/...";
+    slackInput.style = `
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+  `;
+
+    chrome.storage.local.get(["slackWebhookUrl"], (result) => {
+        if (result.slackWebhookUrl) {
+            slackInput.value = "*****";
+            slackInput.dataset.actualUrl = result.slackWebhookUrl;
+            slackInput.style.color = "#666";
+        }
+    });
+
+    slackInput.addEventListener("focus", () => {
+        if (slackInput.value === "*****" && slackInput.dataset.actualUrl) {
+            slackInput.value = slackInput.dataset.actualUrl;
+            slackInput.style.color = "#333";
+        }
+    });
+
+    slackInput.addEventListener("blur", () => {
+        if (slackInput.dataset.actualUrl && slackInput.value === slackInput.dataset.actualUrl) {
+            slackInput.value = "*****";
+            slackInput.style.color = "#666";
+        }
+    });
+
+    formContainer.appendChild(slackInput);
+
     const messageLabel = document.createElement("label");
     messageLabel.textContent = "Message Body:";
     messageLabel.style = `
@@ -1077,6 +1155,74 @@ function createPriceChartForm() {
     font-size: 12px;
   `;
     formContainer.appendChild(messageTextarea);
+
+    const slackButton = document.createElement("button");
+    slackButton.textContent = "Send to Slack";
+    slackButton.style = `
+    width: 100%;
+    padding: 10px;
+    background-color: #4a154b;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 10px;
+  `;
+
+    slackButton.addEventListener("click", async () => {
+        const webhookUrl = slackInput.value === "*****" ? slackInput.dataset.actualUrl : slackInput.value.trim();
+        if (!webhookUrl) {
+            alert("Please enter a Slack webhook URL");
+            return;
+        }
+
+        const shopName = shopInput.value || "Amazon";
+        const originalMessage = messageTextarea.value;
+
+        const slackFormattedMessage = `${shopName}: ${originalMessage}`;
+
+        const payload = JSON.stringify({
+            text: slackFormattedMessage,
+            unfurl_links: true,
+            unfurl_media: true
+        });
+
+        try {
+            const response = await fetch(webhookUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: `payload=${encodeURIComponent(payload)}`
+            });
+
+            if (response.ok) {
+                chrome.storage.local.set({ slackWebhookUrl: webhookUrl });
+
+                slackButton.textContent = "Sent!";
+                slackButton.style.backgroundColor = "#28a745";
+
+                setTimeout(() => {
+                    slackButton.textContent = "Send to Slack";
+                    slackButton.style.backgroundColor = "#4a154b";
+                }, 2000);
+            } else {
+                throw new Error("Failed to send message");
+            }
+        } catch (err) {
+            slackButton.textContent = "Error!";
+            slackButton.style.backgroundColor = "#dc3545";
+            console.error("Slack error:", err);
+
+            setTimeout(() => {
+                slackButton.textContent = "Send to Slack";
+                slackButton.style.backgroundColor = "#4a154b";
+            }, 2000);
+        }
+    });
+
+    formContainer.appendChild(slackButton);
 
     const copyButton = document.createElement("button");
     copyButton.textContent = "Copy to Clipboard";
@@ -1140,6 +1286,7 @@ function createPriceChartForm() {
   `;
 
     closeButton.addEventListener("click", () => {
+        window.removeEventListener("resize", updateFormPosition);
         formContainer.remove();
     });
 
@@ -1148,11 +1295,28 @@ function createPriceChartForm() {
     document.body.appendChild(formContainer);
 
     document.addEventListener("click", function closeFormOnOutsideClick(e) {
-        if (!formContainer.contains(e.target)) {
+        const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
+        const formButton = document.querySelector('[data-form-button="true"]');
+
+        if (!formContainer.contains(e.target) && !formButton?.contains(e.target) && modal?.contains(e.target)) {
+            window.removeEventListener("resize", updateFormPosition);
+            modalObserver.disconnect();
             formContainer.remove();
             document.removeEventListener("click", closeFormOnOutsideClick);
         }
     });
+
+    const modalObserver = new MutationObserver((mutations) => {
+        const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
+        if (!modal) {
+            window.removeEventListener("resize", updateFormPosition);
+            modalObserver.disconnect();
+            formContainer.remove();
+            document.removeEventListener("click", closeFormOnOutsideClick);
+        }
+    });
+
+    modalObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 function setupPriceChartDetection() {
@@ -1165,15 +1329,53 @@ function setupPriceChartDetection() {
 
             setTimeout(() => addTimeButtonListeners(), 1000);
 
-            setTimeout(() => createPriceChartForm(), 1500);
+            setTimeout(() => addFormButtonToModal(), 1500);
         });
     }
 
     if (document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]')) {
         addPriceHistoryPercentages();
         addTimeButtonListeners();
-        createPriceChartForm();
+        addFormButtonToModal();
     }
+}
+
+function addFormButtonToModal() {
+    const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
+    if (!modal || document.querySelector('[data-form-button="true"]')) return;
+
+    const modalHeader = modal.querySelector("header") || modal.querySelector(".modal-header") || modal.querySelector('[data-testid*="header"]');
+    if (!modalHeader) return;
+
+    const formButton = document.createElement("button");
+    formButton.setAttribute("data-form-button", "true");
+    formButton.textContent = "📊 Price Info Form";
+    formButton.style = `
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        z-index: 10002;
+    `;
+
+    formButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const existingForm = document.querySelector('[data-price-form="true"]');
+        if (existingForm) {
+            existingForm.remove();
+        } else {
+            createPriceChartForm();
+        }
+    });
+
+    modalHeader.style.position = "relative";
+    modalHeader.appendChild(formButton);
 }
 
 function addTimeButtonListeners() {
