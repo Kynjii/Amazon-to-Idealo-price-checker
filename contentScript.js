@@ -952,7 +952,7 @@ function createPriceChartForm() {
         const priceStats = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
         let priceReduction = "Keine Daten verfügbar";
         let priceReductionPercent = "";
-        let priceType = "guter Preis";
+        let priceType = "guten Preis";
 
         if (priceStats) {
             const lowestPriceRow = Array.from(priceStats.querySelectorAll(".priceHistoryStatistics-row")).find((row) => {
@@ -975,7 +975,7 @@ function createPriceChartForm() {
                     if (currentPriceValue === lowestPriceValue) {
                         priceType = "Tiefstpreis";
                     } else {
-                        priceType = "guter Preis";
+                        priceType = "guten Preis";
                     }
                 }
             }
@@ -1081,15 +1081,6 @@ function createPriceChartForm() {
 
         window.addEventListener("resize", updateFormPosition);
 
-        const title = document.createElement("h3");
-        title.textContent = "Produktinformationen";
-        title.style = `
-    margin: 0 0 15px 0;
-    color: #333;
-    font-size: 16px;
-  `;
-        formContainer.appendChild(title);
-
         const shopLabel = document.createElement("label");
         shopLabel.textContent = "Shop-Name:";
         shopLabel.style = `
@@ -1192,7 +1183,7 @@ function createPriceChartForm() {
         });
 
         const emojiToggleLabel = document.createElement("label");
-        emojiToggleLabel.textContent = "Prozent-Emoji einschließen";
+        emojiToggleLabel.textContent = "Prozent-Emoji";
         emojiToggleLabel.setAttribute("for", "emoji-toggle");
         emojiToggleLabel.style = `
     margin-left: 8px;
@@ -1224,7 +1215,7 @@ function createPriceChartForm() {
         rekordpreisButton.addEventListener("click", (e) => {
             e.preventDefault();
             const currentMessage = messageTextarea.value;
-            const updatedMessage = currentMessage.replace(/zum (Tiefstpreis|guter Preis|Bestpreis|Rekordpreis) von/, "zum Rekordpreis von");
+            const updatedMessage = currentMessage.replace(/zum (Tiefstpreis|guten Preis|Bestpreis|Rekordpreis) von/, "zum Rekordpreis von");
             messageTextarea.value = updatedMessage;
 
             rekordpreisButton.style.backgroundColor = "#28a745";
@@ -1249,13 +1240,68 @@ function createPriceChartForm() {
   `;
         formContainer.appendChild(messageLabel);
 
-        const emojiContainer = document.createElement("div");
-        emojiContainer.style = `
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
+        const emojiSectionContainer = document.createElement("div");
+        emojiSectionContainer.style = `
     margin-bottom: 10px;
   `;
+
+        const emojiToggleHeader = document.createElement("button");
+        emojiToggleHeader.textContent = "🎯 Emoji auswählen";
+        emojiToggleHeader.type = "button";
+        emojiToggleHeader.style = `
+    width: 100%;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    transition: background-color 0.2s ease;
+  `;
+
+        const toggleIcon = document.createElement("span");
+        toggleIcon.textContent = "▼";
+        toggleIcon.style = `
+    font-size: 10px;
+    transition: transform 0.2s ease;
+  `;
+        emojiToggleHeader.appendChild(toggleIcon);
+
+        const emojiContainer = document.createElement("div");
+        emojiContainer.style = `
+    display: none;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 8px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+  `;
+
+        let isEmojiSectionOpen = false;
+
+        emojiToggleHeader.addEventListener("click", (e) => {
+            e.preventDefault();
+            isEmojiSectionOpen = !isEmojiSectionOpen;
+
+            if (isEmojiSectionOpen) {
+                emojiContainer.style.display = "flex";
+                toggleIcon.style.transform = "rotate(180deg)";
+                emojiToggleHeader.style.backgroundColor = "#e9ecef";
+            } else {
+                emojiContainer.style.display = "none";
+                toggleIcon.style.transform = "rotate(0deg)";
+                emojiToggleHeader.style.backgroundColor = "#f8f9fa";
+            }
+        });
+
+        emojiSectionContainer.appendChild(emojiToggleHeader);
 
         const emojis = ["🔥", "☕️", "☀️", "🥷", "❄️", "🎄", "🛍️", "🍫", "✨", "💸", "🚨"];
         const selectedEmojis = new Set();
@@ -1290,7 +1336,8 @@ function createPriceChartForm() {
             emojiContainer.appendChild(emojiBtn);
         });
 
-        formContainer.appendChild(emojiContainer);
+        emojiSectionContainer.appendChild(emojiContainer);
+        formContainer.appendChild(emojiSectionContainer);
 
         const messageBody = `${productName} zum ${priceType} von ${currentPrice} ${currentUrl}\n${priceReduction}${priceReductionPercent} unter dem Durchschnittspreis.`;
 
