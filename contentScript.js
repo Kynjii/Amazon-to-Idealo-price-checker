@@ -945,7 +945,7 @@ function createPriceChartForm() {
     const currentPriceElement = document.querySelector(".priceHistoryStatistics-amount");
     const currentPrice = currentPriceElement ? currentPriceElement.textContent.trim() : "Unknown Price";
 
-    const currentUrl = window.location.href.split("#")[0];
+    const currentUrl = window.location.href.split("#")[0] + "#pricechart";
 
     const priceStats = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
     let priceReduction = "No data available";
@@ -1294,25 +1294,28 @@ function createPriceChartForm() {
 
     document.body.appendChild(formContainer);
 
-    document.addEventListener("click", function closeFormOnOutsideClick(e) {
+    function closeFormOnOutsideClick(e) {
         const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
         const formButton = document.querySelector('[data-form-button="true"]');
 
         if (!formContainer.contains(e.target) && !formButton?.contains(e.target) && modal?.contains(e.target)) {
-            window.removeEventListener("resize", updateFormPosition);
-            modalObserver.disconnect();
-            formContainer.remove();
-            document.removeEventListener("click", closeFormOnOutsideClick);
+            cleanup();
         }
-    });
+    }
+
+    function cleanup() {
+        window.removeEventListener("resize", updateFormPosition);
+        modalObserver.disconnect();
+        formContainer.remove();
+        document.removeEventListener("click", closeFormOnOutsideClick);
+    }
+
+    document.addEventListener("click", closeFormOnOutsideClick);
 
     const modalObserver = new MutationObserver((mutations) => {
         const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
         if (!modal) {
-            window.removeEventListener("resize", updateFormPosition);
-            modalObserver.disconnect();
-            formContainer.remove();
-            document.removeEventListener("click", closeFormOnOutsideClick);
+            cleanup();
         }
     });
 
@@ -1368,14 +1371,22 @@ function addFormButtonToModal() {
         e.stopPropagation();
         const existingForm = document.querySelector('[data-price-form="true"]');
         if (existingForm) {
+            chrome.storage.local.set({ priceFormOpen: false });
             existingForm.remove();
         } else {
+            chrome.storage.local.set({ priceFormOpen: true });
             createPriceChartForm();
         }
     });
 
     modalHeader.style.position = "relative";
     modalHeader.appendChild(formButton);
+
+    chrome.storage.local.get(["priceFormOpen"], (result) => {
+        if (result.priceFormOpen) {
+            setTimeout(() => createPriceChartForm(), 100);
+        }
+    });
 }
 
 function addTimeButtonListeners() {
@@ -1385,9 +1396,24 @@ function addTimeButtonListeners() {
         if (!button.hasAttribute("data-percentage-listener")) {
             button.setAttribute("data-percentage-listener", "true");
             button.addEventListener("click", () => {
+                const wasFormOpen = document.querySelector('[data-price-form="true"]') !== null;
+                if (wasFormOpen) {
+                    chrome.storage.local.set({ priceFormOpen: true });
+                }
+
                 document.querySelectorAll(".price-percentage-change").forEach((el) => el.remove());
                 setTimeout(() => addPriceHistoryPercentages(), 1000);
                 setTimeout(() => addPriceHistoryPercentages(), 2000);
+
+                if (wasFormOpen) {
+                    setTimeout(() => {
+                        chrome.storage.local.get(["priceFormOpen"], (result) => {
+                            if (result.priceFormOpen) {
+                                createPriceChartForm();
+                            }
+                        });
+                    }, 1500);
+                }
             });
         }
     });
