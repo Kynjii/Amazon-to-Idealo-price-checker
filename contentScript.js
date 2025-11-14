@@ -973,27 +973,12 @@ function createPriceChartForm() {
                     const lowestPriceValue = parseFloat(lowestPriceElement.textContent.replace(/[^\d,]/g, "").replace(",", "."));
 
                     if (currentPriceValue === lowestPriceValue) {
-                        priceType = "Rekordpreis";
-                    } else if (currentPriceValue <= lowestPriceValue * 1.05) {
-                        // Within 5% of lowest price
                         priceType = "Tiefstpreis";
-                    } else if (averagePriceRow) {
-                        const averagePriceElement = averagePriceRow.querySelector(".priceHistoryStatistics-amount");
-                        if (averagePriceElement) {
-                            const averagePriceValue = parseFloat(averagePriceElement.textContent.replace(/[^\d,]/g, "").replace(",", "."));
-
-                            if (currentPriceValue <= averagePriceValue * 0.85) {
-                                // 15% below average
-                                priceType = "Bestpreis";
-                            } else if (currentPriceValue <= averagePriceValue) {
-                                // Below or equal to average
-                                priceType = "guter Preis";
-                            }
-                        }
+                    } else {
+                        priceType = "guter Preis";
                     }
                 }
             }
-
             let targetRow = Array.from(priceStats.querySelectorAll(".priceHistoryStatistics-row")).find((row) => {
                 const title = row.querySelector(".priceHistoryStatistics-title");
                 return title && title.textContent.includes("Jahr");
@@ -1175,14 +1160,22 @@ function createPriceChartForm() {
 
         formContainer.appendChild(slackInput);
 
+        const togglesContainer = document.createElement("div");
+        togglesContainer.style = `
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+    align-items: center;
+  `;
+
         const emojiToggleContainer = document.createElement("div");
         emojiToggleContainer.style = `
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
     padding: 8px;
     background-color: #f8f9fa;
     border-radius: 4px;
+    flex: 1;
   `;
 
         const emojiToggleCheckbox = document.createElement("input");
@@ -1190,6 +1183,10 @@ function createPriceChartForm() {
         emojiToggleCheckbox.id = "emoji-toggle";
 
         chrome.storage.local.get(["emojiToggleEnabled"], (result) => {
+            if (chrome.runtime.lastError) {
+                console.log("Extension context invalidated, page reload required");
+                return;
+            }
             emojiToggleCheckbox.checked = result.emojiToggleEnabled !== undefined ? result.emojiToggleEnabled : true;
             updateMessageWithEmojis();
         });
@@ -1206,8 +1203,42 @@ function createPriceChartForm() {
 
         emojiToggleContainer.appendChild(emojiToggleCheckbox);
         emojiToggleContainer.appendChild(emojiToggleLabel);
-        formContainer.appendChild(emojiToggleContainer);
 
+        const rekordpreisButton = document.createElement("button");
+        rekordpreisButton.textContent = "🔥 Rekordpreis";
+        rekordpreisButton.type = "button";
+        rekordpreisButton.style = `
+    padding: 8px 12px;
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  `;
+
+        rekordpreisButton.addEventListener("click", (e) => {
+            e.preventDefault();
+            const currentMessage = messageTextarea.value;
+            const updatedMessage = currentMessage.replace(/zum (Tiefstpreis|guter Preis|Bestpreis|Rekordpreis) von/, "zum Rekordpreis von");
+            messageTextarea.value = updatedMessage;
+
+            rekordpreisButton.style.backgroundColor = "#28a745";
+            rekordpreisButton.textContent = "🔥 Gesetzt!";
+
+            setTimeout(() => {
+                rekordpreisButton.style.backgroundColor = "#ffc107";
+                rekordpreisButton.textContent = "🔥 Rekordpreis";
+            }, 2000);
+        });
+
+        togglesContainer.appendChild(emojiToggleContainer);
+        togglesContainer.appendChild(rekordpreisButton);
+        formContainer.appendChild(togglesContainer);
         const messageLabel = document.createElement("label");
         messageLabel.textContent = "Nachrichtentext:";
         messageLabel.style = `
@@ -1300,7 +1331,25 @@ function createPriceChartForm() {
 
                     if (changeElement) {
                         const isDecrease = changeElement.classList.contains("decreased");
-                        const emoji = isDecrease ? "🟢" : "🔴";
+                        let emoji = "🔴"; // Default for increases
+
+                        if (isDecrease) {
+                            // Extract percentage number for color logic
+                            const percentMatch = priceReductionPercent.match(/(\d+(?:\.\d+)?)%/);
+                            if (percentMatch) {
+                                const percentNum = parseFloat(percentMatch[1]);
+                                if (percentNum > 20) {
+                                    emoji = "🟢"; // Green for > 20%
+                                } else if (percentNum >= 10) {
+                                    emoji = "🟡"; // Yellow for 10-20%
+                                } else {
+                                    emoji = "🔵"; // Blue for 0-10%
+                                }
+                            } else {
+                                emoji = "🟢"; // Default green for decreases without clear percentage
+                            }
+                        }
+
                         const plainPercent = priceReductionPercent.trim();
                         if (plainPercent.startsWith("(") && plainPercent.endsWith(")")) {
                             const percentContent = plainPercent.slice(1, -1);
@@ -1314,6 +1363,10 @@ function createPriceChartForm() {
         }
 
         emojiToggleCheckbox.addEventListener("change", () => {
+            if (chrome.runtime.lastError) {
+                console.log("Extension context invalidated, page reload required");
+                return;
+            }
             chrome.storage.local.set({ emojiToggleEnabled: emojiToggleCheckbox.checked });
             updateMessageWithEmojis();
         });
@@ -1345,7 +1398,7 @@ function createPriceChartForm() {
             const originalMessage = messageTextarea.value;
             const emojiPrefix = Array.from(selectedEmojis).join("") + (selectedEmojis.size > 0 ? " " : "");
 
-            const slackMessage = originalMessage.replace(currentPrice, `*${currentPrice}*`);
+            const slackMessage = originalMessage.replace(currentPrice, `*${currentPrice}*`).replace(/Rekordpreis/g, "*Rekordpreis*");
             const slackFormattedMessage = `${emojiPrefix}${shopName}: ${slackMessage}`;
 
             const payload = JSON.stringify({
@@ -1656,6 +1709,24 @@ function addPriceHistoryPercentages() {
         const formattedPercentage = Math.abs(percentageChange).toFixed(1);
         percentageDiv.textContent = `${isIncrease ? "+" : "-"}${formattedPercentage}%`;
 
+        // Determine color based on percentage ranges for decreases
+        let color = "#dc3545"; // Default red for increases
+        let borderColor = "#dc3545";
+
+        if (isDecrease) {
+            const absPercentage = Math.abs(percentageChange);
+            if (absPercentage > 0 && absPercentage <= 10) {
+                color = "#007bff"; // Blue 🔵
+                borderColor = "#007bff";
+            } else if (absPercentage > 10 && absPercentage <= 20) {
+                color = "#ffc107"; // Yellow 🟡
+                borderColor = "#ffc107";
+            } else if (absPercentage > 20) {
+                color = "#28a745"; // Green 🟢
+                borderColor = "#28a745";
+            }
+        }
+
         row.style.position = "relative";
 
         percentageDiv.style = `
@@ -1665,11 +1736,11 @@ function addPriceHistoryPercentages() {
       transform: translate(-50%, -50%);
       font-size: 14px;
       font-weight: bold;
-      color: ${isIncrease ? "#dc3545" : "#28a745"};
+      color: ${color};
       background: rgba(255, 255, 255, 0.95);
       padding: 4px 8px;
       border-radius: 6px;
-      border: 1px solid ${isIncrease ? "#dc3545" : "#28a745"};
+      border: 1px solid ${borderColor};
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       z-index: 10;
       pointer-events: none;
