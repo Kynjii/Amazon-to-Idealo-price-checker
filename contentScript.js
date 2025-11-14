@@ -1543,8 +1543,7 @@ function addIdealoButton(titleElement) {
 
     const idealoButton = document.createElement("a");
     idealoButton.innerText = "🔍 Suche auf Idealo";
-    idealoButton.href = `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${searchQuery}`;
-    idealoButton.target = "_blank";
+    idealoButton.href = "#";
     idealoButton.style = `
       display: inline-block;
       margin: 8px 2px;
@@ -1559,6 +1558,16 @@ function addIdealoButton(titleElement) {
       transition: all 0.3s ease;
       position: relative;
     `;
+
+    idealoButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        idealoButton.innerText = "Loading...";
+        idealoButton.style.backgroundColor = "#ccc";
+        
+        setTimeout(() => {
+            window.open(`https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${searchQuery}`, '_blank');
+        }, 1500);
+    });
 
     idealoButton.addEventListener("mouseover", () => {
         idealoButton.style.backgroundColor = "#FF8C00";
