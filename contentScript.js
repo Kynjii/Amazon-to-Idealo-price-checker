@@ -64,7 +64,7 @@ setTimeout(() => {
       cursor: pointer;
       padding: 0;
     `;
-                iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("DeanHead.png")}" width="25" height="25" style="border-radius: 50%;">`;
+                iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("icon.png")}" width="25" height="25" style="border-radius: 50%;">`;
                 document.body.appendChild(iconBtn);
 
                 iconBtn.addEventListener("click", (e) => {
@@ -331,7 +331,7 @@ setTimeout(() => {
       cursor: pointer;
       padding: 0;
     `;
-            iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("DeanHead.png")}" width="25" height="25" style="border-radius: 50%;">`;
+            iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("icon.png")}" width="25" height="25" style="border-radius: 50%;">`;
             document.body.appendChild(iconBtn);
 
             // Create filter panel (hidden by default)
