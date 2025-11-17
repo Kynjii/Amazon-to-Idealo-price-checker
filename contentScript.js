@@ -621,14 +621,14 @@ setTimeout(() => {
             const searchQuery = new URL(window.location.href).searchParams.get("q");
             if (!searchQuery) return;
 
-            const resultItems = document.querySelectorAll('[data-testid="resultItem"]:has(.sr-productSummary__title_f5flP)');
+            const resultItems = document.querySelectorAll('.sr-resultList__item_m6xdA, [data-testid="resultItem"]:has(.sr-productSummary__title_f5flP)');
 
             let highestMatch = { element: null, value: 0 };
             let lowestPriceDiff = { element: null, value: Number.POSITIVE_INFINITY };
 
             resultItems.forEach((resultItem) => {
                 const titleElement = resultItem.querySelector(".sr-productSummary__title_f5flP");
-                const priceElement = resultItem.querySelector("[data-testid='detailedPriceInfo__price']");
+                const priceElement = resultItem.querySelector('.sr-detailedPriceInfo__price_sYVmx, [data-testid="detailedPriceInfo__price"]');
 
                 if (titleElement && priceElement) {
                     const resultTitle = titleElement.textContent.trim();
@@ -741,37 +741,39 @@ setTimeout(() => {
 
             const toggleExtensionUI = () => {
                 const extensionElements = document.querySelectorAll('[data-extension-ui="true"], [data-product-container="true"], .extension-annotation');
+                const navButtons = document.querySelector('[data-nav-buttons="true"]');
 
                 if (extensionElements.length > 0) {
-                    const currentDisplay = extensionElements[0].style.display || "flex";
-                    const newDisplay = currentDisplay === "none" ? "flex" : "none";
-
+                    let isVisible = false;
+                    for (let element of extensionElements) {
+                        if (!element.hasAttribute("data-product-container") && element.style.display !== "none" && getComputedStyle(element).display !== "none") {
+                            isVisible = true;
+                            break;
+                        }
+                    }
                     extensionElements.forEach((element) => {
-                        if (newDisplay === "none") {
-                            if (element.classList.contains("highlighted-element")) {
+                        if (isVisible) {
+                            if (element.classList && element.classList.contains("highlighted-element")) {
                                 element.dataset.originalBorder = element.style.border;
                                 element.dataset.originalBackground = element.style.backgroundColor;
                                 element.style.border = "0";
                                 element.style.backgroundColor = "transparent";
                             }
                             if (!element.hasAttribute("data-product-container")) {
-                                element.style.display = newDisplay;
+                                element.style.display = "none";
                             }
                         } else {
-                            if (element.classList.contains("highlighted-element")) {
+                            if (element.classList && element.classList.contains("highlighted-element")) {
                                 element.style.border = element.dataset.originalBorder || "";
                                 element.style.backgroundColor = element.dataset.originalBackground || "";
                             }
-                            if (element.classList.contains("extension-annotation")) {
-                                element.style.display = "flex";
-                            }
                             if (!element.hasAttribute("data-product-container")) {
-                                element.style.display = newDisplay;
+                                element.style.display = "flex";
                             }
                         }
                     });
-                } else {
-                    console.warn("No extension UI elements found to toggle.");
+                } else if (navButtons) {
+                    console.log("Extension UI elements not found, but navigation is present");
                 }
             };
 
@@ -914,7 +916,7 @@ setTimeout(() => {
                 lowestPriceDiff.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
                 lowestPriceDiff.element.style.backgroundColor = "rgba(255,209,128, 0.2)";
             }
-            if (highestMatch.element === lowestPriceDiff.element) {
+            if (highestMatch.element && lowestPriceDiff.element && highestMatch.element === lowestPriceDiff.element) {
                 highestMatch.element.classList.add("highlighted-element");
                 highestMatch.element.setAttribute("data-product-container", "true");
                 highestMatch.element.style.border = "3px dashed #800080";
