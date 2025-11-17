@@ -599,7 +599,9 @@ setTimeout(() => {
         };
     }
 
-    if (currentUrl.includes("amazon")) {
+    const hostname = window.location.hostname;
+
+    if (hostname.includes("amazon.")) {
         const titleElement = document.getElementById("productTitle");
         const priceElement = document.querySelector(".a-price-whole");
         const fractionElement = document.querySelector(".a-price-fraction");
@@ -612,7 +614,7 @@ setTimeout(() => {
             chrome.storage.local.set({ amazonPrice }, () => {});
             addIdealoButton(titleElement);
         }
-    } else if (currentUrl.includes("idealo.de/preisvergleich/")) {
+    } else if (hostname.includes("idealo.")) {
         setTimeout(() => setupPriceChartDetection(), 1000);
 
         chrome.storage.local.get(["amazonPrice"], (result) => {
@@ -937,18 +939,33 @@ function createPriceChartForm() {
 
     const priceModal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
     if (!priceModal) {
-        console.log("Kein Modal gefunden, kann Formular nicht erstellen");
         return;
     }
-
     setTimeout(() => {
         const productNameElement = document.querySelector('[data-testid="price-chart-modal-product-name"]');
         const productName = productNameElement ? productNameElement.textContent.trim() : "Unbekanntes Produkt";
 
         const currentPriceElements = document.querySelectorAll(".productOffers-listItemOfferPrice");
-        const currentPriceElement = currentPriceElements[0];
-        const currentPrice = currentPriceElement ? currentPriceElement.textContent.trim() : "Unbekannter Preis";
 
+        let currentPrice = "Unbekannter Preis";
+
+        if (currentPriceElements[0]) {
+            currentPrice = currentPriceElements[0].textContent.trim();
+        } else {
+            const priceStats = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
+            if (priceStats) {
+                const lowestPriceRow = Array.from(priceStats.querySelectorAll(".priceHistoryStatistics-row")).find((row) => {
+                    const title = row.querySelector(".priceHistoryStatistics-title");
+                    return title && title.textContent.includes("Tiefster Preis");
+                });
+                if (lowestPriceRow) {
+                    const lowestPriceElement = lowestPriceRow.querySelector(".priceHistoryStatistics-amount");
+                    if (lowestPriceElement) {
+                        currentPrice = lowestPriceElement.textContent.trim();
+                    }
+                }
+            }
+        }
         const currentUrl = window.location.href.split("#")[0] + "#pricechart";
 
         const priceStats = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
@@ -1658,15 +1675,26 @@ function createPriceChartForm() {
 
 function setupPriceChartDetection() {
     const priceChartContainer = document.querySelector(".oopStage-price-chart");
+
     if (priceChartContainer) {
-        priceChartContainer.addEventListener("click", () => {
-            setTimeout(() => addPriceHistoryPercentages(), 500);
-            setTimeout(() => addPriceHistoryPercentages(), 1500);
-            setTimeout(() => addPriceHistoryPercentages(), 3000);
+        const clickableElements = [priceChartContainer, ...priceChartContainer.querySelectorAll(".tv-lightweight-charts"), ...priceChartContainer.querySelectorAll("canvas"), ...priceChartContainer.querySelectorAll(".embedded-chart-container"), ...priceChartContainer.querySelectorAll(".styled-price-chart-embedded")];
 
-            setTimeout(() => addTimeButtonListeners(), 1000);
+        clickableElements.forEach((element) => {
+            element.addEventListener("click", () => {
+                setTimeout(() => addPriceHistoryPercentages(), 100);
+                setTimeout(() => addFormButtonToModal(), 200);
 
-            setTimeout(() => addFormButtonToModal(), 1500);
+                setTimeout(() => addPriceHistoryPercentages(), 500);
+                setTimeout(() => addFormButtonToModal(), 600);
+
+                setTimeout(() => addPriceHistoryPercentages(), 1500);
+                setTimeout(() => addFormButtonToModal(), 1600);
+
+                setTimeout(() => addPriceHistoryPercentages(), 3000);
+                setTimeout(() => addFormButtonToModal(), 3100);
+
+                setTimeout(() => addTimeButtonListeners(), 1000);
+            });
         });
     }
 
@@ -1681,9 +1709,15 @@ function addFormButtonToModal() {
     const modal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
     if (!modal || document.querySelector('[data-form-button="true"]')) return;
 
-    const modalHeader = modal.querySelector("header") || modal.querySelector(".modal-header") || modal.querySelector('[data-testid*="header"]');
-    if (!modalHeader) return;
+    let modalHeader = modal.querySelector("header") || modal.querySelector(".modal-header") || modal.querySelector('[data-testid*="header"]') || modal.querySelector(".styled-price-chart-modal-header") || modal.querySelector(".styled-price-chart-modal header");
 
+    if (!modalHeader) {
+        modalHeader = modal.querySelector(".styled-price-chart-modal");
+    }
+
+    if (!modalHeader) {
+        modalHeader = modal;
+    }
     const formButton = document.createElement("button");
     formButton.setAttribute("data-form-button", "true");
     formButton.textContent = "📊 Preis Info Formular";
