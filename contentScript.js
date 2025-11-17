@@ -1863,6 +1863,19 @@ function addPriceHistoryPercentages() {
     });
 }
 
+function cleanSearchQuery(text) {
+    if (!text) return "";
+
+    return text
+        .replace(/[^\w\säöüÄÖÜß\-\.]/g, " ")
+        .replace(/\b(amazon|bestseller|choice|renewed|pack|set|bundle|kit|piece|pcs|pc|cm|mm|inch|inches|"|kg|g|ml|l)\b/gi, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .split(" ")
+        .slice(0, 8)
+        .join(" ");
+}
+
 function extractArtikelnummer() {
     const tableRows = document.querySelectorAll("#productDetails_techSpec_section_1 tr");
 
@@ -1887,10 +1900,13 @@ function addIdealoButton(titleElement) {
     const artikelnummer = extractArtikelnummer();
     const amazonIdentifier = extractAmazonIdentifier();
 
+    const cleanTitle = cleanSearchQuery(productTitle);
+
     const searchQueryParts = [];
     if (artikelnummer) searchQueryParts.push(artikelnummer);
     if (amazonIdentifier) searchQueryParts.push(amazonIdentifier);
-    searchQueryParts.push(productTitle);
+    if (cleanTitle) searchQueryParts.push(cleanTitle);
+
     const searchQuery = searchQueryParts.map(encodeURIComponent).join(" ");
 
     const idealoButton = document.createElement("a");
