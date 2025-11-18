@@ -808,26 +808,32 @@ setTimeout(() => {
                     const closestMatchButton = document.createElement("button");
                     closestMatchButton.textContent = "Bester Match";
                     closestMatchButton.style = `
+            width: 100%;
             padding: 10px;
-            background-color: #A5D6A7;
-            color: #4F4F4F;
+            background-color: #28a745;
+            color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 14px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           `;
                     closestMatchButton.addEventListener("mouseover", () => {
-                        closestMatchButton.style.backgroundColor = "#45c765";
-                        closestMatchButton.style.color = "black";
+                        closestMatchButton.style.backgroundColor = "#218838";
+                        closestMatchButton.style.transform = "translateY(-1px)";
+                        closestMatchButton.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
                         if (highestMatch.element) {
                             highestMatch.element.style.backgroundColor = "rgba(165,214,167, 0.4)";
                             highestMatch.element.style.border = "3px solid #28a745";
                         }
                     });
                     closestMatchButton.addEventListener("mouseout", () => {
-                        closestMatchButton.style.backgroundColor = "#A5D6A7";
-                        closestMatchButton.style.color = "#4F4F4F";
+                        closestMatchButton.style.backgroundColor = "#28a745";
+                        closestMatchButton.style.transform = "translateY(0)";
+                        closestMatchButton.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
                         if (highestMatch.element) {
                             highestMatch.element.style.backgroundColor = "rgba(165,214,167, 0.2)";
                             highestMatch.element.style.border = "3px dashed green";
@@ -841,28 +847,33 @@ setTimeout(() => {
                     const bestDealButton = document.createElement("button");
                     bestDealButton.textContent = "Bestes Deal";
                     bestDealButton.style = `
+            width: 100%;
             padding: 10px;
-            background-color: #FFD180;
-            color: #4F4F4F;
+            background-color: #ffc107;
+            color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 14px;
-            margin-top: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           `;
 
                     bestDealButton.addEventListener("mouseover", () => {
-                        bestDealButton.style.backgroundColor = "#ffd740";
-                        bestDealButton.style.color = "black";
+                        bestDealButton.style.backgroundColor = "#e0a800";
+                        bestDealButton.style.transform = "translateY(-1px)";
+                        bestDealButton.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
                         if (lowestPriceDiff.element) {
                             lowestPriceDiff.element.style.backgroundColor = "rgba(255,209,128, 0.4)";
                             lowestPriceDiff.element.style.border = "3px solid #ffc107";
                         }
                     });
                     bestDealButton.addEventListener("mouseout", () => {
-                        bestDealButton.style.backgroundColor = "#FFD180";
-                        bestDealButton.style.color = "#4F4F4F";
+                        bestDealButton.style.backgroundColor = "#ffc107";
+                        bestDealButton.style.transform = "translateY(0)";
+                        bestDealButton.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
                         if (lowestPriceDiff.element) {
                             lowestPriceDiff.element.style.backgroundColor = "rgba(255,209,128, 0.2)";
                             lowestPriceDiff.element.style.border = "3px dashed orange";
@@ -877,24 +888,30 @@ setTimeout(() => {
                     const toggleButton = document.createElement("button");
                     toggleButton.textContent = "An/Aus";
                     toggleButton.style = `
+            width: 100%;
             padding: 10px;
-            background-color: #BBDEFB;
-            color: #4F4F4F;
+            background-color: #007bff;
+            color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 14px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           `;
 
                     toggleButton.setAttribute("data-toggle-ui", "true");
                     toggleButton.addEventListener("mouseover", () => {
-                        toggleButton.style.backgroundColor = "#3399ff";
-                        toggleButton.style.color = "black";
+                        toggleButton.style.backgroundColor = "#0056b3";
+                        toggleButton.style.transform = "translateY(-1px)";
+                        toggleButton.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
                     });
                     toggleButton.addEventListener("mouseout", () => {
-                        toggleButton.style.backgroundColor = "#BBDEFB";
-                        toggleButton.style.color = "#4F4F4F";
+                        toggleButton.style.backgroundColor = "#007bff";
+                        toggleButton.style.transform = "translateY(0)";
+                        toggleButton.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
                     });
 
                     toggleButton.setAttribute("data-toggle-ui", "true");
