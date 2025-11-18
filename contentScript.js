@@ -539,7 +539,7 @@ setTimeout(() => {
     }
     const currentUrl = window.location.href;
 
-    if (currentUrl.includes("mydealz.de/heisseste")) {
+    if (currentUrl.includes("mydealz.de")) {
         refreshMyDealzMerchantFilter();
 
         let observerTimeout;
