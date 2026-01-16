@@ -12,6 +12,74 @@ const cosine = {
     }
 };
 
+const siteConfigs = {
+    amazon: {
+        name: "Amazon",
+        hostPattern: "amazon.",
+        storageKey: "amazonPrice",
+        selectors: {
+            title: "#productTitle",
+            priceWhole: ".a-price-whole",
+            priceFraction: ".a-price-fraction"
+        },
+        extractPrice: (titleEl, wholeEl, fracEl) => {
+            if (!titleEl || !wholeEl || !fracEl) return null;
+            const wholePart = wholeEl.textContent.trim().replace(",", ".");
+            const fractionPart = fracEl.textContent.trim();
+            return parseFloat(`${wholePart}${fractionPart}`);
+        },
+        extractSearchTerms: (titleEl) => {
+            const productTitle = titleEl.innerText.trim();
+            const artikelnummer = extractArtikelnummer();
+            const amazonIdentifier = extractAmazonIdentifier();
+            const cleanTitle = cleanSearchQuery(productTitle);
+
+            const searchQueryParts = [];
+            if (artikelnummer) searchQueryParts.push(artikelnummer);
+            if (amazonIdentifier) searchQueryParts.push(amazonIdentifier);
+            if (cleanTitle) searchQueryParts.push(cleanTitle);
+
+            return searchQueryParts;
+        }
+    },
+    breuninger: {
+        name: "Breuninger",
+        hostPattern: "breuninger.",
+        storageKey: "breuningerPrice",
+        selectors: {
+            container: ".ents-pds-summary",
+            brand: ".bewerten-zusammenfassung__heading__link span",
+            productName: ".bewerten-zusammenfassung__name",
+            price: ".ents-price-area .bdk-badge-price",
+            color: ".ents-colors-thumbnails fieldset span.ents-copy-small-bold",
+            title: "h1.bewerten-zusammenfassung__heading"
+        },
+        extractPrice: (container) => {
+            const priceElement = container.querySelector(".ents-price-area .bdk-badge-price");
+            const priceText = priceElement ? priceElement.textContent.trim() : "";
+            return extractPrice(priceText);
+        },
+        extractSearchTerms: (container) => {
+            const brandElement = container.querySelector(".bewerten-zusammenfassung__heading__link span");
+            const brandName = brandElement ? brandElement.textContent.trim() : "";
+            const productNameElement = container.querySelector(".bewerten-zusammenfassung__name");
+            const productName = productNameElement ? productNameElement.textContent.trim() : "";
+            const colorElement = container.querySelector(".ents-colors-thumbnails fieldset span.ents-copy-small-bold");
+            const colorName = colorElement ? colorElement.textContent.trim() : "";
+
+            const searchQueryParts = [];
+            if (brandName) searchQueryParts.push(cleanSearchQuery(brandName));
+            if (productName) searchQueryParts.push(cleanSearchQuery(productName));
+            if (colorName) {
+                const cleanColor = colorName.replace(/^Farbe:\s*/i, "").trim();
+                if (cleanColor) searchQueryParts.push(cleanSearchQuery(cleanColor));
+            }
+
+            return searchQueryParts;
+        }
+    }
+};
+
 function extractPrice(priceText) {
     const priceMatch = priceText.match(/\d+[.,]?\d*/);
     return priceMatch ? parseFloat(priceMatch[0].replace(",", ".")) : null;
@@ -576,6 +644,51 @@ setTimeout(() => {
         });
     }
 
+    function handleSite(siteConfig) {
+        if (siteConfig.name === "Amazon") {
+            const titleElement = document.querySelector(siteConfig.selectors.title);
+            const priceElement = document.querySelector(siteConfig.selectors.priceWhole);
+            const fractionElement = document.querySelector(siteConfig.selectors.priceFraction);
+
+            if (titleElement && priceElement && fractionElement) {
+                const price = siteConfig.extractPrice(titleElement, priceElement, fractionElement);
+                if (price) {
+                    const storageUpdate = {};
+                    Object.values(siteConfigs).forEach((site) => {
+                        storageUpdate[site.storageKey] = site.storageKey === siteConfig.storageKey ? price : null;
+                    });
+                    chrome.storage.local.set(storageUpdate, () => {});
+
+                    const searchTerms = siteConfig.extractSearchTerms(titleElement);
+                    addIdealoButton(titleElement, searchTerms);
+                }
+            }
+        } else if (siteConfig.name === "Breuninger") {
+            if (window.location.pathname.includes("/p/")) {
+                const container = document.querySelector(siteConfig.selectors.container);
+                if (container) {
+                    const titleElement = container.querySelector(siteConfig.selectors.title);
+                    const brandElement = container.querySelector(siteConfig.selectors.brand);
+                    const productNameElement = container.querySelector(siteConfig.selectors.productName);
+
+                    if (titleElement && (brandElement || productNameElement)) {
+                        const price = siteConfig.extractPrice(container);
+                        if (price) {
+                            const storageUpdate = {};
+                            Object.values(siteConfigs).forEach((site) => {
+                                storageUpdate[site.storageKey] = site.storageKey === siteConfig.storageKey ? price : null;
+                            });
+                            chrome.storage.local.set(storageUpdate, () => {});
+
+                            const searchTerms = siteConfig.extractSearchTerms(container);
+                            addIdealoButton(titleElement, searchTerms);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     if (currentUrl.includes("idealo.de/preisvergleich/deals")) {
         refreshBestDealFilter();
         function addPaginationListener() {
@@ -601,53 +714,32 @@ setTimeout(() => {
 
     const hostname = window.location.hostname;
 
-    if (hostname.includes("amazon.")) {
-        const titleElement = document.getElementById("productTitle");
-        const priceElement = document.querySelector(".a-price-whole");
-        const fractionElement = document.querySelector(".a-price-fraction");
-
-        if (titleElement && priceElement && fractionElement) {
-            const wholePart = priceElement.textContent.trim().replace(",", ".");
-            const fractionPart = fractionElement.textContent.trim();
-            const amazonPrice = parseFloat(`${wholePart}${fractionPart}`);
-
-            chrome.storage.local.set({ amazonPrice }, () => {});
-            addIdealoButton(titleElement);
-        }
-    } else if (hostname.includes("breuninger.")) {
-        if (window.location.pathname.includes("/p/")) {
-            const summaryElement = document.querySelector(".ents-pds-summary");
-
-            if (summaryElement) {
-                const brandElement = summaryElement.querySelector(".bewerten-zusammenfassung__heading__link span");
-                const brandName = brandElement ? brandElement.textContent.trim() : "";
-
-                const productNameElement = summaryElement.querySelector(".bewerten-zusammenfassung__name");
-                const productName = productNameElement ? productNameElement.textContent.trim() : "";
-
-                const priceElement = summaryElement.querySelector(".ents-price-area .bdk-badge-price");
-                const priceText = priceElement ? priceElement.textContent.trim() : "";
-
-                const colorElement = summaryElement.querySelector(".ents-colors-thumbnails fieldset span.ents-copy-small-bold");
-                const colorName = colorElement ? colorElement.textContent.trim() : "";
-
-                const titleElement = summaryElement.querySelector("h1.bewerten-zusammenfassung__heading");
-
-                if (titleElement && (brandName || productName)) {
-                    const breuningerPrice = extractPrice(priceText);
-                    if (breuningerPrice) {
-                        chrome.storage.local.set({ breuningerPrice }, () => {});
-                    }
-
-                    addIdealoButtonForBreuninger(titleElement, brandName, productName, colorName);
-                }
-            }
-        }
+    // Generic site handler
+    const currentSite = Object.values(siteConfigs).find((site) => hostname.includes(site.hostPattern));
+    if (currentSite) {
+        handleSite(currentSite);
     } else if (hostname.includes("idealo.")) {
         setTimeout(() => setupPriceChartDetection(), 1000);
 
-        chrome.storage.local.get(["amazonPrice"], (result) => {
-            const amazonPrice = result.amazonPrice;
+        // Get all possible price sources
+        const allStorageKeys = Object.values(siteConfigs).map((site) => site.storageKey);
+        chrome.storage.local.get(allStorageKeys, (result) => {
+            // Find the most recent price from any supported site
+            let referencePrice = null;
+            let priceSiteName = null;
+
+            for (const site of Object.values(siteConfigs)) {
+                if (result[site.storageKey] && !isNaN(result[site.storageKey])) {
+                    referencePrice = result[site.storageKey];
+                    priceSiteName = site.name;
+                    break; // Use the first valid price found
+                }
+            }
+
+            // If no reference price available, skip comparison
+            if (!referencePrice || isNaN(referencePrice)) {
+                return;
+            }
 
             const searchQuery = new URL(window.location.href).searchParams.get("q");
             if (!searchQuery) return;
@@ -667,7 +759,7 @@ setTimeout(() => {
                     const matchPercentage = Math.round(similarity * 100);
 
                     const idealoPrice = extractPrice(priceElement.textContent.replace("ab", "").trim());
-                    const priceDifference = !isNaN(amazonPrice) && !isNaN(idealoPrice) ? (idealoPrice - amazonPrice).toFixed(2) : null;
+                    const priceDifference = !isNaN(referencePrice) && !isNaN(idealoPrice) ? (idealoPrice - referencePrice).toFixed(2) : null;
 
                     const annotationContainer = document.createElement("div");
                     annotationContainer.setAttribute("data-extension-ui", "true");
@@ -713,6 +805,22 @@ setTimeout(() => {
               border-radius: 3px;
             `;
                         annotationContainer.appendChild(priceDiffAnnotation);
+
+                        const priceSourceAnnotation = document.createElement("span");
+                        priceSourceAnnotation.textContent = `vs ${priceSiteName}`;
+                        priceSourceAnnotation.classList.add("extension-annotation");
+                        priceSourceAnnotation.style = `
+              display: flex;
+              padding: 3px 5px;
+              background-color: #6c757d;
+              color: white;
+              font-size: 10px;
+              font-weight: bold;
+              align-items: center;
+              justify-content: center;
+              border-radius: 3px;
+            `;
+                        annotationContainer.appendChild(priceSourceAnnotation);
 
                         if (lowestPriceDiff.element) {
                             lowestPriceDiff.element.classList.remove("lowest-price-highlight");
@@ -1975,72 +2083,9 @@ function extractAmazonIdentifier() {
     return match ? match[1] : null;
 }
 
-function addIdealoButton(titleElement) {
-    const productTitle = titleElement.innerText.trim();
-    const artikelnummer = extractArtikelnummer();
-    const amazonIdentifier = extractAmazonIdentifier();
-
-    const cleanTitle = cleanSearchQuery(productTitle);
-
-    const searchQueryParts = [];
-    if (artikelnummer) searchQueryParts.push(artikelnummer);
-    if (amazonIdentifier) searchQueryParts.push(amazonIdentifier);
-    if (cleanTitle) searchQueryParts.push(cleanTitle);
-
-    const searchQuery = searchQueryParts.map(encodeURIComponent).join(" ");
-
-    const idealoButton = document.createElement("a");
-    idealoButton.innerText = "🔍 Suche auf Idealo";
-    idealoButton.href = `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${searchQuery}`;
-    idealoButton.target = "_blank";
-    idealoButton.style = `
-      display: inline-block;
-      margin: 8px 2px;
-      padding: 0px 8px;
-      background-color: #FFD180;
-      color: #4F4F4F;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
-      font-size: 0.75rem;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s ease;
-      position: relative;
-    `;
-
-    idealoButton.addEventListener("mouseover", () => {
-        idealoButton.style.backgroundColor = "#FF8C00";
-        idealoButton.style.color = "black";
-        idealoButton.style.transform = "scale(1.05)";
-    });
-    idealoButton.addEventListener("mouseout", () => {
-        idealoButton.style.backgroundColor = "#FFD180";
-        idealoButton.style.color = "#4F4F4F";
-        idealoButton.style.transform = "scale(1)";
-    });
-
-    titleElement.parentElement.appendChild(idealoButton);
-}
-
-function addIdealoButtonForBreuninger(titleElement, brandName, productName, colorName) {
-    const searchQueryParts = [];
-
-    if (brandName) {
-        searchQueryParts.push(cleanSearchQuery(brandName));
-    }
-
-    if (productName) {
-        searchQueryParts.push(cleanSearchQuery(productName));
-    }
-
-    if (colorName) {
-        const cleanColor = colorName.replace(/^Farbe:\s*/i, "").trim();
-        if (cleanColor) {
-            searchQueryParts.push(cleanSearchQuery(cleanColor));
-        }
-    }
-
-    const searchQuery = searchQueryParts.map(encodeURIComponent).join(" ");
+// Generic addIdealoButton function
+function addIdealoButton(titleElement, searchTerms) {
+    const searchQuery = searchTerms.map(encodeURIComponent).join(" ");
 
     const idealoButton = document.createElement("a");
     idealoButton.innerText = "🔍 Suche auf Idealo";
@@ -2055,7 +2100,7 @@ function addIdealoButtonForBreuninger(titleElement, brandName, productName, colo
       text-decoration: none;
       border-radius: 5px;
       font-weight: bold;
-      font-size: 0.8rem;
+      font-size: 2rem;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: all 0.3s ease;
       position: relative;
