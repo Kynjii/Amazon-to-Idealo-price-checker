@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Amazon to Idealo",
-    "version": "1.4.0",
+    "version": "1.14.0",
     "description": "Adds a button to Amazon product pages to search for the product on Idealo and annotates Idealo search results with match percentages and price differences.",
     "permissions": ["activeTab", "storage"],
     "host_permissions": ["https://www.amazon.de/*", "https://www.amazon.com/*", "https://www.amazon.co.uk/*", "https://www.amazon.ca/*", "https://www.amazon.fr/*", "https://www.amazon.it/*", "https://www.amazon.es/*", "https://www.amazon.nl/*", "https://www.idealo.de/preisvergleich/*", "https://www.breuninger.com/*"],
