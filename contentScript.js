@@ -614,6 +614,35 @@ setTimeout(() => {
             chrome.storage.local.set({ amazonPrice }, () => {});
             addIdealoButton(titleElement);
         }
+    } else if (hostname.includes("breuninger.")) {
+        if (window.location.pathname.includes("/p/")) {
+            const summaryElement = document.querySelector(".ents-pds-summary");
+
+            if (summaryElement) {
+                const brandElement = summaryElement.querySelector(".bewerten-zusammenfassung__heading__link span");
+                const brandName = brandElement ? brandElement.textContent.trim() : "";
+
+                const productNameElement = summaryElement.querySelector(".bewerten-zusammenfassung__name");
+                const productName = productNameElement ? productNameElement.textContent.trim() : "";
+
+                const priceElement = summaryElement.querySelector(".ents-price-area .bdk-badge-price");
+                const priceText = priceElement ? priceElement.textContent.trim() : "";
+
+                const colorElement = summaryElement.querySelector(".ents-colors-thumbnails fieldset span.ents-copy-small-bold");
+                const colorName = colorElement ? colorElement.textContent.trim() : "";
+
+                const titleElement = summaryElement.querySelector("h1.bewerten-zusammenfassung__heading");
+
+                if (titleElement && (brandName || productName)) {
+                    const breuningerPrice = extractPrice(priceText);
+                    if (breuningerPrice) {
+                        chrome.storage.local.set({ breuningerPrice }, () => {});
+                    }
+
+                    addIdealoButtonForBreuninger(titleElement, brandName, productName, colorName);
+                }
+            }
+        }
     } else if (hostname.includes("idealo.")) {
         setTimeout(() => setupPriceChartDetection(), 1000);
 
@@ -1991,4 +2020,58 @@ function addIdealoButton(titleElement) {
     });
 
     titleElement.parentElement.appendChild(idealoButton);
+}
+
+function addIdealoButtonForBreuninger(titleElement, brandName, productName, colorName) {
+    const searchQueryParts = [];
+
+    if (brandName) {
+        searchQueryParts.push(cleanSearchQuery(brandName));
+    }
+
+    if (productName) {
+        searchQueryParts.push(cleanSearchQuery(productName));
+    }
+
+    if (colorName) {
+        const cleanColor = colorName.replace(/^Farbe:\s*/i, "").trim();
+        if (cleanColor) {
+            searchQueryParts.push(cleanSearchQuery(cleanColor));
+        }
+    }
+
+    const searchQuery = searchQueryParts.map(encodeURIComponent).join(" ");
+
+    const idealoButton = document.createElement("a");
+    idealoButton.innerText = "🔍 Suche auf Idealo";
+    idealoButton.href = `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${searchQuery}`;
+    idealoButton.target = "_blank";
+    idealoButton.style = `
+      display: inline-block;
+      margin: 8px 2px;
+      padding: 8px 12px;
+      background-color: #FFD180;
+      color: #4F4F4F;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 0.8rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      position: relative;
+      margin-top: 10px;
+    `;
+
+    idealoButton.addEventListener("mouseover", () => {
+        idealoButton.style.backgroundColor = "#FF8C00";
+        idealoButton.style.color = "black";
+        idealoButton.style.transform = "scale(1.05)";
+    });
+    idealoButton.addEventListener("mouseout", () => {
+        idealoButton.style.backgroundColor = "#FFD180";
+        idealoButton.style.color = "#4F4F4F";
+        idealoButton.style.transform = "scale(1)";
+    });
+
+    titleElement.insertAdjacentElement("afterend", idealoButton);
 }

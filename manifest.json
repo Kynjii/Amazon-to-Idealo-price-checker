@@ -4,10 +4,10 @@
     "version": "1.3.11",
     "description": "Adds a button to Amazon product pages to search for the product on Idealo and annotates Idealo search results with match percentages and price differences.",
     "permissions": ["activeTab", "storage"],
-    "host_permissions": ["https://www.amazon.de/*", "https://www.amazon.com/*", "https://www.amazon.co.uk/*", "https://www.amazon.ca/*", "https://www.amazon.fr/*", "https://www.amazon.it/*", "https://www.amazon.es/*", "https://www.amazon.nl/*", "https://www.idealo.de/preisvergleich/*"],
+    "host_permissions": ["https://www.amazon.de/*", "https://www.amazon.com/*", "https://www.amazon.co.uk/*", "https://www.amazon.ca/*", "https://www.amazon.fr/*", "https://www.amazon.it/*", "https://www.amazon.es/*", "https://www.amazon.nl/*", "https://www.idealo.de/preisvergleich/*", "https://www.breuninger.com/*"],
     "content_scripts": [
         {
-            "matches": ["https://www.amazon.de/*", "https://www.amazon.com/*", "https://www.amazon.co.uk/*", "https://www.amazon.ca/*", "https://www.amazon.fr/*", "https://www.amazon.it/*", "https://www.amazon.es/*", "https://www.amazon.nl/*"],
+            "matches": ["https://www.amazon.de/*", "https://www.amazon.com/*", "https://www.amazon.co.uk/*", "https://www.amazon.ca/*", "https://www.amazon.fr/*", "https://www.amazon.it/*", "https://www.amazon.es/*", "https://www.amazon.nl/*", "https://www.breuninger.com/*"],
             "js": ["contentScript.js"],
             "run_at": "document_idle"
         },
@@ -20,7 +20,7 @@
     "web_accessible_resources": [
         {
             "resources": ["icon.png"],
-            "matches": ["https://www.idealo.de/*", "https://www.mydealz.de/*"]
+            "matches": ["https://www.idealo.de/*", "https://www.mydealz.de/*", "https://www.breuninger.com/*"]
         }
     ]
 }
