@@ -660,7 +660,7 @@ setTimeout(() => {
                     chrome.storage.local.set(storageUpdate, () => {});
 
                     const searchTerms = siteConfig.extractSearchTerms(titleElement);
-                    addIdealoButton(titleElement, searchTerms);
+                    addIdealoButton(titleElement, searchTerms, "1rem");
                 }
             }
         } else if (siteConfig.name === "Breuninger") {
@@ -681,7 +681,7 @@ setTimeout(() => {
                             chrome.storage.local.set(storageUpdate, () => {});
 
                             const searchTerms = siteConfig.extractSearchTerms(container);
-                            addIdealoButton(titleElement, searchTerms);
+                            addIdealoButton(titleElement, searchTerms, "2rem");
                         }
                     }
                 }
@@ -2083,8 +2083,7 @@ function extractAmazonIdentifier() {
     return match ? match[1] : null;
 }
 
-// Generic addIdealoButton function
-function addIdealoButton(titleElement, searchTerms) {
+function addIdealoButton(titleElement, searchTerms, fontSize = "1rem") {
     const searchQuery = searchTerms.map(encodeURIComponent).join(" ");
 
     const idealoButton = document.createElement("a");
@@ -2100,7 +2099,7 @@ function addIdealoButton(titleElement, searchTerms) {
       text-decoration: none;
       border-radius: 5px;
       font-weight: bold;
-      font-size: 2rem;
+      font-size: ${fontSize};
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       transition: all 0.3s ease;
       position: relative;
