@@ -76,14 +76,6 @@ The manual process previously involved:
     -   Real-time DOM monitoring with throttled observers
 -   **Architecture**: Content script with modular function design and event-driven interactions
 
-## Dependencies
-
-The following dependencies and tools are required for this extension:
-
--   **Chrome Extension Manifest v3**: To define permissions, content scripts, and background processes.
--   **Browser Storage API**: To store and retrieve Amazon price details locally.
--   **DOM Manipulation**: For dynamically injecting buttons and highlights into Amazon and Idealo pages.
-
 ## How It Works
 
 ### Amazon Integration
