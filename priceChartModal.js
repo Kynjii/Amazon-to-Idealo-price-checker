@@ -448,8 +448,35 @@ function createEmojiSelection(formContainer) {
 
     let isEmojiSectionOpen = false;
 
-    emojiToggleHeader.addEventListener("click", (e) => {
-        e.preventDefault();
+    const emojis = ["🔥", "☕️", "☀️", "🥷", "❄️", "🎄", "🛍️", "🍫", "✨", "💸", "🚨"];
+    const selectedEmojis = new Set();
+
+    chrome.storage.local.get(["selectedEmojis"], (result) => {
+        const savedEmojis = result.selectedEmojis || [];
+
+        savedEmojis.forEach((emoji) => {
+            if (emojis.includes(emoji)) {
+                selectedEmojis.add(emoji);
+            }
+        });
+
+        if (savedEmojis.length > 0) {
+            isEmojiSectionOpen = true;
+            emojiContainer.style.display = "flex";
+            toggleIcon.style.transform = "rotate(180deg)";
+            emojiToggleHeader.style.backgroundColor = "#e9ecef";
+        }
+
+        emojis.forEach((emoji) => {
+            const emojiBtn = emojiContainer.querySelector(`button[data-emoji="${emoji}"]`);
+            if (emojiBtn && selectedEmojis.has(emoji)) {
+                emojiBtn.style.border = "2px solid #007bff";
+                emojiBtn.style.background = "#e7f3ff";
+            }
+        });
+    });
+
+    function toggleEmojiSection() {
         isEmojiSectionOpen = !isEmojiSectionOpen;
 
         if (isEmojiSectionOpen) {
@@ -461,17 +488,24 @@ function createEmojiSelection(formContainer) {
             toggleIcon.style.transform = "rotate(0deg)";
             emojiToggleHeader.style.backgroundColor = "#f8f9fa";
         }
+    }
+
+    function saveSelectedEmojis() {
+        chrome.storage.local.set({ selectedEmojis: Array.from(selectedEmojis) });
+    }
+
+    emojiToggleHeader.addEventListener("click", (e) => {
+        e.preventDefault();
+        toggleEmojiSection();
     });
 
     emojiSectionContainer.appendChild(emojiToggleHeader);
-
-    const emojis = ["🔥", "☕️", "☀️", "🥷", "❄️", "🎄", "🛍️", "🍫", "✨", "💸", "🚨"];
-    const selectedEmojis = new Set();
 
     emojis.forEach((emoji) => {
         const emojiBtn = document.createElement("button");
         emojiBtn.textContent = emoji;
         emojiBtn.type = "button";
+        emojiBtn.setAttribute("data-emoji", emoji);
         emojiBtn.style = `padding: 8px; border: 2px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 16px; transition: all 0.2s ease;`;
 
         emojiBtn.addEventListener("click", (e) => {
@@ -485,6 +519,7 @@ function createEmojiSelection(formContainer) {
                 emojiBtn.style.border = "2px solid #007bff";
                 emojiBtn.style.background = "#e7f3ff";
             }
+            saveSelectedEmojis();
         });
 
         emojiContainer.appendChild(emojiBtn);
@@ -721,6 +756,46 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
     formContainer.appendChild(closeButton);
 }
 
+function setupModalCloseTracking(priceModal, updateFormPosition) {
+    const modalObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.type === "childList") {
+                mutation.removedNodes.forEach((node) => {
+                    if (node.nodeType === Node.ELEMENT_NODE) {
+                        if (node === priceModal || (node.querySelector && (node.querySelector('[role="dialog"]') === priceModal || node.querySelector(".modal") === priceModal || node.querySelector('[data-testid*="modal"]') === priceModal))) {
+                            const currentForm = document.querySelector('[data-price-form="true"]');
+                            if (currentForm) {
+                                window.removeEventListener("resize", updateFormPosition);
+                                currentForm.remove();
+                            }
+                            modalObserver.disconnect();
+                        }
+                    }
+                });
+            }
+        });
+    });
+
+    modalObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    const modalCheckInterval = setInterval(() => {
+        const currentPriceModal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
+
+        if (!currentPriceModal) {
+            const currentForm = document.querySelector('[data-price-form="true"]');
+            if (currentForm) {
+                window.removeEventListener("resize", updateFormPosition);
+                currentForm.remove();
+            }
+            modalObserver.disconnect();
+            clearInterval(modalCheckInterval);
+        }
+    }, 1000);
+}
+
 function createPriceChartForm() {
     const existingForm = document.querySelector('[data-price-form="true"]');
     if (existingForm) {
@@ -759,5 +834,7 @@ function createPriceChartForm() {
         );
 
         document.body.appendChild(formContainer);
+
+        setupModalCloseTracking(priceModal, updateFormPosition);
     }, 100);
 }
