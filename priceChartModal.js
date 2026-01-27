@@ -109,7 +109,7 @@ function createFormContainer() {
         padding: 20px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         z-index: 10001;
-        font-family: Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         font-size: 14px;
         display: flex;
         flex-direction: column;
@@ -180,6 +180,7 @@ function createShopSelection(formContainer) {
         font-weight: 600; 
         color: #2c3e50;
         font-size: 13px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         letter-spacing: 0.5px;
     `;
     formContainer.appendChild(shopLabel);
@@ -190,7 +191,7 @@ function createShopSelection(formContainer) {
     const shopSelect = document.createElement("select");
     shopSelect.style = `
         width: 100%;
-        padding: 12px 16px;
+        padding: 8px 12px;
         padding-right: 40px;
         border: 2px solid #e1e8ed;
         border-radius: 8px;
@@ -200,6 +201,7 @@ function createShopSelection(formContainer) {
         cursor: pointer;
         font-size: 14px;
         font-weight: 500;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         line-height: 1.4;
         appearance: none;
         transition: all 0.2s ease;
@@ -268,6 +270,7 @@ function createShopSelection(formContainer) {
         color: #2c3e50;
         font-size: 14px;
         font-weight: 500;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         line-height: 1.4;
         display: none;
         margin-top: 8px;
@@ -312,13 +315,13 @@ function createShopSelection(formContainer) {
 function createSlackInput(formContainer) {
     const slackLabel = document.createElement("label");
     slackLabel.textContent = "Slack Webhook URL (optional):";
-    slackLabel.style = `display: block; margin-bottom: 5px; font-weight: bold; color: #333;`;
+    slackLabel.style = `display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; letter-spacing: 0.5px;`;
     formContainer.appendChild(slackLabel);
 
     const slackInput = document.createElement("input");
     slackInput.type = "text";
     slackInput.placeholder = "https://hooks.slack.com/services/...";
-    slackInput.style = `width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; box-sizing: border-box;`;
+    slackInput.style = `width: 100%; padding: 12px 16px; border: 2px solid #e1e8ed; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 500; color: #2c3e50; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);`;
 
     chrome.storage.local.get(["slackWebhookUrl"], (result) => {
         if (result.slackWebhookUrl) {
@@ -342,6 +345,25 @@ function createSlackInput(formContainer) {
         }
     });
 
+    slackInput.addEventListener("focus", (e) => {
+        if (slackInput.value === "*****" && slackInput.dataset.actualUrl) {
+            slackInput.value = slackInput.dataset.actualUrl;
+            slackInput.style.color = "#2c3e50";
+        }
+        e.target.style.borderColor = "#3498db";
+        e.target.style.boxShadow = "0 0 0 3px rgba(52, 152, 219, 0.2)";
+        e.target.style.outline = "none";
+    });
+
+    slackInput.addEventListener("blur", (e) => {
+        if (slackInput.dataset.actualUrl && slackInput.value === slackInput.dataset.actualUrl) {
+            slackInput.value = "*****";
+            slackInput.style.color = "#666";
+        }
+        e.target.style.borderColor = "#e1e8ed";
+        e.target.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
+    });
+
     formContainer.appendChild(slackInput);
     return slackInput;
 }
@@ -362,9 +384,11 @@ function createToggleControls(formContainer) {
     emojiToggleLabel.setAttribute("for", "price-form-emoji-toggle");
     emojiToggleLabel.style = `
         margin-left: 8px; 
-        color: #333; 
+        color: #2c3e50; 
         cursor: pointer; 
-        font-size: 12px;
+        font-size: 13px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        font-weight: 500;
     `;
 
     emojiToggleContainer.appendChild(emojiToggleCheckbox);
@@ -374,7 +398,7 @@ function createToggleControls(formContainer) {
     rekordpreisButton.textContent = "🔥 Rekordpreis";
     rekordpreisButton.type = "button";
     rekordpreisButton.id = "price-form-rekordpreis-button";
-    rekordpreisButton.style = `padding: 8px 12px; background-color: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);`;
+    rekordpreisButton.style = `padding: 8px 12px; background-color: #ffc107; color: #212529; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);`;
 
     rekordpreisButton.addEventListener("click", (e) => {
         e.preventDefault();
@@ -404,7 +428,7 @@ function createToggleControls(formContainer) {
 function createEmojiSelection(formContainer) {
     const messageLabel = document.createElement("label");
     messageLabel.textContent = "Nachrichtentext:";
-    messageLabel.style = `display: block; margin-bottom: 5px; font-weight: bold; color: #333;`;
+    messageLabel.style = `display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; letter-spacing: 0.5px;`;
     formContainer.appendChild(messageLabel);
 
     const emojiSectionContainer = document.createElement("div");
@@ -413,7 +437,7 @@ function createEmojiSelection(formContainer) {
     const emojiToggleHeader = document.createElement("button");
     emojiToggleHeader.textContent = "🎯 Emoji auswählen";
     emojiToggleHeader.type = "button";
-    emojiToggleHeader.style = `width: 100%; padding: 8px 12px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; cursor: pointer; font-size: 12px; text-align: left; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; transition: background-color 0.2s ease;`;
+    emojiToggleHeader.style = `width: 100%; padding: 10px 14px; background-color: #f8f9fa; border: 2px solid #e1e8ed; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-weight: 500; color: #2c3e50; text-align: left; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; transition: all 0.2s ease;`;
 
     const toggleIcon = document.createElement("span");
     toggleIcon.textContent = "▼";
@@ -480,7 +504,7 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
     const messageTextarea = document.createElement("textarea");
     messageTextarea.id = "price-form-message-textarea";
     messageTextarea.value = messageBody;
-    messageTextarea.style = `width: 100%; height: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; box-sizing: border-box; resize: vertical; font-family: Arial, sans-serif; font-size: 12px;`;
+    messageTextarea.style = `width: 100%; height: 120px; padding: 12px 16px; border: 2px solid #e1e8ed; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; resize: vertical; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 500; color: #2c3e50; line-height: 1.5; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);`;
 
     function updateMessageWithEmojis() {
         const emojiToggle = document.getElementById("price-form-emoji-toggle");
@@ -538,6 +562,17 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
         }
     }
 
+    messageTextarea.addEventListener("focus", (e) => {
+        e.target.style.borderColor = "#3498db";
+        e.target.style.boxShadow = "0 0 0 3px rgba(52, 152, 219, 0.2)";
+        e.target.style.outline = "none";
+    });
+
+    messageTextarea.addEventListener("blur", (e) => {
+        e.target.style.borderColor = "#e1e8ed";
+        e.target.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
+    });
+
     chrome.storage.local.get(["emojiToggleEnabled"], (result) => {
         if (chrome.runtime.lastError) {
             console.log("Extension context invalidated, page reload required");
@@ -571,15 +606,15 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
 function createActionButtons(formContainer, { slackInput, messageTextarea, getSelectedShopName, selectedEmojis, currentPrice }, updateFormPosition) {
     const slackButton = document.createElement("button");
     slackButton.textContent = "An Slack senden";
-    slackButton.style = `width: 100%; padding: 10px; background-color: #4a154b; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px;`;
+    slackButton.style = `width: 100%; padding: 12px; background-color: #4a154b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; margin-bottom: 10px; transition: all 0.2s ease;`;
 
     const copyButton = document.createElement("button");
     copyButton.textContent = "In Zwischenablage kopieren";
-    copyButton.style = `width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px;`;
+    copyButton.style = `width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; margin-bottom: 10px; transition: all 0.2s ease;`;
 
     const closeButton = document.createElement("button");
     closeButton.textContent = "Schließen";
-    closeButton.style = `width: 100%; padding: 8px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;`;
+    closeButton.style = `width: 100%; padding: 10px; background-color: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; transition: all 0.2s ease;`;
 
     slackButton.addEventListener("click", async () => {
         const webhookUrl = slackInput.value === "*****" ? slackInput.dataset.actualUrl : slackInput.value.trim();
