@@ -47,6 +47,93 @@ function addIdealoButton(titleElement, searchTerms, fontSize = "1rem") {
     titleElement.insertAdjacentElement("afterend", idealoButton);
 }
 
+function createThemeSelector() {
+    const themeSection = document.createElement("div");
+    themeSection.className = "spca-theme-section";
+
+    const themeControls = document.createElement("div");
+    themeControls.className = "spca-filter-controls";
+
+    const themeBtn = createThemeButton();
+
+    const changelogBtn = document.createElement("button");
+    changelogBtn.textContent = "📋";
+    changelogBtn.className = "spca-btn spca-btn-icon";
+    changelogBtn.title = "Was ist neu?";
+
+    const currentVersion = "1.15.0";
+    chrome.storage.local.get(["lastChangelogViewed"], (result) => {
+        if (result.lastChangelogViewed !== currentVersion) {
+            changelogBtn.classList.add("spca-changelog-new");
+            changelogBtn.textContent = "📋✨";
+            changelogBtn.title = "Neue Version verfügbar!";
+        }
+    });
+
+    changelogBtn.addEventListener("click", () => {
+        if (typeof showChangelog === "function") {
+            changelogBtn.classList.remove("spca-changelog-new");
+            changelogBtn.textContent = "📋";
+            changelogBtn.title = "Was ist neu?";
+            showChangelog();
+        }
+    });
+
+    themeControls.appendChild(themeBtn);
+    themeControls.appendChild(changelogBtn);
+    themeSection.appendChild(themeControls);
+
+    return themeSection;
+}
+
+function createThemeButton() {
+    const themeBtn = document.createElement("button");
+    themeBtn.className = "spca-btn spca-btn-icon";
+    themeBtn.title = "Thema wechseln";
+
+    const updateIcon = (theme) => {
+        const themeIcons = { light: "☀️", dark: "🌙" };
+        themeBtn.textContent = themeIcons[theme] || themeIcons.light;
+    };
+
+    chrome.storage.local.get(["selectedTheme"], (result) => {
+        const theme = result.selectedTheme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        updateIcon(theme);
+    });
+
+    themeBtn.addEventListener("click", () => {
+        chrome.storage.local.get(["selectedTheme"], (result) => {
+            const currentTheme = result.selectedTheme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+            const themes = ["light", "dark"];
+            const currentIndex = themes.indexOf(currentTheme);
+            const nextTheme = themes[(currentIndex + 1) % themes.length];
+
+            chrome.storage.local.set({ selectedTheme: nextTheme });
+            updateIcon(nextTheme);
+
+            const containers = document.querySelectorAll(".spca-form-container, .spca-filter-container, .spca-changelog-container");
+            containers.forEach((container) => {
+                container.classList.remove("spca-theme-light", "spca-theme-dark");
+                container.classList.add(`spca-theme-${nextTheme}`);
+            });
+
+            if (typeof applyTheme === "function") {
+                applyTheme(nextTheme);
+            }
+        });
+    });
+
+    return themeBtn;
+}
+
+function updateThemeButtonText(button, theme) {
+    const themeIcons = {
+        light: "☀️",
+        dark: "🌙"
+    };
+    button.textContent = themeIcons[theme] || themeIcons.light;
+}
+
 function createGenericFilter(config) {
     try {
         const productCards = config.getProductCards();
@@ -78,81 +165,47 @@ function createGenericFilter(config) {
                 let filterContainer = document.createElement("div");
                 filterContainer.setAttribute(config.containerAttribute, "true");
                 filterContainer.setAttribute(`${config.containerAttribute}-panel`, "true");
-                filterContainer.style = `
-                    position: fixed;
-                    top: 70px;
-                    right: 16px;
-                    z-index: 1000;
-                    background: #ffffff;
-                    border: 2px solid #e1e8ed;
-                    border-radius: 12px;
-                    padding: 20px;
-                    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-                    font-size: 14px;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                    color: #2c3e50;
-                    width: 300px;
-                    max-height: 450px;
-                    display: none;
-                    flex-direction: column;
-                    opacity: 0;
-                    transform: translateY(-10px);
-                    transition: all 0.3s ease;
-                `;
+                filterContainer.className = "spca-filter-container spca-filter-positioned";
+                filterContainer.style.display = "none";
 
-                const label = document.createElement("label");
+                chrome.storage.local.get(["selectedTheme"], (result) => {
+                    const theme = result.selectedTheme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                    filterContainer.classList.remove("spca-theme-light", "spca-theme-dark");
+                    filterContainer.classList.add(`spca-theme-${theme}`);
+                });
+
+                const header = document.createElement("div");
+                header.className = "spca-filter-header";
+
+                const titleContainer = document.createElement("div");
+                titleContainer.className = "spca-filter-title-container";
+
+                const label = document.createElement("h3");
                 label.textContent = config.labelText;
-                label.style = `
-                    font-weight: 600;
-                    margin-bottom: 16px;
-                    color: #2c3e50;
-                    font-size: 16px;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                    letter-spacing: 0.5px;
-                `;
-                filterContainer.appendChild(label);
+                label.className = "spca-filter-title spca-title-primary";
+                titleContainer.appendChild(label);
 
-                const closeBtn = document.createElement("button");
-                closeBtn.textContent = "×";
-                closeBtn.title = "Schließen";
-                closeBtn.style = `
-                    position: absolute;
-                    top: 12px;
-                    right: 16px;
-                    background: none;
-                    border: none;
-                    font-size: 22px;
-                    color: #95a5a6;
-                    cursor: pointer;
-                    width: 28px;
-                    height: 28px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 50%;
-                    transition: all 0.2s ease;
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                `;
-                filterContainer.appendChild(closeBtn);
+                const countDisplay = document.createElement("span");
+                countDisplay.className = "spca-filter-count";
+                countDisplay.textContent = allItemNames.size;
+                titleContainer.appendChild(countDisplay);
 
-                closeBtn.addEventListener("mouseenter", () => {
-                    closeBtn.style.backgroundColor = "#fee2e2";
-                    closeBtn.style.color = "#dc2626";
-                    closeBtn.style.transform = "scale(1.1)";
-                });
-                closeBtn.addEventListener("mouseleave", () => {
-                    closeBtn.style.backgroundColor = "transparent";
-                    closeBtn.style.color = "#95a5a6";
-                    closeBtn.style.transform = "scale(1)";
-                });
+                header.appendChild(titleContainer);
+
+                const main = document.createElement("div");
+                main.className = "spca-filter-main";
 
                 const checkboxList = document.createElement("div");
-                checkboxList.style = `
-                    overflow-y: auto;
-                    max-height: 320px;
-                    width: 100%;
-                    padding-right: 8px;
-                `;
+                checkboxList.className = "spca-filter-list";
+
+                main.appendChild(checkboxList);
+
+                const footer = document.createElement("div");
+                footer.className = "spca-filter-footer";
+
+                const themeSection = createThemeSelector();
+                themeSection.className = "spca-theme-section";
+                footer.appendChild(themeSection);
 
                 const sortedItemNames = Array.from(allItemNames).sort((a, b) => {
                     const aSelected = savedSelections.includes(a);
@@ -166,88 +219,42 @@ function createGenericFilter(config) {
                     const resultCount = productCards.filter((card) => config.matchesCard(card, name)).length;
 
                     const wrapper = document.createElement("div");
-                    wrapper.style = `
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 10px;
-                        padding: 8px 12px;
-                        border-radius: 8px;
-                        transition: all 0.2s ease;
-                        cursor: pointer;
-                    `;
+                    wrapper.className = "spca-filter-item";
 
                     const checkbox = document.createElement("input");
                     checkbox.type = "checkbox";
                     checkbox.value = name;
                     checkbox.id = `${config.containerAttribute}-${name.replace(/\s+/g, "-")}`;
                     checkbox.checked = savedSelections.includes(name);
-                    checkbox.style = `
-                        width: 18px;
-                        height: 18px;
-                        cursor: pointer;
-                        accent-color: #3498db;
-                    `;
+                    checkbox.className = "spca-filter-checkbox";
 
                     const checkboxLabel = document.createElement("label");
                     checkboxLabel.textContent = `${name} (${resultCount})`;
                     checkboxLabel.setAttribute("for", checkbox.id);
-                    checkboxLabel.style = `
-                        margin-left: 12px;
-                        color: #2c3e50;
-                        cursor: pointer;
-                        flex: 1;
-                        font-size: 14px;
-                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-                        font-weight: 500;
-                    `;
-
-                    if (savedSelections.includes(name)) {
-                        wrapper.style.fontWeight = "600";
-                        wrapper.style.backgroundColor = "#e3f2fd";
-                        wrapper.style.borderRadius = "8px";
-                        wrapper.style.padding = "10px 12px";
-                        wrapper.style.border = "1px solid #3498db";
-                    }
-
-                    checkbox.addEventListener("change", () => {
-                        if (checkbox.checked) {
-                            wrapper.style.fontWeight = "600";
-                            wrapper.style.backgroundColor = "#e3f2fd";
-                            wrapper.style.borderRadius = "8px";
-                            wrapper.style.padding = "10px 12px";
-                            wrapper.style.border = "1px solid #3498db";
-                        } else {
-                            wrapper.style.fontWeight = "500";
-                            wrapper.style.backgroundColor = "transparent";
-                            wrapper.style.borderRadius = "8px";
-                            wrapper.style.padding = "8px 12px";
-                            wrapper.style.border = "none";
-                        }
-                    });
+                    checkboxLabel.className = "spca-filter-label";
 
                     wrapper.appendChild(checkbox);
                     wrapper.appendChild(checkboxLabel);
 
-                    wrapper.addEventListener("mouseenter", () => {
-                        if (!checkbox.checked) {
-                            wrapper.style.backgroundColor = "#f0f9ff";
-                            wrapper.style.border = "1px solid #bfdbfe";
-                            wrapper.style.transform = "translateX(2px)";
-                            wrapper.style.boxShadow = "0 2px 8px rgba(59, 130, 246, 0.15)";
-                        }
-                    });
-                    wrapper.addEventListener("mouseleave", () => {
-                        if (!checkbox.checked) {
-                            wrapper.style.backgroundColor = "transparent";
-                            wrapper.style.border = "none";
-                            wrapper.style.transform = "translateX(0)";
-                            wrapper.style.boxShadow = "none";
-                        }
+                    wrapper.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.dispatchEvent(new Event("change", { bubbles: true }));
                     });
 
                     checkboxList.appendChild(wrapper);
                 });
-                filterContainer.appendChild(checkboxList);
+
+                const closeBtn = document.createElement("button");
+                closeBtn.textContent = "×";
+                closeBtn.title = "Schließen";
+                closeBtn.className = "spca-btn spca-btn-secondary spca-filter-close-btn";
+
+                filterContainer.appendChild(closeBtn);
+                filterContainer.appendChild(header);
+                filterContainer.appendChild(main);
+                filterContainer.appendChild(footer);
+
                 document.body.appendChild(filterContainer);
 
                 function updateFilter() {
@@ -312,7 +319,10 @@ function createGenericFilter(config) {
                 });
 
                 document.addEventListener("mousedown", (e) => {
-                    if (!filterContainer.contains(e.target) && !iconBtn.contains(e.target)) {
+                    const changelogContainer = document.querySelector(".spca-changelog-container");
+                    const isInsideChangelog = changelogContainer && changelogContainer.contains(e.target);
+                    
+                    if (!filterContainer.contains(e.target) && !iconBtn.contains(e.target) && !isInsideChangelog) {
                         filterContainer.style.opacity = "0";
                         filterContainer.style.transform = "translateY(-10px)";
                         setTimeout(() => {

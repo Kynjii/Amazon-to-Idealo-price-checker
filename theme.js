@@ -167,11 +167,6 @@ const modalForm = {
     flexDirection: "column"
 };
 
-/**
- * Generates CSS style string from style object
- * @param {Object} styleObj - Style object with camelCase properties
- * @returns {string} - CSS style string
- */
 function createStyleString(styleObj) {
     return Object.entries(styleObj)
         .map(([key, value]) => {
@@ -179,6 +174,36 @@ function createStyleString(styleObj) {
             return `${cssKey}: ${value}`;
         })
         .join("; ");
+}
+
+function applyTheme(theme) {
+    const containers = document.querySelectorAll(".spca-form-container, .spca-filter-container, .spca-changelog-container");
+
+    containers.forEach((container) => {
+        container.classList.remove("spca-theme-light", "spca-theme-dark");
+
+        if (theme === "light") {
+            container.classList.add("spca-theme-light");
+        } else if (theme === "dark") {
+            container.classList.add("spca-theme-dark");
+        }
+    });
+}
+
+function initializeTheme() {
+    chrome.storage.local.get(["selectedTheme"], (result) => {
+        let theme = result.selectedTheme;
+        if (!theme) {
+            // On first load, detect OS theme preference
+            theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            chrome.storage.local.set({ selectedTheme: theme });
+        }
+        applyTheme(theme);
+    });
+}
+
+if (typeof chrome !== "undefined" && chrome.storage) {
+    initializeTheme();
 }
 
 const THEME = {

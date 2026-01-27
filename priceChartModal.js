@@ -92,148 +92,74 @@ function extractProductData() {
 }
 
 function createFormContainer() {
-    const priceModal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
-
     const formContainer = document.createElement("div");
     formContainer.setAttribute("data-price-form", "true");
-    formContainer.style = `
-        position: fixed;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 25vw;
-        min-width: 300px;
-        max-width: 400px;
-        background: white;
-        border: 1px solid #fff;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10001;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        font-size: 14px;
-        display: flex;
-        flex-direction: column;
-    `;
+    formContainer.className = "spca-form-container spca-form-positioned";
 
-    if (priceModal) {
-        const modalRect = priceModal.getBoundingClientRect();
-        const viewportWidth = window.innerWidth;
-        const formWidth = Math.min(400, Math.max(300, viewportWidth * 0.25));
-        const gap = 15;
+    const formHeader = document.createElement("div");
+    formHeader.className = "spca-form-header";
 
-        const leftPosition = modalRect.left - formWidth - gap;
+    const formTitle = document.createElement("h3");
+    formTitle.className = "spca-form-title";
+    formTitle.textContent = "Preis-Nachricht erstellen";
 
-        if (leftPosition >= 0) {
-            formContainer.style.left = `${leftPosition}px`;
-        } else {
-            const rightPosition = modalRect.right + gap;
-            if (rightPosition + formWidth <= viewportWidth) {
-                formContainer.style.left = `${rightPosition}px`;
-            } else {
-                formContainer.style.left = "20px";
-            }
-        }
-    } else {
-        formContainer.style.left = "20px";
-    }
+    const themeBtn = createThemeButton();
+
+    chrome.storage.local.get(["selectedTheme"], (result) => {
+        const theme = result.selectedTheme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        formContainer.classList.remove("spca-theme-light", "spca-theme-dark");
+        formContainer.classList.add(`spca-theme-${theme}`);
+    });
+
+    formHeader.appendChild(formTitle);
+    formHeader.appendChild(themeBtn);
+    formContainer.appendChild(formHeader);
 
     return formContainer;
 }
 
-function setupFormPositioning(formContainer) {
-    const priceModal = document.querySelector('[role="dialog"]') || document.querySelector(".modal") || document.querySelector('[data-testid*="modal"]');
+function setupFormPosition(formContainer, priceModal) {
+    const updatePosition = () => {
+        const modalRect = priceModal.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const formWidth = 400;
+        const gap = 15;
 
-    function updateFormPosition() {
-        if (priceModal) {
-            const modalRect = priceModal.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-            const formWidth = Math.min(400, Math.max(300, viewportWidth * 0.25));
-            const gap = 15;
+        const leftPosition = modalRect.left - formWidth - gap;
+        const rightPosition = modalRect.right + gap;
 
-            formContainer.style.width = `${Math.max(300, Math.min(400, viewportWidth * 0.25))}px`;
-
-            const leftPosition = modalRect.left - formWidth - gap;
-
-            if (leftPosition >= 0) {
-                formContainer.style.left = `${leftPosition}px`;
-            } else {
-                const rightPosition = modalRect.right + gap;
-                if (rightPosition + formWidth <= viewportWidth) {
-                    formContainer.style.left = `${rightPosition}px`;
-                } else {
-                    formContainer.style.left = "20px";
-                }
-            }
+        if (leftPosition >= 0) {
+            formContainer.style.left = `${leftPosition}px`;
+        } else if (rightPosition + formWidth <= viewportWidth) {
+            formContainer.style.left = `${rightPosition}px`;
+        } else {
+            formContainer.style.left = "20px";
         }
-    }
+    };
 
-    window.addEventListener("resize", updateFormPosition);
-    return updateFormPosition;
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+
+    const observer = new MutationObserver(() => {
+        if (!document.body.contains(formContainer)) {
+            window.removeEventListener("resize", updatePosition);
+            observer.disconnect();
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 }
 
 function createShopSelection(formContainer) {
     const shopLabel = document.createElement("label");
     shopLabel.textContent = "Shop-Name:";
-    shopLabel.style = `
-        display: block; 
-        margin-bottom: 8px; 
-        font-weight: 600; 
-        color: #2c3e50;
-        font-size: 13px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        letter-spacing: 0.5px;
-    `;
+    shopLabel.className = "spca-form-label";
     formContainer.appendChild(shopLabel);
 
     const shopContainer = document.createElement("div");
     shopContainer.style = `position: relative; margin-bottom: 18px;`;
 
     const shopSelect = document.createElement("select");
-    shopSelect.style = `
-        width: 100%;
-        padding: 8px 12px;
-        padding-right: 40px;
-        border: 2px solid #e1e8ed;
-        border-radius: 8px;
-        box-sizing: border-box;
-        background-color: #ffffff;
-        color: #2c3e50;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 500;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        line-height: 1.4;
-        appearance: none;
-        transition: all 0.2s ease;
-        background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%23718096" d="M4.427 9.573l3.396-3.396a.25.25 0 01.354 0l3.396 3.396a.25.25 0 01-.177.427H4.604a.25.25 0 01-.177-.427z"/></svg>');
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        background-size: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    `;
-
-    shopSelect.addEventListener("mouseenter", () => {
-        shopSelect.style.borderColor = "#3498db";
-        shopSelect.style.boxShadow = "0 2px 8px rgba(52, 152, 219, 0.15)";
-    });
-
-    shopSelect.addEventListener("mouseleave", () => {
-        if (document.activeElement !== shopSelect) {
-            shopSelect.style.borderColor = "#e1e8ed";
-            shopSelect.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
-        }
-    });
-
-    shopSelect.addEventListener("focus", () => {
-        shopSelect.style.borderColor = "#3498db";
-        shopSelect.style.boxShadow = "0 0 0 3px rgba(52, 152, 219, 0.2)";
-        shopSelect.style.outline = "none";
-    });
-
-    shopSelect.addEventListener("blur", () => {
-        shopSelect.style.borderColor = "#e1e8ed";
-        shopSelect.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
-    });
+    shopSelect.className = "spca-form-select";
 
     const shopOptions = [
         { value: "Amazon", text: "Amazon" },
@@ -259,34 +185,9 @@ function createShopSelection(formContainer) {
     const customShopInput = document.createElement("input");
     customShopInput.type = "text";
     customShopInput.placeholder = "Shop-Namen eingeben";
-    customShopInput.style = `
-        width: 100%;
-        padding: 12px 16px;
-        border: 2px solid #e1e8ed;
-        border-radius: 8px;
-        box-sizing: border-box;
-        background-color: #ffffff;
-        color: #2c3e50;
-        font-size: 14px;
-        font-weight: 500;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        line-height: 1.4;
-        display: none;
-        margin-top: 8px;
-        transition: all 0.2s ease;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    `;
-
-    customShopInput.addEventListener("focus", () => {
-        customShopInput.style.borderColor = "#3498db";
-        customShopInput.style.boxShadow = "0 0 0 3px rgba(52, 152, 219, 0.2)";
-        customShopInput.style.outline = "none";
-    });
-
-    customShopInput.addEventListener("blur", () => {
-        customShopInput.style.borderColor = "#e1e8ed";
-        customShopInput.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
-    });
+    customShopInput.className = "spca-form-input";
+    customShopInput.style.display = "none";
+    customShopInput.style.marginTop = "8px";
 
     shopSelect.addEventListener("change", () => {
         if (shopSelect.value === "custom") {
@@ -314,53 +215,34 @@ function createShopSelection(formContainer) {
 function createSlackInput(formContainer) {
     const slackLabel = document.createElement("label");
     slackLabel.textContent = "Slack Webhook URL (optional):";
-    slackLabel.style = `display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; letter-spacing: 0.5px;`;
+    slackLabel.className = "spca-form-label";
     formContainer.appendChild(slackLabel);
 
     const slackInput = document.createElement("input");
     slackInput.type = "text";
     slackInput.placeholder = "https://hooks.slack.com/services/...";
-    slackInput.style = `width: 100%; padding: 12px 16px; border: 2px solid #e1e8ed; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 500; color: #2c3e50; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);`;
+    slackInput.className = "spca-form-input";
 
     chrome.storage.local.get(["slackWebhookUrl"], (result) => {
         if (result.slackWebhookUrl) {
             slackInput.value = "*****";
             slackInput.dataset.actualUrl = result.slackWebhookUrl;
-            slackInput.style.color = "#666";
+            slackInput.classList.add("spca-masked-input");
         }
     });
 
     slackInput.addEventListener("focus", () => {
         if (slackInput.value === "*****" && slackInput.dataset.actualUrl) {
             slackInput.value = slackInput.dataset.actualUrl;
-            slackInput.style.color = "#333";
+            slackInput.classList.remove("spca-masked-input");
         }
     });
 
     slackInput.addEventListener("blur", () => {
         if (slackInput.dataset.actualUrl && slackInput.value === slackInput.dataset.actualUrl) {
             slackInput.value = "*****";
-            slackInput.style.color = "#666";
+            slackInput.classList.add("spca-masked-input");
         }
-    });
-
-    slackInput.addEventListener("focus", (e) => {
-        if (slackInput.value === "*****" && slackInput.dataset.actualUrl) {
-            slackInput.value = slackInput.dataset.actualUrl;
-            slackInput.style.color = "#2c3e50";
-        }
-        e.target.style.borderColor = "#3498db";
-        e.target.style.boxShadow = "0 0 0 3px rgba(52, 152, 219, 0.2)";
-        e.target.style.outline = "none";
-    });
-
-    slackInput.addEventListener("blur", (e) => {
-        if (slackInput.dataset.actualUrl && slackInput.value === slackInput.dataset.actualUrl) {
-            slackInput.value = "*****";
-            slackInput.style.color = "#666";
-        }
-        e.target.style.borderColor = "#e1e8ed";
-        e.target.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
     });
 
     formContainer.appendChild(slackInput);
@@ -369,26 +251,20 @@ function createSlackInput(formContainer) {
 
 function createToggleControls(formContainer) {
     const togglesContainer = document.createElement("div");
-    togglesContainer.style = `display: flex; gap: 15px; margin-bottom: 15px; align-items: center;`;
+    togglesContainer.className = "spca-toggle-container";
 
     const emojiToggleContainer = document.createElement("div");
-    emojiToggleContainer.style = `display: flex; align-items: center; padding: 8px; background-color: #f8f9fa; border-radius: 4px; flex: 1;`;
+    emojiToggleContainer.className = "spca-toggle-item";
 
     const emojiToggleCheckbox = document.createElement("input");
     emojiToggleCheckbox.type = "checkbox";
-    emojiToggleCheckbox.id = "price-form-emoji-toggle";
+    emojiToggleCheckbox.id = "spca-price-form-emoji-toggle";
+    emojiToggleCheckbox.className = "spca-form-checkbox";
 
     const emojiToggleLabel = document.createElement("label");
     emojiToggleLabel.textContent = "Prozent-Emoji";
-    emojiToggleLabel.setAttribute("for", "price-form-emoji-toggle");
-    emojiToggleLabel.style = `
-        margin-left: 8px; 
-        color: #2c3e50; 
-        cursor: pointer; 
-        font-size: 13px;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        font-weight: 500;
-    `;
+    emojiToggleLabel.setAttribute("for", "spca-price-form-emoji-toggle");
+    emojiToggleLabel.className = "spca-form-label spca-toggle-label";
 
     emojiToggleContainer.appendChild(emojiToggleCheckbox);
     emojiToggleContainer.appendChild(emojiToggleLabel);
@@ -396,22 +272,20 @@ function createToggleControls(formContainer) {
     const rekordpreisButton = document.createElement("button");
     rekordpreisButton.textContent = "🔥 Rekordpreis";
     rekordpreisButton.type = "button";
-    rekordpreisButton.id = "price-form-rekordpreis-button";
-    rekordpreisButton.style = `padding: 8px 12px; background-color: #ffc107; color: #212529; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);`;
+    rekordpreisButton.id = "spca-price-form-rekordpreis-button";
+    rekordpreisButton.className = "spca-btn spca-btn-secondary spca-btn-rekordpreis";
 
     rekordpreisButton.addEventListener("click", (e) => {
         e.preventDefault();
-        const messageTextarea = document.getElementById("price-form-message-textarea");
-        if (messageTextarea) {
-            const currentMessage = messageTextarea.value;
-            const updatedMessage = currentMessage.replace(/zum (Tiefstpreis|guten Preis|Bestpreis|Rekordpreis) von/, "zum Rekordpreis von");
-            messageTextarea.value = updatedMessage;
+        const messageTextarea = document.getElementById("spca-price-form-message-textarea");
+        if (messageTextarea && messageTextarea.setPriceType) {
+            messageTextarea.setPriceType("Rekordpreis");
 
-            rekordpreisButton.style.backgroundColor = "#28a745";
+            rekordpreisButton.classList.add("spca-btn-success");
             rekordpreisButton.textContent = "🔥 Gesetzt!";
 
             setTimeout(() => {
-                rekordpreisButton.style.backgroundColor = "#ffc107";
+                rekordpreisButton.classList.remove("spca-btn-success");
                 rekordpreisButton.textContent = "🔥 Rekordpreis";
             }, 2000);
         }
@@ -427,16 +301,16 @@ function createToggleControls(formContainer) {
 function createEmojiSelection(formContainer) {
     const messageLabel = document.createElement("label");
     messageLabel.textContent = "Nachrichtentext:";
-    messageLabel.style = `display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; letter-spacing: 0.5px;`;
+    messageLabel.className = "spca-form-label";
     formContainer.appendChild(messageLabel);
 
     const emojiSectionContainer = document.createElement("div");
-    emojiSectionContainer.style = `margin-bottom: 10px;`;
+    emojiSectionContainer.className = "spca-emoji-container";
 
     const emojiToggleHeader = document.createElement("button");
     emojiToggleHeader.textContent = "🎯 Emoji auswählen";
     emojiToggleHeader.type = "button";
-    emojiToggleHeader.style = `width: 100%; padding: 10px 14px; background-color: #f8f9fa; border: 2px solid #e1e8ed; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-weight: 500; color: #2c3e50; text-align: left; display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; transition: all 0.2s ease;`;
+    emojiToggleHeader.className = "spca-emoji-toggle";
 
     const toggleIcon = document.createElement("span");
     toggleIcon.textContent = "▼";
@@ -444,7 +318,7 @@ function createEmojiSelection(formContainer) {
     emojiToggleHeader.appendChild(toggleIcon);
 
     const emojiContainer = document.createElement("div");
-    emojiContainer.style = `display: none; flex-wrap: wrap; gap: 5px; padding: 8px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-top: none; border-radius: 0 0 4px 4px;`;
+    emojiContainer.className = "spca-emoji-selection";
 
     let isEmojiSectionOpen = false;
 
@@ -462,16 +336,14 @@ function createEmojiSelection(formContainer) {
 
         if (savedEmojis.length > 0) {
             isEmojiSectionOpen = true;
-            emojiContainer.style.display = "flex";
+            emojiContainer.classList.add("spca-expanded");
             toggleIcon.style.transform = "rotate(180deg)";
-            emojiToggleHeader.style.backgroundColor = "#e9ecef";
         }
 
         emojis.forEach((emoji) => {
             const emojiBtn = emojiContainer.querySelector(`button[data-emoji="${emoji}"]`);
             if (emojiBtn && selectedEmojis.has(emoji)) {
-                emojiBtn.style.border = "2px solid #007bff";
-                emojiBtn.style.background = "#e7f3ff";
+                emojiBtn.classList.add("spca-selected");
             }
         });
     });
@@ -480,13 +352,11 @@ function createEmojiSelection(formContainer) {
         isEmojiSectionOpen = !isEmojiSectionOpen;
 
         if (isEmojiSectionOpen) {
-            emojiContainer.style.display = "flex";
+            emojiContainer.classList.add("spca-expanded");
             toggleIcon.style.transform = "rotate(180deg)";
-            emojiToggleHeader.style.backgroundColor = "#e9ecef";
         } else {
-            emojiContainer.style.display = "none";
+            emojiContainer.classList.remove("spca-expanded");
             toggleIcon.style.transform = "rotate(0deg)";
-            emojiToggleHeader.style.backgroundColor = "#f8f9fa";
         }
     }
 
@@ -506,18 +376,16 @@ function createEmojiSelection(formContainer) {
         emojiBtn.textContent = emoji;
         emojiBtn.type = "button";
         emojiBtn.setAttribute("data-emoji", emoji);
-        emojiBtn.style = `padding: 8px; border: 2px solid #ddd; border-radius: 4px; background: white; cursor: pointer; font-size: 16px; transition: all 0.2s ease;`;
+        emojiBtn.className = "spca-emoji-option";
 
         emojiBtn.addEventListener("click", (e) => {
             e.preventDefault();
             if (selectedEmojis.has(emoji)) {
                 selectedEmojis.delete(emoji);
-                emojiBtn.style.border = "2px solid #ddd";
-                emojiBtn.style.background = "white";
+                emojiBtn.classList.remove("spca-selected");
             } else {
                 selectedEmojis.add(emoji);
-                emojiBtn.style.border = "2px solid #007bff";
-                emojiBtn.style.background = "#e7f3ff";
+                emojiBtn.classList.add("spca-selected");
             }
             saveSelectedEmojis();
         });
@@ -533,17 +401,28 @@ function createEmojiSelection(formContainer) {
 
 function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) {
     const { productName, priceType, currentPrice, currentUrl, priceReduction, priceReductionPercent, priceStats } = productData;
-    const messageBody = `${productName} zum ${priceType} von ${currentPrice} ${currentUrl}\n${priceReduction}${priceReductionPercent} unter dem Durchschnittspreis.`;
+
+    let currentPriceType = priceType;
+
+    function getMessageBody() {
+        return `${productName} zum ${currentPriceType} von ${currentPrice} ${currentUrl}
+${priceReduction}${priceReductionPercent} unter dem Durchschnittspreis.`;
+    }
 
     const messageTextarea = document.createElement("textarea");
-    messageTextarea.id = "price-form-message-textarea";
-    messageTextarea.value = messageBody;
-    messageTextarea.style = `width: 100%; height: 120px; padding: 12px 16px; border: 2px solid #e1e8ed; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; resize: vertical; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 500; color: #2c3e50; line-height: 1.5; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);`;
+    messageTextarea.id = "spca-price-form-message-textarea";
+    messageTextarea.value = getMessageBody();
+    messageTextarea.className = "spca-form-textarea";
+
+    messageTextarea.setPriceType = (newType) => {
+        currentPriceType = newType;
+        updateMessageWithEmojis();
+    };
 
     function updateMessageWithEmojis() {
-        const emojiToggle = document.getElementById("price-form-emoji-toggle");
+        const emojiToggle = document.getElementById("spca-price-form-emoji-toggle");
         const useEmojis = emojiToggle && emojiToggle.checked;
-        let updatedMessage = messageBody;
+        let updatedMessage = getMessageBody();
 
         if (useEmojis && priceStats && priceReductionPercent) {
             let targetRow = Array.from(priceStats.querySelectorAll(".priceHistoryStatistics-row")).find((row) => {
@@ -590,21 +469,18 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
             }
         }
 
-        const textarea = document.getElementById("price-form-message-textarea");
+        const textarea = document.getElementById("spca-price-form-message-textarea");
         if (textarea) {
             textarea.value = updatedMessage;
         }
     }
 
     messageTextarea.addEventListener("focus", (e) => {
-        e.target.style.borderColor = "#3498db";
-        e.target.style.boxShadow = "0 0 0 3px rgba(52, 152, 219, 0.2)";
-        e.target.style.outline = "none";
+        e.target.classList.add("spca-input-focused");
     });
 
     messageTextarea.addEventListener("blur", (e) => {
-        e.target.style.borderColor = "#e1e8ed";
-        e.target.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
+        e.target.classList.remove("spca-input-focused");
     });
 
     chrome.storage.local.get(["emojiToggleEnabled"], (result) => {
@@ -612,7 +488,7 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
             console.log("Extension context invalidated, page reload required");
             return;
         }
-        const emojiToggle = document.getElementById("price-form-emoji-toggle");
+        const emojiToggle = document.getElementById("spca-price-form-emoji-toggle");
         if (emojiToggle) {
             emojiToggle.checked = result.emojiToggleEnabled !== undefined ? result.emojiToggleEnabled : true;
             updateMessageWithEmojis();
@@ -620,15 +496,15 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
     });
 
     setTimeout(() => {
-        const emojiToggle = document.getElementById("price-form-emoji-toggle");
+        const emojiToggle = document.getElementById("spca-price-form-emoji-toggle");
         if (emojiToggle) {
             emojiToggle.addEventListener("change", () => {
-                if (chrome.runtime.lastError) {
-                    console.log("Extension context invalidated, page reload required");
-                    return;
-                }
-                chrome.storage.local.set({ emojiToggleEnabled: emojiToggle.checked });
                 updateMessageWithEmojis();
+                try {
+                    chrome.storage.local.set({ emojiToggleEnabled: emojiToggle.checked });
+                } catch (e) {
+                    console.log("Extension context invalidated, page reload required");
+                }
             });
         }
     }, 10);
@@ -637,30 +513,28 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
     return messageTextarea;
 }
 
-function createActionButtons(formContainer, { slackInput, messageTextarea, getSelectedShopName, selectedEmojis, currentPrice }, updateFormPosition) {
+function createActionButtons(formContainer, { slackInput, messageTextarea, getSelectedShopName, selectedEmojis, currentPrice }) {
     const slackButton = document.createElement("button");
     slackButton.textContent = "An Slack senden";
-    slackButton.style = `width: 100%; padding: 12px; background-color: #4a154b; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; margin-bottom: 10px; transition: all 0.2s ease;`;
+    slackButton.className = "spca-btn spca-btn-slack";
 
     const copyButton = document.createElement("button");
     copyButton.textContent = "In Zwischenablage kopieren";
-    copyButton.style = `width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; margin-bottom: 10px; transition: all 0.2s ease;`;
+    copyButton.className = "spca-btn spca-btn-primary";
 
     const closeButton = document.createElement("button");
     closeButton.textContent = "Schließen";
-    closeButton.style = `width: 100%; padding: 10px; background-color: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; transition: all 0.2s ease;`;
+    closeButton.className = "spca-btn spca-btn-secondary";
 
     slackButton.addEventListener("click", async () => {
         const webhookUrl = slackInput.value === "*****" ? slackInput.dataset.actualUrl : slackInput.value.trim();
         if (!webhookUrl) {
             slackButton.textContent = "Slack URL eingeben!";
-            slackButton.style.backgroundColor = "#dc3545";
-            slackButton.style.transform = "scale(0.98)";
+            slackButton.className = "spca-btn spca-btn-danger spca-error-state";
 
             setTimeout(() => {
                 slackButton.textContent = "An Slack senden";
-                slackButton.style.backgroundColor = "#4a154b";
-                slackButton.style.transform = "scale(1)";
+                slackButton.className = "spca-btn spca-btn-slack";
             }, 3000);
             return;
         }
@@ -691,23 +565,23 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
                 chrome.storage.local.set({ slackWebhookUrl: webhookUrl });
 
                 slackButton.textContent = "Gesendet!";
-                slackButton.style.backgroundColor = "#28a745";
+                slackButton.className = "spca-btn spca-btn-success";
 
                 setTimeout(() => {
                     slackButton.textContent = "An Slack senden";
-                    slackButton.style.backgroundColor = "#4a154b";
+                    slackButton.className = "spca-btn spca-btn-slack";
                 }, 2000);
             } else {
                 throw new Error("Failed to send message");
             }
         } catch (err) {
             slackButton.textContent = "Fehler!";
-            slackButton.style.backgroundColor = "#dc3545";
+            slackButton.className = "spca-btn spca-btn-danger spca-error-state";
             console.error("Slack error:", err);
 
             setTimeout(() => {
                 slackButton.textContent = "An Slack senden";
-                slackButton.style.backgroundColor = "#4a154b";
+                slackButton.className = "spca-btn spca-btn-slack";
             }, 2000);
         }
     });
@@ -722,32 +596,49 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
         try {
             await navigator.clipboard.writeText(finalMessage);
             copyButton.textContent = "Kopiert!";
-            copyButton.style.backgroundColor = "#28a745";
+            copyButton.className = "spca-btn spca-btn-success";
 
             setTimeout(() => {
                 copyButton.textContent = "In Zwischenablage kopieren";
-                copyButton.style.backgroundColor = "#007bff";
+                copyButton.className = "spca-btn spca-btn-primary";
             }, 2000);
         } catch (err) {
-            const textArea = document.createElement("textarea");
-            textArea.value = finalMessage;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand("copy");
-            document.body.removeChild(textArea);
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = finalMessage;
+                textArea.style.position = "fixed";
+                textArea.style.opacity = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
 
-            copyButton.textContent = "Kopiert!";
-            copyButton.style.backgroundColor = "#28a745";
+                const successful = document.execCommand("copy");
+                document.body.removeChild(textArea);
 
-            setTimeout(() => {
-                copyButton.textContent = "In Zwischenablage kopieren";
-                copyButton.style.backgroundColor = "#007bff";
-            }, 2000);
+                if (successful) {
+                    copyButton.textContent = "Kopiert!";
+                    copyButton.className = "spca-btn spca-btn-success";
+
+                    setTimeout(() => {
+                        copyButton.textContent = "In Zwischenablage kopieren";
+                        copyButton.className = "spca-btn spca-btn-primary";
+                    }, 2000);
+                } else {
+                    throw new Error("Copy command failed");
+                }
+            } catch (fallbackErr) {
+                copyButton.textContent = "Kopieren fehlgeschlagen";
+                copyButton.className = "spca-btn spca-btn-danger";
+
+                setTimeout(() => {
+                    copyButton.textContent = "In Zwischenablage kopieren";
+                    copyButton.className = "spca-btn spca-btn-primary";
+                }, 3000);
+            }
         }
     });
 
     closeButton.addEventListener("click", () => {
-        window.removeEventListener("resize", updateFormPosition);
         formContainer.remove();
     });
 
@@ -756,7 +647,7 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
     formContainer.appendChild(closeButton);
 }
 
-function setupModalCloseTracking(priceModal, updateFormPosition) {
+function setupModalCloseTracking(priceModal) {
     const modalObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.type === "childList") {
@@ -765,7 +656,6 @@ function setupModalCloseTracking(priceModal, updateFormPosition) {
                         if (node === priceModal || (node.querySelector && (node.querySelector('[role="dialog"]') === priceModal || node.querySelector(".modal") === priceModal || node.querySelector('[data-testid*="modal"]') === priceModal))) {
                             const currentForm = document.querySelector('[data-price-form="true"]');
                             if (currentForm) {
-                                window.removeEventListener("resize", updateFormPosition);
                                 currentForm.remove();
                             }
                             modalObserver.disconnect();
@@ -787,7 +677,6 @@ function setupModalCloseTracking(priceModal, updateFormPosition) {
         if (!currentPriceModal) {
             const currentForm = document.querySelector('[data-price-form="true"]');
             if (currentForm) {
-                window.removeEventListener("resize", updateFormPosition);
                 currentForm.remove();
             }
             modalObserver.disconnect();
@@ -808,33 +697,33 @@ function createPriceChartForm() {
     }
 
     setTimeout(() => {
-        const productData = extractProductData();
+        try {
+            const productData = extractProductData();
 
-        const formContainer = createFormContainer();
-        const updateFormPosition = setupFormPositioning(formContainer);
+            const formContainer = createFormContainer();
 
-        const shopSelection = createShopSelection(formContainer);
-        const slackInput = createSlackInput(formContainer);
+            const shopSelection = createShopSelection(formContainer);
+            const slackInput = createSlackInput(formContainer);
 
-        createToggleControls(formContainer);
-        const finalMessageTextarea = createMessageTextarea(formContainer, productData);
+            createToggleControls(formContainer);
+            const finalMessageTextarea = createMessageTextarea(formContainer, productData);
 
-        const selectedEmojis = createEmojiSelection(formContainer);
+            const selectedEmojis = createEmojiSelection(formContainer);
 
-        createActionButtons(
-            formContainer,
-            {
+            createActionButtons(formContainer, {
                 slackInput,
                 messageTextarea: finalMessageTextarea,
                 getSelectedShopName: shopSelection.getSelectedShopName,
                 selectedEmojis,
                 currentPrice: productData.currentPrice
-            },
-            updateFormPosition
-        );
+            });
 
-        document.body.appendChild(formContainer);
+            setupFormPosition(formContainer, priceModal);
+            document.body.appendChild(formContainer);
 
-        setupModalCloseTracking(priceModal, updateFormPosition);
+            setupModalCloseTracking(priceModal);
+        } catch (error) {
+            console.error("Error creating price form:", error);
+        }
     }, 100);
 }

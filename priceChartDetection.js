@@ -46,41 +46,44 @@ function addFormButtonToModal() {
 
     const formButton = document.createElement("button");
     formButton.setAttribute("data-form-button", "true");
+    formButton.className = "spca-price-info-btn";
     formButton.textContent = "📊 Preis Info Formular";
-    formButton.style = `
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        background: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        padding: 8px 12px;
-        font-size: 12px;
-        cursor: pointer;
-        z-index: 10002;
-    `;
 
     formButton.addEventListener("click", (e) => {
         e.stopPropagation();
         const existingForm = document.querySelector('[data-price-form="true"]');
         if (existingForm) {
-            chrome.storage.local.set({ priceFormOpen: false });
+            try {
+                chrome.storage.local.set({ priceFormOpen: false });
+            } catch (err) {
+                // Extension context invalidated, ignore
+            }
             existingForm.remove();
         } else {
-            chrome.storage.local.set({ priceFormOpen: true });
-            createPriceChartForm();
+            try {
+                chrome.storage.local.set({ priceFormOpen: true });
+            } catch (err) {
+                // Extension context invalidated, ignore
+            }
+            if (typeof createPriceChartForm === 'function') {
+                createPriceChartForm();
+            }
         }
     });
 
     modalHeader.style.position = "relative";
     modalHeader.appendChild(formButton);
 
-    chrome.storage.local.get(["priceFormOpen"], (result) => {
-        if (result.priceFormOpen) {
-            setTimeout(() => createPriceChartForm(), 100);
-        }
-    });
+    try {
+        chrome.storage.local.get(["priceFormOpen"], (result) => {
+            if (chrome.runtime.lastError) return;
+            if (result.priceFormOpen) {
+                setTimeout(() => createPriceChartForm(), 100);
+            }
+        });
+    } catch (err) {
+        // Extension context invalidated, ignore
+    }
 }
 
 function addTimeButtonListeners() {
@@ -95,7 +98,7 @@ function addTimeButtonListeners() {
                     chrome.storage.local.set({ priceFormOpen: true });
                 }
 
-                document.querySelectorAll(".price-percentage-change").forEach((el) => el.remove());
+                document.querySelectorAll(".spca-price-percentage").forEach((el) => el.remove());
                 setTimeout(() => addPriceHistoryPercentages(), 1000);
                 setTimeout(() => addPriceHistoryPercentages(), 2000);
 
@@ -114,7 +117,7 @@ function addTimeButtonListeners() {
 }
 
 function addPriceHistoryPercentages() {
-    document.querySelectorAll(".price-percentage-change").forEach((el) => el.remove());
+    document.querySelectorAll(".spca-price-percentage").forEach((el) => el.remove());
 
     const priceHistorySection = document.querySelector('.priceHistoryStatistics[data-testid="price-history-statistics"]');
     if (!priceHistorySection) {
@@ -158,7 +161,7 @@ function addPriceHistoryPercentages() {
 
         const percentageChange = (changeAmount / historicalPrice) * 100;
 
-        const existingPercentage = row.querySelector(".price-percentage-change");
+        const existingPercentage = row.querySelector(".spca-price-percentage");
         if (existingPercentage) {
             existingPercentage.remove();
         }
@@ -168,53 +171,25 @@ function addPriceHistoryPercentages() {
         }
 
         const percentageDiv = document.createElement("div");
-        percentageDiv.className = "price-percentage-change";
-        percentageDiv.style = `
-            font-size: 12px;
-            font-weight: bold;
-            color: ${isIncrease ? "#dc3545" : "#28a745"};
-            margin-bottom: 4px;
-        `;
+        percentageDiv.className = "spca-price-percentage";
 
         const formattedPercentage = Math.abs(percentageChange).toFixed(1);
         percentageDiv.textContent = `${isIncrease ? "+" : "-"}${formattedPercentage}%`;
 
-        let color = "#dc3545";
-        let borderColor = "#dc3545";
-
-        if (isDecrease) {
+        if (isIncrease) {
+            percentageDiv.classList.add("spca-price-percentage-increase");
+        } else if (isDecrease) {
             const absPercentage = Math.abs(percentageChange);
             if (absPercentage > 0 && absPercentage <= 10) {
-                color = "#007bff";
-                borderColor = "#007bff";
+                percentageDiv.classList.add("spca-price-percentage-decrease-low");
             } else if (absPercentage > 10 && absPercentage <= 20) {
-                color = "#ffc107";
-                borderColor = "#ffc107";
+                percentageDiv.classList.add("spca-price-percentage-decrease-medium");
             } else if (absPercentage > 20) {
-                color = "#28a745";
-                borderColor = "#28a745";
+                percentageDiv.classList.add("spca-price-percentage-decrease-high");
             }
         }
 
         row.style.position = "relative";
-
-        percentageDiv.style = `
-            position: absolute;
-            top: 50%;
-            left: 35%;
-            transform: translate(-50%, -50%);
-            font-size: 14px;
-            font-weight: bold;
-            color: ${color};
-            background: rgba(255, 255, 255, 0.95);
-            padding: 4px 8px;
-            border-radius: 6px;
-            border: 1px solid ${borderColor};
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            z-index: 10;
-            pointer-events: none;
-        `;
-
         row.appendChild(percentageDiv);
     });
 }
