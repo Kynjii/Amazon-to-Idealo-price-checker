@@ -177,3 +177,17 @@ function createStyleString(styleObj) {
         })
         .join("; ");
 }
+
+const THEME = {
+    colors,
+    similarityColors,
+    priceColors,
+    percentageColors,
+    buttonStyles,
+    filterIcon,
+    filterContainer,
+    idealoButton,
+    navButton,
+    modalForm,
+    createStyleString
+};
