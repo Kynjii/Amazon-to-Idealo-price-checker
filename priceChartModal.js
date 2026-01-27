@@ -212,7 +212,6 @@ function createShopSelection(formContainer) {
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     `;
 
-    // Add hover and focus effects
     shopSelect.addEventListener("mouseenter", () => {
         shopSelect.style.borderColor = "#3498db";
         shopSelect.style.boxShadow = "0 2px 8px rgba(52, 152, 219, 0.15)";
@@ -619,7 +618,15 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
     slackButton.addEventListener("click", async () => {
         const webhookUrl = slackInput.value === "*****" ? slackInput.dataset.actualUrl : slackInput.value.trim();
         if (!webhookUrl) {
-            alert("Bitte geben Sie eine Slack Webhook URL ein");
+            slackButton.textContent = "Slack URL eingeben!";
+            slackButton.style.backgroundColor = "#dc3545";
+            slackButton.style.transform = "scale(0.98)";
+
+            setTimeout(() => {
+                slackButton.textContent = "An Slack senden";
+                slackButton.style.backgroundColor = "#4a154b";
+                slackButton.style.transform = "scale(1)";
+            }, 3000);
             return;
         }
 

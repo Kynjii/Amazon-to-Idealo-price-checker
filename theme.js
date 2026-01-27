@@ -75,37 +75,40 @@ const filterIcon = {
     right: "16px",
     zIndex: "1001",
     background: colors.primary,
-    border: `1px solid ${colors.white}`,
+    border: `2px solid ${colors.white}`,
     borderRadius: "50%",
-    width: "38px",
-    height: "38px",
+    width: "42px",
+    height: "42px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
     cursor: "pointer",
-    padding: "0"
+    padding: "0",
+    transition: "all 0.2s ease",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
 };
 
 const filterContainer = {
     position: "fixed",
-    top: "60px",
+    top: "70px",
     right: "16px",
     zIndex: "1000",
-    background: colors.primary,
-    border: `1px solid ${colors.white}`,
-    borderRadius: "8px",
-    padding: "16px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+    background: colors.white,
+    border: `2px solid #e1e8ed`,
+    borderRadius: "12px",
+    padding: "20px",
+    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
     fontSize: "14px",
-    color: colors.gray[800],
-    width: "280px",
-    maxHeight: "400px",
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+    color: "#2c3e50",
+    width: "300px",
+    maxHeight: "450px",
     display: "none",
     flexDirection: "column",
     opacity: "0",
     transform: "translateY(-10px)",
-    transition: "opacity 0.3s ease, transform 0.3s ease"
+    transition: "all 0.3s ease"
 };
 
 const idealoButton = {
