@@ -2,7 +2,7 @@ function createFilterIcon(dataAttribute, openTitle = "Offen", closeTitle = "Schl
     const iconBtn = document.createElement("button");
     iconBtn.setAttribute(dataAttribute, "true");
     iconBtn.title = openTitle;
-    iconBtn.style = createStyleString({
+    iconBtn.style.cssText = createStyleString({
         ...THEME.filterIcon,
         background: backgroundColor,
         border: `1px solid ${borderColor}`
@@ -26,20 +26,20 @@ function addIdealoButton(titleElement, searchTerms, fontSize = "1rem") {
     idealoButton.href = `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${searchQuery}`;
     idealoButton.target = "_blank";
     idealoButton.style.cssText = createStyleString({
-        ...THEME.buttonStyles.base,
+        ...THEME.idealoButton.base,
         fontSize: fontSize
     });
 
     idealoButton.addEventListener("mouseover", () => {
         idealoButton.style.cssText = createStyleString({
-            ...THEME.buttonStyles.base,
-            ...THEME.buttonStyles.hover,
+            ...THEME.idealoButton.base,
+            ...THEME.idealoButton.hover,
             fontSize: fontSize
         });
     });
     idealoButton.addEventListener("mouseout", () => {
         idealoButton.style.cssText = createStyleString({
-            ...THEME.buttonStyles.base,
+            ...THEME.idealoButton.base,
             fontSize: fontSize
         });
     });
