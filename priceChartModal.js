@@ -492,7 +492,7 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
     return messageTextarea;
 }
 
-function createActionButtons(formContainer, { slackInput, messageTextarea, getSelectedShopName, selectedEmojis }, updateFormPosition) {
+function createActionButtons(formContainer, { slackInput, messageTextarea, getSelectedShopName, selectedEmojis, currentPrice }, updateFormPosition) {
     const slackButton = document.createElement("button");
     slackButton.textContent = "An Slack senden";
     slackButton.style = `width: 100%; padding: 10px; background-color: #4a154b; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px;`;
@@ -516,7 +516,7 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
         const originalMessage = messageTextarea.value;
         const emojiPrefix = Array.from(selectedEmojis).join("") + (selectedEmojis.size > 0 ? " " : "");
 
-        const slackMessage = originalMessage.replace(/€[\d,]+/g, (match) => `*${match}*`).replace(/Rekordpreis/g, "*Rekordpreis*");
+        const slackMessage = originalMessage.replace(currentPrice, `*${currentPrice}*`).replace(/Rekordpreis/g, "*Rekordpreis*");
         const slackFormattedMessage = `${emojiPrefix}${shopName}: ${slackMessage}`;
 
         const payload = JSON.stringify({
@@ -638,7 +638,8 @@ function createPriceChartForm() {
                 slackInput,
                 messageTextarea: finalMessageTextarea,
                 getSelectedShopName: shopSelection.getSelectedShopName,
-                selectedEmojis
+                selectedEmojis,
+                currentPrice: productData.currentPrice
             },
             updateFormPosition
         );
