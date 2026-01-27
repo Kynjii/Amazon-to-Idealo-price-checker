@@ -64,13 +64,12 @@ function extractProductData() {
 
         if (targetRow) {
             const changeElement = targetRow.querySelector(".priceHistoryStatistics-change.decreased");
-            const percentageElement = targetRow.querySelector(".price-percentage-change");
 
             if (changeElement) {
                 priceReduction = changeElement.textContent.trim();
-                const percentText = percentageElement ? percentageElement.textContent.trim() : "";
-                if (percentText) {
-                    priceReductionPercent = ` (${percentText})`;
+                const percentageElement = targetRow.querySelector(".spca-price-percentage");
+                if (percentageElement) {
+                    priceReductionPercent = ` (${percentageElement.textContent.trim()})`;
                 } else {
                     priceReductionPercent = "";
                 }
@@ -277,6 +276,7 @@ function createToggleControls(formContainer) {
 
     rekordpreisButton.addEventListener("click", (e) => {
         e.preventDefault();
+        e.stopPropagation();
         const messageTextarea = document.getElementById("spca-price-form-message-textarea");
         if (messageTextarea && messageTextarea.setPriceType) {
             messageTextarea.setPriceType("Rekordpreis");
@@ -299,11 +299,6 @@ function createToggleControls(formContainer) {
 }
 
 function createEmojiSelection(formContainer) {
-    const messageLabel = document.createElement("label");
-    messageLabel.textContent = "Nachrichtentext:";
-    messageLabel.className = "spca-form-label";
-    formContainer.appendChild(messageLabel);
-
     const emojiSectionContainer = document.createElement("div");
     emojiSectionContainer.className = "spca-emoji-container";
 
@@ -324,29 +319,6 @@ function createEmojiSelection(formContainer) {
 
     const emojis = ["🔥", "☕️", "☀️", "🥷", "❄️", "🎄", "🛍️", "🍫", "✨", "💸", "🚨"];
     const selectedEmojis = new Set();
-
-    chrome.storage.local.get(["selectedEmojis"], (result) => {
-        const savedEmojis = result.selectedEmojis || [];
-
-        savedEmojis.forEach((emoji) => {
-            if (emojis.includes(emoji)) {
-                selectedEmojis.add(emoji);
-            }
-        });
-
-        if (savedEmojis.length > 0) {
-            isEmojiSectionOpen = true;
-            emojiContainer.classList.add("spca-expanded");
-            toggleIcon.style.transform = "rotate(180deg)";
-        }
-
-        emojis.forEach((emoji) => {
-            const emojiBtn = emojiContainer.querySelector(`button[data-emoji="${emoji}"]`);
-            if (emojiBtn && selectedEmojis.has(emoji)) {
-                emojiBtn.classList.add("spca-selected");
-            }
-        });
-    });
 
     function toggleEmojiSection() {
         isEmojiSectionOpen = !isEmojiSectionOpen;
@@ -380,6 +352,7 @@ function createEmojiSelection(formContainer) {
 
         emojiBtn.addEventListener("click", (e) => {
             e.preventDefault();
+            e.stopPropagation();
             if (selectedEmojis.has(emoji)) {
                 selectedEmojis.delete(emoji);
                 emojiBtn.classList.remove("spca-selected");
@@ -391,6 +364,26 @@ function createEmojiSelection(formContainer) {
         });
 
         emojiContainer.appendChild(emojiBtn);
+    });
+
+    chrome.storage.local.get(["selectedEmojis"], (result) => {
+        const savedEmojis = result.selectedEmojis || [];
+
+        savedEmojis.forEach((emoji) => {
+            if (emojis.includes(emoji)) {
+                selectedEmojis.add(emoji);
+                const emojiBtn = emojiContainer.querySelector(`button[data-emoji="${emoji}"]`);
+                if (emojiBtn) {
+                    emojiBtn.classList.add("spca-selected");
+                }
+            }
+        });
+
+        if (savedEmojis.length > 0) {
+            isEmojiSectionOpen = true;
+            emojiContainer.classList.add("spca-expanded");
+            toggleIcon.style.transform = "rotate(180deg)";
+        }
     });
 
     emojiSectionContainer.appendChild(emojiContainer);
@@ -420,8 +413,7 @@ ${priceReduction}${priceReductionPercent} unter dem Durchschnittspreis.`;
     };
 
     function updateMessageWithEmojis() {
-        const emojiToggle = document.getElementById("spca-price-form-emoji-toggle");
-        const useEmojis = emojiToggle && emojiToggle.checked;
+        const useEmojis = emojiToggleCheckbox && emojiToggleCheckbox.checked;
         let updatedMessage = getMessageBody();
 
         if (useEmojis && priceStats && priceReductionPercent) {
@@ -488,26 +480,22 @@ ${priceReduction}${priceReductionPercent} unter dem Durchschnittspreis.`;
             console.log("Extension context invalidated, page reload required");
             return;
         }
-        const emojiToggle = document.getElementById("spca-price-form-emoji-toggle");
-        if (emojiToggle) {
-            emojiToggle.checked = result.emojiToggleEnabled !== undefined ? result.emojiToggleEnabled : true;
+        if (emojiToggleCheckbox) {
+            emojiToggleCheckbox.checked = result.emojiToggleEnabled !== undefined ? result.emojiToggleEnabled : true;
             updateMessageWithEmojis();
         }
     });
 
-    setTimeout(() => {
-        const emojiToggle = document.getElementById("spca-price-form-emoji-toggle");
-        if (emojiToggle) {
-            emojiToggle.addEventListener("change", () => {
-                updateMessageWithEmojis();
-                try {
-                    chrome.storage.local.set({ emojiToggleEnabled: emojiToggle.checked });
-                } catch (e) {
-                    console.log("Extension context invalidated, page reload required");
-                }
-            });
-        }
-    }, 10);
+    if (emojiToggleCheckbox) {
+        emojiToggleCheckbox.addEventListener("change", () => {
+            updateMessageWithEmojis();
+            try {
+                chrome.storage.local.set({ emojiToggleEnabled: emojiToggleCheckbox.checked });
+            } catch (e) {
+                console.log("Extension context invalidated, page reload required");
+            }
+        });
+    }
 
     formContainer.appendChild(messageTextarea);
     return messageTextarea;
@@ -705,8 +693,8 @@ function createPriceChartForm() {
             const shopSelection = createShopSelection(formContainer);
             const slackInput = createSlackInput(formContainer);
 
-            createToggleControls(formContainer);
-            const finalMessageTextarea = createMessageTextarea(formContainer, productData);
+            const { emojiToggleCheckbox } = createToggleControls(formContainer);
+            const finalMessageTextarea = createMessageTextarea(formContainer, productData, emojiToggleCheckbox);
 
             const selectedEmojis = createEmojiSelection(formContainer);
 

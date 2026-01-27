@@ -136,19 +136,26 @@
     flex-shrink: 0;
     position: relative;
     z-index: 1;
+    background-color: white;
 }
 
 .spca-form-checkbox:hover {
     border-color: var(--spca-color-primary);
+    background-color: var(--spca-color-gray-50);
 }
 
 .spca-form-checkbox:checked {
-    background-color: var(--spca-color-primary);
-    border-color: var(--spca-color-primary);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
-    background-size: 14px;
-    background-position: center;
-    background-repeat: no-repeat;
+    background-color: var(--spca-color-primary) !important;
+    border-color: var(--spca-color-primary) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E") !important;
+    background-size: 14px !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.spca-form-checkbox:checked:hover {
+    background-color: var(--spca-color-primary) !important;
+    border-color: var(--spca-color-primary) !important;
 }
 
 .spca-masked-input {
@@ -162,12 +169,14 @@
 }
 
 .spca-btn-rekordpreis {
-    min-width: 120px;
+    min-width: 140px;
+    flex-shrink: 0;
     text-align: center;
     background-color: var(--spca-color-warning) !important;
     border-color: var(--spca-color-warning) !important;
     color: #1f2937 !important;
     font-weight: 600;
+    border-radius: var(--spca-border-radius) !important;
 }
 
 .spca-btn-rekordpreis:hover:not(:disabled) {
@@ -319,7 +328,7 @@
     font-family: var(--spca-font-family);
     background: var(--spca-color-gray-100);
     border: 1px solid var(--spca-color-gray-300);
-    border-radius: var(--spca-border-radius);
+    border-radius: var(--spca-border-radius) !important;
     padding: 8px 12px;
     font-size: 13px;
     cursor: pointer;
@@ -354,7 +363,7 @@
     font-family: var(--spca-font-family);
     padding: 6px 10px;
     border: 1px solid var(--spca-color-gray-300);
-    border-radius: var(--spca-border-radius-sm);
+    border-radius: var(--spca-border-radius-sm) !important;
     background: white;
     cursor: pointer;
     transition: var(--spca-transition-fast);
@@ -368,9 +377,9 @@
 }
 
 .spca-emoji-option.spca-selected {
-    background: var(--spca-color-primary);
-    color: white;
-    border-color: var(--spca-color-primary);
+    background: var(--spca-color-primary) !important;
+    color: white !important;
+    border-color: var(--spca-color-primary) !important;
 }
 
 .spca-filter-container {
@@ -793,6 +802,21 @@
     color: var(--spca-color-gray-900) !important;
 }
 
+.spca-form-container.spca-theme-light .spca-form-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231f2937' d='M6 8L1 3h10z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-color: white !important;
+}
+
+.spca-form-container.spca-theme-light .spca-form-header {
+    border-bottom-color: var(--spca-color-primary) !important;
+}
+
+.spca-form-container.spca-theme-light .spca-form-title {
+    color: var(--spca-color-primary) !important;
+}
+
 .spca-form-container.spca-theme-light .spca-form-label {
     color: var(--spca-color-gray-700) !important;
 }
@@ -801,6 +825,29 @@
     background: var(--spca-color-gray-100) !important;
     border-color: var(--spca-color-gray-300) !important;
     color: var(--spca-color-gray-700) !important;
+}
+
+.spca-form-container.spca-theme-light .spca-emoji-toggle {
+    background: var(--spca-color-gray-100) !important;
+    border-color: var(--spca-color-gray-300) !important;
+    color: var(--spca-color-gray-700) !important;
+}
+
+.spca-form-container.spca-theme-light .spca-emoji-selection {
+    background: var(--spca-color-gray-50) !important;
+    border-color: var(--spca-color-gray-200) !important;
+}
+
+.spca-form-container.spca-theme-light .spca-emoji-option {
+    background: white !important;
+    border-color: var(--spca-color-gray-300) !important;
+    color: var(--spca-color-gray-700) !important;
+}
+
+.spca-form-container.spca-theme-light .spca-emoji-option.spca-selected {
+    background: var(--spca-color-primary) !important;
+    border-color: var(--spca-color-primary) !important;
+    color: white !important;
 }
 
 .spca-form-container.spca-theme-dark,
@@ -829,11 +876,11 @@
 }
 
 .spca-form-container.spca-theme-dark .spca-form-header {
-    border-bottom-color: var(--spca-color-gray-600) !important;
+    border-bottom-color: var(--spca-color-primary) !important;
 }
 
 .spca-form-container.spca-theme-dark .spca-form-title {
-    color: var(--spca-color-gray-200) !important;
+    color: var(--spca-color-primary) !important;
 }
 
 .spca-form-container.spca-theme-dark .spca-toggle-item {
@@ -842,6 +889,17 @@
 
 .spca-form-container.spca-theme-dark .spca-form-checkbox {
     border-color: var(--spca-color-gray-500) !important;
+    background-color: var(--spca-color-gray-700) !important;
+}
+
+.spca-form-container.spca-theme-dark .spca-form-checkbox:hover {
+    border-color: var(--spca-color-primary) !important;
+    background-color: var(--spca-color-gray-600) !important;
+}
+
+.spca-form-container.spca-theme-dark .spca-form-checkbox:checked {
+    background-color: var(--spca-color-primary) !important;
+    border-color: var(--spca-color-primary) !important;
 }
 
 .spca-form-container.spca-theme-dark .spca-masked-input {
@@ -871,6 +929,12 @@
 
 .spca-form-container.spca-theme-dark .spca-emoji-option:hover {
     background: var(--spca-color-gray-500) !important;
+}
+
+.spca-form-container.spca-theme-dark .spca-emoji-option.spca-selected {
+    background: var(--spca-color-primary) !important;
+    border-color: var(--spca-color-primary) !important;
+    color: white !important;
 }
 
 .spca-price-info-btn {
