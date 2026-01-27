@@ -174,29 +174,65 @@ function setupFormPositioning(formContainer) {
 function createShopSelection(formContainer) {
     const shopLabel = document.createElement("label");
     shopLabel.textContent = "Shop-Name:";
-    shopLabel.style = `display: block; margin-bottom: 5px; font-weight: bold; color: #333;`;
+    shopLabel.style = `
+        display: block; 
+        margin-bottom: 8px; 
+        font-weight: 600; 
+        color: #2c3e50;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+    `;
     formContainer.appendChild(shopLabel);
 
     const shopContainer = document.createElement("div");
-    shopContainer.style = `position: relative; margin-bottom: 15px;`;
+    shopContainer.style = `position: relative; margin-bottom: 18px;`;
 
     const shopSelect = document.createElement("select");
     shopSelect.style = `
         width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+        padding: 12px 16px;
+        padding-right: 40px;
+        border: 2px solid #e1e8ed;
+        border-radius: 8px;
         box-sizing: border-box;
-        background-color: white;
+        background-color: #ffffff;
+        color: #2c3e50;
         cursor: pointer;
         font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
         appearance: none;
-        background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23999" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+        transition: all 0.2s ease;
+        background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path fill="%23718096" d="M4.427 9.573l3.396-3.396a.25.25 0 01.354 0l3.396 3.396a.25.25 0 01-.177.427H4.604a.25.25 0 01-.177-.427z"/></svg>');
         background-repeat: no-repeat;
-        background-position: right 8px center;
-        background-size: 12px;
-        padding-right: 5px;
+        background-position: right 12px center;
+        background-size: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     `;
+
+    // Add hover and focus effects
+    shopSelect.addEventListener("mouseenter", () => {
+        shopSelect.style.borderColor = "#3498db";
+        shopSelect.style.boxShadow = "0 2px 8px rgba(52, 152, 219, 0.15)";
+    });
+
+    shopSelect.addEventListener("mouseleave", () => {
+        if (document.activeElement !== shopSelect) {
+            shopSelect.style.borderColor = "#e1e8ed";
+            shopSelect.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
+        }
+    });
+
+    shopSelect.addEventListener("focus", () => {
+        shopSelect.style.borderColor = "#3498db";
+        shopSelect.style.boxShadow = "0 0 0 3px rgba(52, 152, 219, 0.2)";
+        shopSelect.style.outline = "none";
+    });
+
+    shopSelect.addEventListener("blur", () => {
+        shopSelect.style.borderColor = "#e1e8ed";
+        shopSelect.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
+    });
 
     const shopOptions = [
         { value: "Amazon", text: "Amazon" },
@@ -224,13 +260,31 @@ function createShopSelection(formContainer) {
     customShopInput.placeholder = "Shop-Namen eingeben";
     customShopInput.style = `
         width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
+        padding: 12px 16px;
+        border: 2px solid #e1e8ed;
+        border-radius: 8px;
         box-sizing: border-box;
+        background-color: #ffffff;
+        color: #2c3e50;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.4;
         display: none;
-        margin-top: 5px;
+        margin-top: 8px;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
     `;
+
+    customShopInput.addEventListener("focus", () => {
+        customShopInput.style.borderColor = "#3498db";
+        customShopInput.style.boxShadow = "0 0 0 3px rgba(52, 152, 219, 0.2)";
+        customShopInput.style.outline = "none";
+    });
+
+    customShopInput.addEventListener("blur", () => {
+        customShopInput.style.borderColor = "#e1e8ed";
+        customShopInput.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.08)";
+    });
 
     shopSelect.addEventListener("change", () => {
         if (shopSelect.value === "custom") {
@@ -292,7 +346,7 @@ function createSlackInput(formContainer) {
     return slackInput;
 }
 
-function createToggleControls(formContainer, messageTextarea) {
+function createToggleControls(formContainer) {
     const togglesContainer = document.createElement("div");
     togglesContainer.style = `display: flex; gap: 15px; margin-bottom: 15px; align-items: center;`;
 
@@ -301,12 +355,17 @@ function createToggleControls(formContainer, messageTextarea) {
 
     const emojiToggleCheckbox = document.createElement("input");
     emojiToggleCheckbox.type = "checkbox";
-    emojiToggleCheckbox.id = "emoji-toggle";
+    emojiToggleCheckbox.id = "price-form-emoji-toggle";
 
     const emojiToggleLabel = document.createElement("label");
     emojiToggleLabel.textContent = "Prozent-Emoji";
-    emojiToggleLabel.setAttribute("for", "emoji-toggle");
-    emojiToggleLabel.style = `margin-left: 8px; color: #333; cursor: pointer; font-size: 12px;`;
+    emojiToggleLabel.setAttribute("for", "price-form-emoji-toggle");
+    emojiToggleLabel.style = `
+        margin-left: 8px; 
+        color: #333; 
+        cursor: pointer; 
+        font-size: 12px;
+    `;
 
     emojiToggleContainer.appendChild(emojiToggleCheckbox);
     emojiToggleContainer.appendChild(emojiToggleLabel);
@@ -314,21 +373,25 @@ function createToggleControls(formContainer, messageTextarea) {
     const rekordpreisButton = document.createElement("button");
     rekordpreisButton.textContent = "🔥 Rekordpreis";
     rekordpreisButton.type = "button";
+    rekordpreisButton.id = "price-form-rekordpreis-button";
     rekordpreisButton.style = `padding: 8px 12px; background-color: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1);`;
 
     rekordpreisButton.addEventListener("click", (e) => {
         e.preventDefault();
-        const currentMessage = messageTextarea.value;
-        const updatedMessage = currentMessage.replace(/zum (Tiefstpreis|guten Preis|Bestpreis|Rekordpreis) von/, "zum Rekordpreis von");
-        messageTextarea.value = updatedMessage;
+        const messageTextarea = document.getElementById("price-form-message-textarea");
+        if (messageTextarea) {
+            const currentMessage = messageTextarea.value;
+            const updatedMessage = currentMessage.replace(/zum (Tiefstpreis|guten Preis|Bestpreis|Rekordpreis) von/, "zum Rekordpreis von");
+            messageTextarea.value = updatedMessage;
 
-        rekordpreisButton.style.backgroundColor = "#28a745";
-        rekordpreisButton.textContent = "🔥 Gesetzt!";
+            rekordpreisButton.style.backgroundColor = "#28a745";
+            rekordpreisButton.textContent = "🔥 Gesetzt!";
 
-        setTimeout(() => {
-            rekordpreisButton.style.backgroundColor = "#ffc107";
-            rekordpreisButton.textContent = "🔥 Rekordpreis";
-        }, 2000);
+            setTimeout(() => {
+                rekordpreisButton.style.backgroundColor = "#ffc107";
+                rekordpreisButton.textContent = "🔥 Rekordpreis";
+            }, 2000);
+        }
     });
 
     togglesContainer.appendChild(emojiToggleContainer);
@@ -415,11 +478,13 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
     const messageBody = `${productName} zum ${priceType} von ${currentPrice} ${currentUrl}\n${priceReduction}${priceReductionPercent} unter dem Durchschnittspreis.`;
 
     const messageTextarea = document.createElement("textarea");
+    messageTextarea.id = "price-form-message-textarea";
     messageTextarea.value = messageBody;
     messageTextarea.style = `width: 100%; height: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; box-sizing: border-box; resize: vertical; font-family: Arial, sans-serif; font-size: 12px;`;
 
     function updateMessageWithEmojis() {
-        const useEmojis = emojiToggleCheckbox && emojiToggleCheckbox.checked;
+        const emojiToggle = document.getElementById("price-form-emoji-toggle");
+        const useEmojis = emojiToggle && emojiToggle.checked;
         let updatedMessage = messageBody;
 
         if (useEmojis && priceStats && priceReductionPercent) {
@@ -467,7 +532,10 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
             }
         }
 
-        messageTextarea.value = updatedMessage;
+        const textarea = document.getElementById("price-form-message-textarea");
+        if (textarea) {
+            textarea.value = updatedMessage;
+        }
     }
 
     chrome.storage.local.get(["emojiToggleEnabled"], (result) => {
@@ -475,22 +543,26 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
             console.log("Extension context invalidated, page reload required");
             return;
         }
-        if (emojiToggleCheckbox) {
-            emojiToggleCheckbox.checked = result.emojiToggleEnabled !== undefined ? result.emojiToggleEnabled : true;
+        const emojiToggle = document.getElementById("price-form-emoji-toggle");
+        if (emojiToggle) {
+            emojiToggle.checked = result.emojiToggleEnabled !== undefined ? result.emojiToggleEnabled : true;
             updateMessageWithEmojis();
         }
     });
 
-    if (emojiToggleCheckbox) {
-        emojiToggleCheckbox.addEventListener("change", () => {
-            if (chrome.runtime.lastError) {
-                console.log("Extension context invalidated, page reload required");
-                return;
-            }
-            chrome.storage.local.set({ emojiToggleEnabled: emojiToggleCheckbox.checked });
-            updateMessageWithEmojis();
-        });
-    }
+    setTimeout(() => {
+        const emojiToggle = document.getElementById("price-form-emoji-toggle");
+        if (emojiToggle) {
+            emojiToggle.addEventListener("change", () => {
+                if (chrome.runtime.lastError) {
+                    console.log("Extension context invalidated, page reload required");
+                    return;
+                }
+                chrome.storage.local.set({ emojiToggleEnabled: emojiToggle.checked });
+                updateMessageWithEmojis();
+            });
+        }
+    }, 10);
 
     formContainer.appendChild(messageTextarea);
     return messageTextarea;
@@ -627,12 +699,8 @@ function createPriceChartForm() {
         const shopSelection = createShopSelection(formContainer);
         const slackInput = createSlackInput(formContainer);
 
-        const messageTextarea = createMessageTextarea(formContainer, productData, null);
-
-        const { emojiToggleCheckbox } = createToggleControls(formContainer, messageTextarea);
-
-        messageTextarea.remove();
-        const finalMessageTextarea = createMessageTextarea(formContainer, productData, emojiToggleCheckbox);
+        createToggleControls(formContainer);
+        const finalMessageTextarea = createMessageTextarea(formContainer, productData);
 
         const selectedEmojis = createEmojiSelection(formContainer);
 
