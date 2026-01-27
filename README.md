@@ -61,20 +61,32 @@ The manual process previously involved:
 
 ## Technology Stack
 
--   **Frontend**: JavaScript (ES6+), HTML5, CSS3 with responsive design principles
+-   **Frontend**: Vanilla JavaScript, HTML5, CSS3 with responsive design principles
 -   **Browser APIs**:
     -   Chrome Extension Manifest v3
     -   Chrome Storage API for persistent data
     -   DOM Manipulation and MutationObserver for dynamic content
     -   Clipboard API with fallback support
 -   **Algorithms**:
-    -   Cosine similarity for product title matching
+    -   Custom cosine similarity implementation for character-based product title matching
     -   Price parsing and comparison algorithms
     -   Percentage calculation for price history analysis
 -   **Integration**:
     -   Slack Webhooks with CORS-compliant form-encoded requests
     -   Real-time DOM monitoring with throttled observers
--   **Architecture**: Content script with modular function design and event-driven interactions
+-   **Architecture**: Modular content script architecture with 11 specialized modules:
+    -   `theme.js` - Centralized styling and theming system
+    -   `textUtils.js` - Text processing and search query optimization
+    -   `priceUtils.js` - Price extraction and parsing utilities
+    -   `domUtils.js` - DOM manipulation and UI element creation
+    -   `similarityEngine.js` - Custom cosine similarity algorithm
+    -   `siteHandlers.js` - Site-specific logic for Amazon, Breuninger
+    -   `mydealzFilter.js` - MyDealz merchant filtering system
+    -   `idealoFilter.js` - Idealo Best-Deal provider filtering
+    -   `priceChartDetection.js` - Price chart integration and detection
+    -   `priceChartModal.js` - Modal form system with 9 specialized functions
+    -   `idealoComparison.js` - Price comparison and product matching
+    -   `mainContentScript.js` - Main orchestration and site routing
 
 ## How It Works
 
@@ -121,7 +133,9 @@ The manual process previously involved:
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top-right corner
 4. Click "Load unpacked" and select the extension directory
-5. The extension will be automatically active on Amazon, Idealo, and mydealz pages
+5. The extension will be automatically active on Amazon, Idealo, Breuninger, and MyDealz pages
+
+**Note**: This is a pure vanilla JavaScript extension with no build process or dependencies required. All modules are loaded directly by Chrome.
 
 ### Usage Workflow
 

@@ -419,7 +419,7 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
     messageTextarea.style = `width: 100%; height: 120px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 15px; box-sizing: border-box; resize: vertical; font-family: Arial, sans-serif; font-size: 12px;`;
 
     function updateMessageWithEmojis() {
-        const useEmojis = emojiToggleCheckbox.checked;
+        const useEmojis = emojiToggleCheckbox && emojiToggleCheckbox.checked;
         let updatedMessage = messageBody;
 
         if (useEmojis && priceStats && priceReductionPercent) {
@@ -475,18 +475,22 @@ function createMessageTextarea(formContainer, productData, emojiToggleCheckbox) 
             console.log("Extension context invalidated, page reload required");
             return;
         }
-        emojiToggleCheckbox.checked = result.emojiToggleEnabled !== undefined ? result.emojiToggleEnabled : true;
-        updateMessageWithEmojis();
+        if (emojiToggleCheckbox) {
+            emojiToggleCheckbox.checked = result.emojiToggleEnabled !== undefined ? result.emojiToggleEnabled : true;
+            updateMessageWithEmojis();
+        }
     });
 
-    emojiToggleCheckbox.addEventListener("change", () => {
-        if (chrome.runtime.lastError) {
-            console.log("Extension context invalidated, page reload required");
-            return;
-        }
-        chrome.storage.local.set({ emojiToggleEnabled: emojiToggleCheckbox.checked });
-        updateMessageWithEmojis();
-    });
+    if (emojiToggleCheckbox) {
+        emojiToggleCheckbox.addEventListener("change", () => {
+            if (chrome.runtime.lastError) {
+                console.log("Extension context invalidated, page reload required");
+                return;
+            }
+            chrome.storage.local.set({ emojiToggleEnabled: emojiToggleCheckbox.checked });
+            updateMessageWithEmojis();
+        });
+    }
 
     formContainer.appendChild(messageTextarea);
     return messageTextarea;
