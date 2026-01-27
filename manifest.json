@@ -8,12 +8,12 @@
     "content_scripts": [
         {
             "matches": ["https://www.amazon.de/*", "https://www.amazon.com/*", "https://www.amazon.co.uk/*", "https://www.amazon.ca/*", "https://www.amazon.fr/*", "https://www.amazon.it/*", "https://www.amazon.es/*", "https://www.amazon.nl/*", "https://www.breuninger.com/*"],
-            "js": ["theme.js", "textUtils.js", "priceUtils.js", "domUtils.js", "similarityEngine.js", "siteHandlers.js", "priceChartDetection.js", "priceChartModal.js", "idealoComparison.js", "mainContentScript.js"],
+            "js": ["libs/packages/string-comparison.js", "theme.js", "textUtils.js", "priceUtils.js", "domUtils.js", "similarityEngine.js", "siteHandlers.js", "priceChartDetection.js", "priceChartModal.js", "idealoComparison.js", "mainContentScript.js"],
             "run_at": "document_idle"
         },
         {
             "matches": ["https://www.idealo.de/preisvergleich/ProductCategory/*", "https://www.idealo.de/preisvergleich/deals/*", "https://www.idealo.de/preisvergleich/OffersOfProduct/*", "https://www.mydealz.de/*", "https://www.idealo.de/preisvergleich/MainSearchProductCategory.html*"],
-            "js": ["theme.js", "textUtils.js", "priceUtils.js", "domUtils.js", "similarityEngine.js", "siteHandlers.js", "mydealzFilter.js", "idealoFilter.js", "priceChartDetection.js", "priceChartModal.js", "idealoComparison.js", "mainContentScript.js"],
+            "js": ["libs/packages/string-comparison.js", "theme.js", "textUtils.js", "priceUtils.js", "domUtils.js", "similarityEngine.js", "siteHandlers.js", "mydealzFilter.js", "idealoFilter.js", "priceChartDetection.js", "priceChartModal.js", "idealoComparison.js", "mainContentScript.js"],
             "run_at": "document_idle"
         }
     ],
