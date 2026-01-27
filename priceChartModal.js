@@ -102,7 +102,27 @@ function createFormContainer() {
     formTitle.className = "spca-form-title";
     formTitle.textContent = "Preis-Nachricht erstellen";
 
+    const headerButtons = document.createElement("div");
+    headerButtons.className = "spca-header-buttons";
+
     const themeBtn = createThemeButton();
+
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "spca-btn-icon";
+    closeBtn.innerHTML = "✕";
+    closeBtn.title = "Schließen";
+    closeBtn.addEventListener("click", () => {
+        try {
+            chrome.storage.local.set({ priceFormOpen: false });
+        } catch (e) {
+            console.log("Extension context invalidated");
+        }
+        formContainer.remove();
+    });
+
+    headerButtons.appendChild(themeBtn);
+    headerButtons.appendChild(closeBtn);
 
     chrome.storage.local.get(["selectedTheme"], (result) => {
         const theme = result.selectedTheme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -111,7 +131,7 @@ function createFormContainer() {
     });
 
     formHeader.appendChild(formTitle);
-    formHeader.appendChild(themeBtn);
+    formHeader.appendChild(headerButtons);
     formContainer.appendChild(formHeader);
 
     return formContainer;
@@ -510,10 +530,6 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
     copyButton.textContent = "In Zwischenablage kopieren";
     copyButton.className = "spca-btn spca-btn-primary";
 
-    const closeButton = document.createElement("button");
-    closeButton.textContent = "Schließen";
-    closeButton.className = "spca-btn spca-btn-secondary";
-
     slackButton.addEventListener("click", async () => {
         const webhookUrl = slackInput.value === "*****" ? slackInput.dataset.actualUrl : slackInput.value.trim();
         if (!webhookUrl) {
@@ -626,13 +642,8 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
         }
     });
 
-    closeButton.addEventListener("click", () => {
-        formContainer.remove();
-    });
-
     formContainer.appendChild(slackButton);
     formContainer.appendChild(copyButton);
-    formContainer.appendChild(closeButton);
 }
 
 function setupModalCloseTracking(priceModal) {
