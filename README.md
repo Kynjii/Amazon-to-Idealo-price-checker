@@ -1,8 +1,8 @@
-# Amazon to Idealo Price Checker
+# Smart Price Comparison Assistant
 
 ## Product Overview
 
-The **Amazon to Idealo Price Checker** is a comprehensive browser extension designed to streamline deal discovery and price comparison workflows. Built for affiliate managers and deal hunters, it automates the process of comparing Amazon product prices with Idealo (German price comparison platform) and mydealz (German deals community), while providing advanced filtering, price analysis, and direct Slack integration for sending pre-written mesages.
+The **Smart Price Comparison Assistant** is a comprehensive browser extension designed to streamline deal discovery and price comparison workflows. Built for affiliate managers and deal hunters, it automates the process of comparing prices across Amazon, Idealo, Breuninger, and MyDealz platforms, while providing advanced filtering, price analysis, and direct Slack integration for sending pre-written messages.
 
 ## Problem Statement
 
