@@ -8,15 +8,9 @@ const cosine = {
         if (!s1.length || !s2.length) return 0;
         if (s1 === s2) return 1;
 
-        s1 = s1.toLowerCase();
-        s2 = s2.toLowerCase();
-
-        const words1 = s1.split(/\s+/);
-        const words2 = s2.split(/\s+/);
-        const allWords = Array.from(new Set([...words1, ...words2]));
-
-        const vec1 = allWords.map((word) => words1.filter((w) => w === word).length);
-        const vec2 = allWords.map((word) => words2.filter((w) => w === word).length);
+        const terms = Array.from(new Set([...s1.split(""), ...s2.split("")]));
+        const vec1 = terms.map((term) => s1.split(term).length - 1);
+        const vec2 = terms.map((term) => s2.split(term).length - 1);
 
         const dotProduct = vec1.reduce((acc, cur, i) => acc + cur * vec2[i], 0);
         const magnitude1 = Math.sqrt(vec1.reduce((acc, cur) => acc + cur ** 2, 0));
