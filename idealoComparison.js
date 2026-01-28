@@ -1,4 +1,29 @@
-function processIdealoResults(referencePrice, priceSiteName, searchQuery) {
+function isExternalLink(resultItem) {
+    const externalForm = resultItem.querySelector('form[action*="/ipc/prg"]');
+    return !!externalForm;
+}
+
+function createExternalLinkBadge() {
+    const badge = document.createElement("span");
+    badge.textContent = "❗";
+    badge.title = "Idealo stellt keine detaillierten Informationen bereit, ein Klick führt zu einem externen Shop.";
+    badge.classList.add("extension-annotation", "spca-external-badge");
+    return badge;
+}
+
+function createKeepaButton(asin) {
+    if (!asin) return null;
+
+    const keepaButton = document.createElement("a");
+    keepaButton.href = `https://keepa.com/#!product/3-${asin}`;
+    keepaButton.target = "_blank";
+    keepaButton.textContent = "Keepa";
+    keepaButton.classList.add("extension-annotation", "spca-keepa-button");
+    keepaButton.addEventListener("click", (e) => e.stopPropagation());
+    return keepaButton;
+}
+
+function processIdealoResults(referencePrice, priceSiteName, productTitle, productAsin) {
     const resultItems = document.querySelectorAll('.sr-resultList__item_m6xdA, [data-testid="resultItem"]:has(.sr-productSummary__title_f5flP)');
 
     let highestMatch = { element: null, value: 0 };
@@ -10,7 +35,7 @@ function processIdealoResults(referencePrice, priceSiteName, searchQuery) {
 
         if (titleElement && priceElement) {
             const resultTitle = titleElement.textContent.trim();
-            const similarity = cosine.similarity(searchQuery, resultTitle);
+            const similarity = cosine.similarity(productTitle, resultTitle);
             const matchPercentage = Math.round(similarity * 100);
 
             const idealoPrice = extractPrice(priceElement.textContent.replace("ab", "").trim());
@@ -76,6 +101,11 @@ function processIdealoResults(referencePrice, priceSiteName, searchQuery) {
                     border-radius: 3px;
                 `;
                 annotationContainer.appendChild(priceSourceAnnotation);
+
+                if (isExternalLink(resultItem)) {
+                    const externalBadge = createExternalLinkBadge();
+                    annotationContainer.appendChild(externalBadge);
+                }
 
                 if (lowestPriceDiff.element) {
                     lowestPriceDiff.element.classList.remove("lowest-price-highlight");

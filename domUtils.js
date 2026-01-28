@@ -59,13 +59,12 @@ function createThemeSelector() {
     const changelogBtn = document.createElement("button");
     changelogBtn.textContent = "📋";
     changelogBtn.className = "spca-btn spca-btn-icon";
-    changelogBtn.title = "Was ist neu?";
+    changelogBtn.title = "Changelog";
 
-    const currentVersion = "1.15.0";
     chrome.storage.local.get(["lastChangelogViewed"], (result) => {
-        if (result.lastChangelogViewed !== currentVersion) {
+        if (result.lastChangelogViewed !== window.EXTENSION_VERSION) {
             changelogBtn.classList.add("spca-changelog-new");
-            changelogBtn.textContent = "📋✨";
+            changelogBtn.textContent = "✨";
             changelogBtn.title = "Neue Version verfügbar!";
         }
     });
@@ -74,7 +73,7 @@ function createThemeSelector() {
         if (typeof showChangelog === "function") {
             changelogBtn.classList.remove("spca-changelog-new");
             changelogBtn.textContent = "📋";
-            changelogBtn.title = "Was ist neu?";
+            changelogBtn.title = "Changelog";
             showChangelog();
         }
     });
@@ -89,7 +88,7 @@ function createThemeSelector() {
 function createThemeButton() {
     const themeBtn = document.createElement("button");
     themeBtn.className = "spca-btn spca-btn-icon";
-    themeBtn.title = "Thema wechseln";
+    themeBtn.title = "Modus";
 
     const updateIcon = (theme) => {
         const themeIcons = { light: "☀️", dark: "🌙" };
@@ -321,7 +320,7 @@ function createGenericFilter(config) {
                 document.addEventListener("mousedown", (e) => {
                     const changelogContainer = document.querySelector(".spca-changelog-container");
                     const isInsideChangelog = changelogContainer && changelogContainer.contains(e.target);
-                    
+
                     if (!filterContainer.contains(e.target) && !iconBtn.contains(e.target) && !isInsideChangelog) {
                         filterContainer.style.opacity = "0";
                         filterContainer.style.transform = "translateY(-10px)";

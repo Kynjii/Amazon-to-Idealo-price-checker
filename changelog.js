@@ -1,7 +1,18 @@
+const EXTENSION_VERSION = "1.16.0";
+window.EXTENSION_VERSION = EXTENSION_VERSION;
+
 function showChangelog() {
     const changelogData = {
-        currentVersion: "1.15.0",
+        currentVersion: EXTENSION_VERSION,
         entries: [
+            {
+                version: "1.16.0",
+                date: "2026-01-28",
+                changes: [
+                    { type: "improve", text: "Genauere Produktvergleiche" },
+                    { type: "improve", text: "Kleinere UI-Verbesserungen" }
+                ]
+            },
             {
                 version: "1.15.0",
                 date: "2026-01-27",
@@ -189,7 +200,7 @@ function showChangelog() {
 }
 
 function checkAndShowChangelogIfNeeded() {
-    const currentVersion = "1.15.0";
+    const currentVersion = EXTENSION_VERSION;
 
     chrome.storage.local.get(["lastChangelogViewed"], (result) => {
         if (result.lastChangelogViewed !== currentVersion) {

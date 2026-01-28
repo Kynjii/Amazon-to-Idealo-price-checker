@@ -47,7 +47,8 @@ function addFormButtonToModal() {
     const formButton = document.createElement("button");
     formButton.setAttribute("data-form-button", "true");
     formButton.className = "spca-price-info-btn";
-    formButton.textContent = "📊 Preis Info Formular";
+    formButton.textContent = "✒️";
+    formButton.title = "Deal-Nachricht erstellen";
 
     formButton.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -65,7 +66,7 @@ function addFormButtonToModal() {
             } catch (err) {
                 // Extension context invalidated, ignore
             }
-            if (typeof createPriceChartForm === 'function') {
+            if (typeof createPriceChartForm === "function") {
                 createPriceChartForm();
             }
         }

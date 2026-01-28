@@ -100,7 +100,7 @@ function createFormContainer() {
 
     const formTitle = document.createElement("h3");
     formTitle.className = "spca-form-title";
-    formTitle.textContent = "Preis-Nachricht erstellen";
+    formTitle.textContent = "Deal-Nachricht erstellen";
 
     const headerButtons = document.createElement("div");
     headerButtons.className = "spca-header-buttons";

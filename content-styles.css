@@ -1464,3 +1464,33 @@
 .spca-changelog-entry-change.spca-changelog-improve::before {
     content: "⚡";
 }
+
+.spca-keepa-button {
+    display: flex;
+    padding: 5px;
+    background-color: #1976d2;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.spca-keepa-button:hover {
+    background-color: #1565c0;
+}
+
+.spca-external-badge {
+    display: flex;
+    padding: 5px;
+    background-color: #ffc400;
+    font-size: 12px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: min-content;
+    cursor: default;
+}

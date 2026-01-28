@@ -75,7 +75,13 @@ function handleSite(siteConfig) {
         if (titleElement && priceElement && fractionElement) {
             const price = siteConfig.extractPrice(titleElement, priceElement, fractionElement);
             if (price) {
-                const storageUpdate = {};
+                const productTitle = titleElement.innerText.trim();
+                const asin = extractAmazonIdentifier();
+                const storageUpdate = {
+                    productTitle: productTitle,
+                    productAsin: asin,
+                    idealoButtonClicked: false
+                };
                 Object.values(siteConfigs).forEach((site) => {
                     storageUpdate[site.storageKey] = site.storageKey === siteConfig.storageKey ? price : null;
                 });
@@ -96,7 +102,16 @@ function handleSite(siteConfig) {
                 if (titleElement && (brandElement || productNameElement)) {
                     const price = siteConfig.extractPrice(container);
                     if (price) {
-                        const storageUpdate = {};
+                        const brandElement = container.querySelector(".bewerten-zusammenfassung__heading__link span");
+                        const productNameElement = container.querySelector(".bewerten-zusammenfassung__name");
+                        const brandName = brandElement ? brandElement.textContent.trim() : "";
+                        const productName = productNameElement ? productNameElement.textContent.trim() : "";
+                        const productTitle = [brandName, productName].filter(Boolean).join(" ");
+                        const storageUpdate = {
+                            productTitle: productTitle,
+                            productAsin: null,
+                            idealoButtonClicked: false
+                        };
                         Object.values(siteConfigs).forEach((site) => {
                             storageUpdate[site.storageKey] = site.storageKey === siteConfig.storageKey ? price : null;
                         });

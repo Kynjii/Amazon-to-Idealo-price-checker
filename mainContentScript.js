@@ -72,7 +72,11 @@
     } else if (hostname.includes("idealo.")) {
         setTimeout(() => setupPriceChartDetection(), 1000);
 
-        const allStorageKeys = Object.values(siteConfigs).map((site) => site.storageKey);
+        if (currentUrl.includes("idealo.de/preisvergleich/deals") || currentUrl.includes("idealo.de/preisvergleich/OffersOfProduct")) {
+            return;
+        }
+
+        const allStorageKeys = [...Object.values(siteConfigs).map((site) => site.storageKey), "productTitle", "productAsin"];
         chrome.storage.local.get(allStorageKeys, (result) => {
             let referencePrice = null;
             let priceSiteName = null;
@@ -89,10 +93,11 @@
                 return;
             }
 
-            const searchQuery = new URL(window.location.href).searchParams.get("q");
-            if (!searchQuery) return;
+            const productTitle = result.productTitle;
+            if (!productTitle) return;
 
-            processIdealoResults(referencePrice, priceSiteName, searchQuery);
+            const productAsin = result.productAsin || null;
+            processIdealoResults(referencePrice, priceSiteName, productTitle, productAsin);
         });
     }
 })();
