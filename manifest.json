@@ -3,7 +3,22 @@
     "name": "Smart Price Comparison Assistant",
     "version": "1.16.0",
     "description": "Intelligent price comparison across Amazon, Idealo, Breuninger, and MyDealz with similarity matching, filtering, and Slack integration for smart shopping decisions.",
-    "permissions": ["activeTab", "storage"],
+    "icons": {
+        "16": "assets/web/icon-192.png",
+        "32": "assets/web/icon-192.png",
+        "48": "assets/web/icon-192.png",
+        "128": "assets/web/icon-192.png"
+    },
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "assets/web/icon-192.png",
+            "32": "assets/web/icon-192.png",
+            "48": "assets/web/icon-192.png"
+        },
+        "default_title": "Smart Price Comparison Assistant"
+    },
+    "permissions": ["activeTab", "storage", "tabs"],
     "host_permissions": ["https://www.amazon.de/*", "https://www.amazon.com/*", "https://www.amazon.co.uk/*", "https://www.amazon.ca/*", "https://www.amazon.fr/*", "https://www.amazon.it/*", "https://www.amazon.es/*", "https://www.amazon.nl/*", "https://www.idealo.de/preisvergleich/*", "https://www.breuninger.com/*"],
     "content_scripts": [
         {

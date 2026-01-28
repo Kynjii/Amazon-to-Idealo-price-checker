@@ -57,6 +57,7 @@
     width: 22vw;
     min-width: 280px;
     max-width: 360px;
+    min-height: 420px;
     display: flex;
     flex-direction: column;
     text-align: center;
@@ -233,6 +234,10 @@
     background-position: right 10px center;
     padding-right: 30px;
     cursor: pointer;
+}
+
+.spca-form-select option {
+    font-family: var(--spca-font-family);
 }
 
 .spca-form-input:focus,

@@ -9,12 +9,14 @@ function showChangelog() {
                 version: "1.16.0",
                 date: "2026-01-28",
                 changes: [
+                    { type: "new", text: "Einstellungs-Popup über Toolbar-Icon (Design, Slack, Changelog)" },
                     { type: "new", text: "Keepa-Button für Amazon Preisverlauf auf Idealo-Suchergebnissen" },
                     { type: "new", text: "Externe Shop-Links auf Idealo werden jetzt markiert" },
                     { type: "new", text: "Neue kompakte Produktvergleichs-Karte mit aufklappbaren Details" },
+                    { type: "improve", text: "Slack Webhook URL jetzt zentral in Einstellungen statt im Formular" },
                     { type: "improve", text: "Gleiche Preise werden jetzt korrekt angezeigt statt als 'teurer'" },
                     { type: "improve", text: "Einheitliches Brand-Styling für alle UI-Komponenten" },
-                    { type: "improve", text: "Genauere Produktvergleiche" }
+                    { type: "improve", text: "Aufgeräumte Benutzeroberfläche ohne doppelte Buttons" }
                 ]
             },
             {

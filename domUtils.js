@@ -195,10 +195,6 @@ function createGenericFilter(config) {
                 const footer = document.createElement("div");
                 footer.className = "spca-filter-footer";
 
-                const themeSection = createThemeSelector();
-                themeSection.className = "spca-theme-section";
-                footer.appendChild(themeSection);
-
                 const sortedItemNames = Array.from(allItemNames).sort((a, b) => {
                     const aSelected = savedSelections.includes(a);
                     const bSelected = savedSelections.includes(b);

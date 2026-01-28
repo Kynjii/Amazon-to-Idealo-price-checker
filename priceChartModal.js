@@ -105,8 +105,6 @@ function createFormContainer() {
     const headerButtons = document.createElement("div");
     headerButtons.className = "spca-header-buttons";
 
-    const themeBtn = createThemeButton();
-
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
     closeBtn.className = "spca-btn-icon";
@@ -121,7 +119,6 @@ function createFormContainer() {
         formContainer.remove();
     });
 
-    headerButtons.appendChild(themeBtn);
     headerButtons.appendChild(closeBtn);
 
     chrome.storage.local.get(["selectedTheme"], (result) => {
@@ -521,7 +518,7 @@ ${priceReduction}${priceReductionPercent} unter dem Durchschnittspreis.`;
     return messageTextarea;
 }
 
-function createActionButtons(formContainer, { slackInput, messageTextarea, getSelectedShopName, selectedEmojis, currentPrice }) {
+function createActionButtons(formContainer, { messageTextarea, getSelectedShopName, selectedEmojis, currentPrice }) {
     const slackButton = document.createElement("button");
     slackButton.textContent = "An Slack senden";
     slackButton.className = "spca-btn spca-btn-slack";
@@ -531,9 +528,11 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
     copyButton.className = "spca-btn spca-btn-primary";
 
     slackButton.addEventListener("click", async () => {
-        const webhookUrl = slackInput.value === "*****" ? slackInput.dataset.actualUrl : slackInput.value.trim();
+        const result = await chrome.storage.local.get(["slackWebhookUrl"]);
+        const webhookUrl = result.slackWebhookUrl;
+
         if (!webhookUrl) {
-            slackButton.textContent = "Slack URL eingeben!";
+            slackButton.textContent = "Slack URL in Einstellungen!";
             slackButton.className = "spca-btn spca-btn-danger spca-error-state";
 
             setTimeout(() => {
@@ -566,8 +565,6 @@ function createActionButtons(formContainer, { slackInput, messageTextarea, getSe
             });
 
             if (response.ok) {
-                chrome.storage.local.set({ slackWebhookUrl: webhookUrl });
-
                 slackButton.textContent = "Gesendet!";
                 slackButton.className = "spca-btn spca-btn-success";
 
@@ -702,7 +699,6 @@ function createPriceChartForm() {
             const formContainer = createFormContainer();
 
             const shopSelection = createShopSelection(formContainer);
-            const slackInput = createSlackInput(formContainer);
 
             const { emojiToggleCheckbox } = createToggleControls(formContainer);
             const finalMessageTextarea = createMessageTextarea(formContainer, productData, emojiToggleCheckbox);
@@ -710,7 +706,6 @@ function createPriceChartForm() {
             const selectedEmojis = createEmojiSelection(formContainer);
 
             createActionButtons(formContainer, {
-                slackInput,
                 messageTextarea: finalMessageTextarea,
                 getSelectedShopName: shopSelection.getSelectedShopName,
                 selectedEmojis,

@@ -98,7 +98,7 @@
 
             const productAsin = result.productAsin || null;
             processIdealoResults(referencePrice, priceSiteName, productTitle, productAsin);
-            
+
             if (productAsin) {
                 setTimeout(() => {
                     addKeepaButtonToGrid(productAsin);
@@ -107,3 +107,18 @@
         });
     }
 })();
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === "showChangelog") {
+        if (window.spca?.showChangelog) {
+            window.spca.showChangelog();
+        }
+        sendResponse({ success: true });
+    } else if (message.action === "applyTheme") {
+        if (typeof applyTheme === "function") {
+            applyTheme(message.theme);
+        }
+        sendResponse({ success: true });
+    }
+    return true;
+});

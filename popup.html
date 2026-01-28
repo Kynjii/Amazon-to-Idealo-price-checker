@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Smart Price Comparison Assistant</title>
+        <link rel="stylesheet" href="popup.css" />
+    </head>
+    <body>
+        <div class="popup-container">
+            <header class="popup-header">
+                <img src="assets/web/icon-192.png" alt="Logo" class="popup-logo" />
+                <div class="popup-title-section">
+                    <h1 class="popup-title">Smart Price Comparison Assistant</h1>
+                    <span class="popup-version"></span>
+                </div>
+            </header>
+
+            <main class="popup-main">
+                <section class="popup-section">
+                    <h2 class="popup-section-title">Design</h2>
+                    <div class="theme-toggle">
+                        <button class="theme-btn" data-theme="light" title="Helles Design">
+                            <img src="assets/lightmode.png" alt="" class="theme-icon" />
+                            <span class="theme-label">Hell</span>
+                        </button>
+                        <button class="theme-btn" data-theme="dark" title="Dunkles Design">
+                            <img src="assets/darkmode.png" alt="" class="theme-icon" />
+                            <span class="theme-label">Dunkel</span>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="popup-section">
+                    <h2 class="popup-section-title">Slack Integration</h2>
+                    <div class="slack-input-group">
+                        <input type="url" id="slackUrl" class="popup-input" placeholder="Slack Webhook URL eingeben..." />
+                        <button id="saveSlackBtn" class="popup-btn popup-btn-primary">Speichern</button>
+                    </div>
+                    <p class="popup-hint" id="slackStatus"></p>
+                </section>
+
+                <section class="popup-section">
+                    <button id="showChangelogBtn" class="popup-btn popup-btn-secondary popup-btn-full">
+                        <img src="assets/changelog.png" alt="" class="popup-btn-icon" />
+                        Changelog
+                    </button>
+                </section>
+            </main>
+
+            <footer class="popup-footer">Entwickelt von Dean Burrows</footer>
+        </div>
+
+        <script src="popup.js"></script>
+    </body>
+</html>
