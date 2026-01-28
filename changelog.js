@@ -11,8 +11,10 @@ function showChangelog() {
                 changes: [
                     { type: "new", text: "Keepa-Button für Amazon Preisverlauf auf Idealo-Suchergebnissen" },
                     { type: "new", text: "Externe Shop-Links auf Idealo werden jetzt markiert" },
-                    { type: "improve", text: "Genauere Produktvergleiche" },
-                    { type: "improve", text: "Kleinere UI-Verbesserungen" }
+                    { type: "new", text: "Neue kompakte Produktvergleichs-Karte mit aufklappbaren Details" },
+                    { type: "improve", text: "Gleiche Preise werden jetzt korrekt angezeigt statt als 'teurer'" },
+                    { type: "improve", text: "Einheitliches Brand-Styling für alle UI-Komponenten" },
+                    { type: "improve", text: "Genauere Produktvergleiche" }
                 ]
             },
             {
@@ -90,7 +92,7 @@ function showChangelog() {
 
     const existingChangelog = document.querySelector(".spca-changelog-container");
     if (existingChangelog) {
-        existingChangelog.remove();
+        return;
     }
 
     const changelogContainer = document.createElement("div");

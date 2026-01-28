@@ -18,6 +18,15 @@ function isSavings(priceDifference) {
     return parseFloat(priceDifference) < 0;
 }
 
+function isSamePrice(priceDifference) {
+    return parseFloat(priceDifference) === 0;
+}
+
+function getPriceClass(priceDifference) {
+    if (isSamePrice(priceDifference)) return "same";
+    return isSavings(priceDifference) ? "savings" : "more";
+}
+
 function createSimilarityBadge(matchPercentage) {
     const badge = document.createElement("span");
     badge.classList.add("spca-card-badge", "spca-card-badge--similarity");
@@ -31,8 +40,9 @@ function createPriceBadge(priceDifference, priceSiteName) {
 
     const badge = document.createElement("span");
     badge.classList.add("spca-card-badge", "spca-card-badge--price");
-    badge.classList.add(isSavings(priceDifference) ? "spca-card-badge--savings" : "spca-card-badge--more");
-    badge.title = `${formatPriceDifference(priceDifference)} vs. ${priceSiteName}`;
+    badge.classList.add(`spca-card-badge--${getPriceClass(priceDifference)}`);
+    const titleText = isSamePrice(priceDifference) ? `Gleicher Preis wie ${priceSiteName}` : `${formatPriceDifference(priceDifference)} vs. ${priceSiteName}`;
+    badge.title = titleText;
     return badge;
 }
 
@@ -134,10 +144,17 @@ function createExpandedView(matchPercentage, priceDifference, priceSiteName, isE
 
     // Price comparison row with circle
     if (priceDifference !== null) {
-        const isSaving = isSavings(priceDifference);
-        const priceClass = isSaving ? "spca-card-badge--savings" : "spca-card-badge--more";
-        const priceValueClass = isSaving ? "spca-card-value--savings" : "spca-card-value--more";
-        const priceText = isSaving ? `${formatPriceDifference(priceDifference)} günstiger als ${priceSiteName}` : `${formatPriceDifference(priceDifference)} teurer als ${priceSiteName}`;
+        const priceType = getPriceClass(priceDifference);
+        const priceClass = `spca-card-badge--${priceType}`;
+        const priceValueClass = `spca-card-value--${priceType}`;
+        let priceText;
+        if (isSamePrice(priceDifference)) {
+            priceText = `Gleicher Preis wie ${priceSiteName}`;
+        } else if (isSavings(priceDifference)) {
+            priceText = `${formatPriceDifference(priceDifference)} günstiger als ${priceSiteName}`;
+        } else {
+            priceText = `${formatPriceDifference(priceDifference)} teurer als ${priceSiteName}`;
+        }
         view.appendChild(createDetailRow(priceClass, "Preisdifferenz", priceText, priceValueClass));
     }
 
