@@ -29,7 +29,10 @@ The manual process previously involved:
 -   **Automated search** from Amazon to Idealo with ASIN, product number, and title
 -   **Cosine similarity matching** to identify the most relevant products
 -   **Visual price comparison** with color-coded annotations
+-   **Compact product comparison cards** with expandable details
 -   **Best match and best deal highlighting** for quick decision making
+-   **External shop marking** to identify links that redirect outside Idealo
+-   **Keepa integration** for Amazon price history directly from Idealo search results
 
 ### 2. Advanced Filtering System
 
@@ -54,10 +57,12 @@ The manual process previously involved:
 
 ### 5. Responsive User Interface
 
+-   **Settings popup** accessible via toolbar icon for theme, Slack configuration, and changelog
+-   **Light and dark theme support** with automatic system preference detection
 -   **Modal-integrated controls** that appear contextually within Idealo price charts
 -   **Intelligent form positioning** that adapts to different screen sizes
 -   **State persistence** across time period changes and page interactions
--   **Toggle functionality** for streamlined user interactions
+-   **Unified brand styling** across all UI components
 
 ## Technology Stack
 
@@ -74,19 +79,21 @@ The manual process previously involved:
 -   **Integration**:
     -   Slack Webhooks with CORS-compliant form-encoded requests
     -   Real-time DOM monitoring with throttled observers
--   **Architecture**: Modular content script architecture with 11 specialized modules:
+-   **Architecture**: Modular content script architecture with 14 specialized modules:
     -   `theme.js` - Centralized styling and theming system
     -   `textUtils.js` - Text processing and search query optimization
     -   `priceUtils.js` - Price extraction and parsing utilities
     -   `domUtils.js` - DOM manipulation and UI element creation
+    -   `changelog.js` - Version tracking and changelog display
     -   `similarityEngine.js` - Custom cosine similarity algorithm
     -   `siteHandlers.js` - Site-specific logic for Amazon, Breuninger
     -   `mydealzFilter.js` - MyDealz merchant filtering system
     -   `idealoFilter.js` - Idealo Best-Deal provider filtering
     -   `priceChartDetection.js` - Price chart integration and detection
     -   `priceChartModal.js` - Modal form system with 9 specialized functions
-    -   `idealoComparison.js` - Price comparison and product matching
+    -   `idealoComparison.js` - Price comparison, product matching, Keepa integration, and external link detection
     -   `mainContentScript.js` - Main orchestration and site routing
+    -   `popup.js` / `popup.html` / `popup.css` - Settings popup for theme, Slack, and changelog access
 
 ## How It Works
 
@@ -112,11 +119,16 @@ The manual process previously involved:
     - Time period switching with state persistence
 3. **Smart Product Analysis**:
     - Automatic price comparison with color-coded annotations
+    - Compact comparison cards with expandable detailed views
     - Best match highlighting based on title similarity
     - Best deal identification with price difference calculations
-4. **Automated Deal Posting**:
+    - External shop detection with visual warning badges
+4. **Keepa Integration**:
+    - Quick-access Keepa button for Amazon price history
+    - Available directly on Idealo search results when ASIN is detected
+5. **Automated Deal Posting**:
     - In-modal price information form with pre-filled product data
-    - Slack webhook integration for automated deal notifications
+    - Slack webhook integration with centralized URL configuration
     - Clipboard functionality for manual sharing workflows
 
 ### Cross-Platform State Management
@@ -161,6 +173,8 @@ The manual process previously involved:
 
 ### Configuration
 
--   **Slack Integration**: Enter webhook URL once - it's stored locally and masked for privacy
+-   **Settings Popup**: Access all settings via the toolbar icon - theme selection, Slack configuration, and changelog
+-   **Theme Selection**: Choose between light and dark themes (auto-detects system preference on first use)
+-   **Slack Integration**: Configure webhook URL once in settings - it's stored locally and used across all sites
 -   **Filter Preferences**: All filter selections are automatically saved and restored
 -   **Form State**: Price information form remembers its state across time period changes
