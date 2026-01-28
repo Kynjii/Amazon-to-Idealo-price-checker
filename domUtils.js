@@ -1,13 +1,10 @@
-function createFilterIcon(dataAttribute, openTitle = "Offen", closeTitle = "Schließen", backgroundColor = THEME.colors.primary, borderColor = THEME.colors.white) {
+function createFilterIcon(dataAttribute, openTitle = "Offen", closeTitle = "Schließen") {
     const iconBtn = document.createElement("button");
     iconBtn.setAttribute(dataAttribute, "true");
+    iconBtn.setAttribute("data-extension-ui", "true");
     iconBtn.title = openTitle;
-    iconBtn.style.cssText = createStyleString({
-        ...THEME.filterIcon,
-        background: backgroundColor,
-        border: `1px solid ${borderColor}`
-    });
-    iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("assets/logo.png")}" width="25" height="25" style="border-radius: 50%;">`;
+    iconBtn.classList.add("spca-filter-icon");
+    iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("assets/logo.png")}" alt="">`;
     document.body.appendChild(iconBtn);
 
     iconBtn.addEventListener("click", (e) => {
@@ -21,30 +18,18 @@ function createFilterIcon(dataAttribute, openTitle = "Offen", closeTitle = "Schl
 function addIdealoButton(titleElement, searchTerms, fontSize = "1rem") {
     const searchQuery = searchTerms.map(encodeURIComponent).join(" ");
 
+    const container = document.createElement("div");
+    container.classList.add("spca-idealo-search");
+    container.setAttribute("data-extension-ui", "true");
+
     const idealoButton = document.createElement("a");
-    idealoButton.innerText = "🔍 Suche auf Idealo";
+    idealoButton.classList.add("spca-idealo-search-button");
+    idealoButton.innerHTML = `<img src="${chrome.runtime.getURL("assets/search.png")}" alt=""> Suche auf Idealo`;
     idealoButton.href = `https://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=${searchQuery}`;
     idealoButton.target = "_blank";
-    idealoButton.style.cssText = createStyleString({
-        ...THEME.idealoButton.base,
-        fontSize: fontSize
-    });
 
-    idealoButton.addEventListener("mouseover", () => {
-        idealoButton.style.cssText = createStyleString({
-            ...THEME.idealoButton.base,
-            ...THEME.idealoButton.hover,
-            fontSize: fontSize
-        });
-    });
-    idealoButton.addEventListener("mouseout", () => {
-        idealoButton.style.cssText = createStyleString({
-            ...THEME.idealoButton.base,
-            fontSize: fontSize
-        });
-    });
-
-    titleElement.insertAdjacentElement("afterend", idealoButton);
+    container.appendChild(idealoButton);
+    document.body.appendChild(container);
 }
 
 function createThemeSelector() {
@@ -98,7 +83,7 @@ function createThemeButton(onThemeChange) {
     const updateIcon = (theme) => {
         const isDark = theme === "dark";
         const iconFile = isDark ? "assets/darkmode_white.png" : "assets/lightmode.png";
-        themeBtn.innerHTML = `<img src="${chrome.runtime.getURL(iconFile)}" width="16" height="16" alt="${isDark ? 'Dark' : 'Light'} mode">`;
+        themeBtn.innerHTML = `<img src="${chrome.runtime.getURL(iconFile)}" width="16" height="16" alt="${isDark ? "Dark" : "Light"} mode">`;
     };
 
     chrome.storage.local.get(["selectedTheme"], (result) => {
@@ -115,7 +100,7 @@ function createThemeButton(onThemeChange) {
 
             chrome.storage.local.set({ selectedTheme: nextTheme });
             updateIcon(nextTheme);
-            
+
             if (typeof onThemeChange === "function") {
                 onThemeChange(nextTheme);
             }
@@ -138,7 +123,7 @@ function createThemeButton(onThemeChange) {
 function updateThemeButtonText(button, theme) {
     const isDark = theme === "dark";
     const iconFile = isDark ? "assets/darkmode_white.png" : "assets/lightmode.png";
-    button.innerHTML = `<img src="${chrome.runtime.getURL(iconFile)}" width="16" height="16" alt="${isDark ? 'Dark' : 'Light'} mode">`;
+    button.innerHTML = `<img src="${chrome.runtime.getURL(iconFile)}" width="16" height="16" alt="${isDark ? "Dark" : "Light"} mode">`;
 }
 
 function createGenericFilter(config) {

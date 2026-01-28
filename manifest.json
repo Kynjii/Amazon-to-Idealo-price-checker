@@ -21,7 +21,7 @@
     ],
     "web_accessible_resources": [
         {
-            "resources": ["assets/logo.png", "assets/changelog.png", "assets/changelog_white.png", "assets/darkmode.png", "assets/darkmode_white.png", "assets/lightmode.png", "assets/lightmode_white.png", "assets/message_white.png", "assets/plus.png", "assets/warning.png"],
+            "resources": ["assets/logo.png", "assets/changelog.png", "assets/changelog_white.png", "assets/darkmode.png", "assets/darkmode_white.png", "assets/lightmode.png", "assets/lightmode_white.png", "assets/message_white.png", "assets/plus.png", "assets/search.png", "assets/warning.png"],
             "matches": ["https://www.idealo.de/*", "https://www.mydealz.de/*", "https://www.breuninger.com/*", "https://www.amazon.de/*", "https://www.amazon.com/*", "https://www.amazon.co.uk/*", "https://www.amazon.ca/*", "https://www.amazon.fr/*", "https://www.amazon.it/*", "https://www.amazon.es/*", "https://www.amazon.nl/*"]
         }
     ]
