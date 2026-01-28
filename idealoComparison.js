@@ -11,16 +11,43 @@ function createExternalLinkBadge() {
     return badge;
 }
 
-function createKeepaButton(asin) {
+function createKeepaButton(asin, isHeader = false) {
     if (!asin) return null;
 
     const keepaButton = document.createElement("a");
     keepaButton.href = `https://keepa.com/#!product/3-${asin}`;
     keepaButton.target = "_blank";
-    keepaButton.textContent = "Keepa";
-    keepaButton.classList.add("extension-annotation", "spca-keepa-button");
     keepaButton.addEventListener("click", (e) => e.stopPropagation());
+
+    if (isHeader) {
+        keepaButton.classList.add("spca-keepa-header-button");
+        keepaButton.innerHTML = `<img src="${chrome.runtime.getURL("assets/plus.png")}" width="16" height="16" alt=""> Auf Keepa ansehen`;
+    } else {
+        keepaButton.textContent = "Keepa";
+        keepaButton.classList.add("extension-annotation", "spca-keepa-button");
+    }
+
     return keepaButton;
+}
+
+function addKeepaButtonToGrid(asin) {
+    if (!asin) return;
+
+    if (document.querySelector('[data-keepa-header="true"]')) return;
+
+    const resultList = document.querySelector(".sr-resultList__item_m6xdA")?.parentElement;
+    if (!resultList) return;
+
+    const keepaContainer = document.createElement("div");
+    keepaContainer.setAttribute("data-keepa-header", "true");
+    keepaContainer.setAttribute("data-extension-ui", "true");
+    keepaContainer.classList.add("spca-keepa-header");
+
+    const keepaLink = createKeepaButton(asin, true);
+    if (keepaLink) {
+        keepaContainer.appendChild(keepaLink);
+        resultList.parentElement.insertBefore(keepaContainer, resultList);
+    }
 }
 
 function processIdealoResults(referencePrice, priceSiteName, productTitle, productAsin) {

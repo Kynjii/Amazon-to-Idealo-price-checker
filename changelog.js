@@ -9,6 +9,8 @@ function showChangelog() {
                 version: "1.16.0",
                 date: "2026-01-28",
                 changes: [
+                    { type: "new", text: "Keepa-Button für Amazon Preisverlauf auf Idealo-Suchergebnissen" },
+                    { type: "new", text: "Externe Shop-Links auf Idealo werden jetzt markiert" },
                     { type: "improve", text: "Genauere Produktvergleiche" },
                     { type: "improve", text: "Kleinere UI-Verbesserungen" }
                 ]

@@ -98,6 +98,12 @@
 
             const productAsin = result.productAsin || null;
             processIdealoResults(referencePrice, priceSiteName, productTitle, productAsin);
+            
+            if (productAsin) {
+                setTimeout(() => {
+                    addKeepaButtonToGrid(productAsin);
+                }, 3000);
+            }
         });
     }
 })();
