@@ -7,7 +7,7 @@ function createFilterIcon(dataAttribute, openTitle = "Offen", closeTitle = "Schl
         background: backgroundColor,
         border: `1px solid ${borderColor}`
     });
-    iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("logo.png")}" width="25" height="25" style="border-radius: 50%;">`;
+    iconBtn.innerHTML = `<img src="${chrome.runtime.getURL("assets/logo.png")}" width="25" height="25" style="border-radius: 50%;">`;
     document.body.appendChild(iconBtn);
 
     iconBtn.addEventListener("click", (e) => {
@@ -54,17 +54,23 @@ function createThemeSelector() {
     const themeControls = document.createElement("div");
     themeControls.className = "spca-filter-controls";
 
-    const themeBtn = createThemeButton();
-
     const changelogBtn = document.createElement("button");
-    changelogBtn.textContent = "📋";
     changelogBtn.className = "spca-btn spca-btn-icon";
     changelogBtn.title = "Changelog";
 
-    chrome.storage.local.get(["lastChangelogViewed"], (result) => {
+    const updateChangelogIcon = (theme) => {
+        const isDark = theme === "dark";
+        const iconFile = isDark ? "assets/changelog_white.png" : "assets/changelog.png";
+        changelogBtn.innerHTML = `<img src="${chrome.runtime.getURL(iconFile)}" width="16" height="16" alt="Changelog">`;
+    };
+
+    const themeBtn = createThemeButton(updateChangelogIcon);
+
+    chrome.storage.local.get(["selectedTheme", "lastChangelogViewed"], (result) => {
+        const theme = result.selectedTheme || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        updateChangelogIcon(theme);
         if (result.lastChangelogViewed !== window.EXTENSION_VERSION) {
             changelogBtn.classList.add("spca-changelog-new");
-            changelogBtn.textContent = "✨";
             changelogBtn.title = "Neue Version verfügbar!";
         }
     });
@@ -72,7 +78,6 @@ function createThemeSelector() {
     changelogBtn.addEventListener("click", () => {
         if (typeof showChangelog === "function") {
             changelogBtn.classList.remove("spca-changelog-new");
-            changelogBtn.textContent = "📋";
             changelogBtn.title = "Changelog";
             showChangelog();
         }
@@ -85,14 +90,15 @@ function createThemeSelector() {
     return themeSection;
 }
 
-function createThemeButton() {
+function createThemeButton(onThemeChange) {
     const themeBtn = document.createElement("button");
     themeBtn.className = "spca-btn spca-btn-icon";
     themeBtn.title = "Modus";
 
     const updateIcon = (theme) => {
-        const themeIcons = { light: "☀️", dark: "🌙" };
-        themeBtn.textContent = themeIcons[theme] || themeIcons.light;
+        const isDark = theme === "dark";
+        const iconFile = isDark ? "assets/darkmode_white.png" : "assets/lightmode.png";
+        themeBtn.innerHTML = `<img src="${chrome.runtime.getURL(iconFile)}" width="16" height="16" alt="${isDark ? 'Dark' : 'Light'} mode">`;
     };
 
     chrome.storage.local.get(["selectedTheme"], (result) => {
@@ -109,6 +115,10 @@ function createThemeButton() {
 
             chrome.storage.local.set({ selectedTheme: nextTheme });
             updateIcon(nextTheme);
+            
+            if (typeof onThemeChange === "function") {
+                onThemeChange(nextTheme);
+            }
 
             const containers = document.querySelectorAll(".spca-form-container, .spca-filter-container, .spca-changelog-container");
             containers.forEach((container) => {
@@ -126,11 +136,9 @@ function createThemeButton() {
 }
 
 function updateThemeButtonText(button, theme) {
-    const themeIcons = {
-        light: "☀️",
-        dark: "🌙"
-    };
-    button.textContent = themeIcons[theme] || themeIcons.light;
+    const isDark = theme === "dark";
+    const iconFile = isDark ? "assets/darkmode_white.png" : "assets/lightmode.png";
+    button.innerHTML = `<img src="${chrome.runtime.getURL(iconFile)}" width="16" height="16" alt="${isDark ? 'Dark' : 'Light'} mode">`;
 }
 
 function createGenericFilter(config) {

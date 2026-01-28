@@ -47,8 +47,8 @@ function addFormButtonToModal() {
     const formButton = document.createElement("button");
     formButton.setAttribute("data-form-button", "true");
     formButton.className = "spca-price-info-btn";
-    formButton.textContent = "✒️";
     formButton.title = "Deal-Nachricht erstellen";
+    formButton.innerHTML = `<img src="${chrome.runtime.getURL("assets/message_white.png")}" width="16" height="16" alt="Nachricht">`;
 
     formButton.addEventListener("click", (e) => {
         e.stopPropagation();

@@ -5,7 +5,7 @@ function isExternalLink(resultItem) {
 
 function createExternalLinkBadge() {
     const badge = document.createElement("span");
-    badge.textContent = "❗";
+    badge.innerHTML = `<img src="${chrome.runtime.getURL("assets/warning.png")}" width="14" height="14" alt="Warnung">`;
     badge.title = "Idealo stellt keine detaillierten Informationen bereit, ein Klick führt zu einem externen Shop.";
     badge.classList.add("extension-annotation", "spca-external-badge");
     return badge;
@@ -43,63 +43,32 @@ function processIdealoResults(referencePrice, priceSiteName, productTitle, produ
 
             const annotationContainer = document.createElement("div");
             annotationContainer.setAttribute("data-extension-ui", "true");
-            annotationContainer.style = `
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                position: absolute;
-                top: 0.5rem;
-                left: 0.3rem;
-                z-index: 9999;
-            `;
+            annotationContainer.classList.add("spca-annotation-container");
 
             const matchAnnotation = document.createElement("span");
             matchAnnotation.textContent = `${matchPercentage}%`;
-            matchAnnotation.classList.add("extension-annotation");
-            matchAnnotation.style = `
-                display: flex;
-                padding: 5px;
-                background-color: ${matchPercentage >= 90 ? "green" : matchPercentage >= 80 ? "#FFCC80" : matchPercentage >= 0 ? "#E0E0E0" : "#dc3545"};
-                color: white;
-                font-size: 12px;
-                font-weight: bold;
-                align-items: center;
-                justify-content: center;
-                border-radius: 3px;
-            `;
+            matchAnnotation.classList.add("extension-annotation", "spca-annotation");
+            if (matchPercentage >= 90) {
+                matchAnnotation.classList.add("spca-annotation--match-high");
+            } else if (matchPercentage >= 80) {
+                matchAnnotation.classList.add("spca-annotation--match-medium");
+            } else if (matchPercentage >= 0) {
+                matchAnnotation.classList.add("spca-annotation--match-low");
+            } else {
+                matchAnnotation.classList.add("spca-annotation--match-none");
+            }
             annotationContainer.appendChild(matchAnnotation);
 
             if (priceDifference !== null) {
                 const priceDiffAnnotation = document.createElement("span");
                 priceDiffAnnotation.textContent = `€${priceDifference}`;
-                priceDiffAnnotation.classList.add("extension-annotation", "lowest-price-highlight");
-                priceDiffAnnotation.style = `
-                    display: flex;
-                    padding: 5px;
-                    background-color: ${priceDifference < 0 ? "#A5D6A7" : "#EF9A9A"};
-                    color: white;
-                    font-size: 12px;
-                    font-weight: bold;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 3px;
-                `;
+                priceDiffAnnotation.classList.add("extension-annotation", "spca-annotation", "lowest-price-highlight");
+                priceDiffAnnotation.classList.add(priceDifference < 0 ? "spca-annotation--price-lower" : "spca-annotation--price-higher");
                 annotationContainer.appendChild(priceDiffAnnotation);
 
                 const priceSourceAnnotation = document.createElement("span");
                 priceSourceAnnotation.textContent = `vs ${priceSiteName}`;
-                priceSourceAnnotation.classList.add("extension-annotation");
-                priceSourceAnnotation.style = `
-                    display: flex;
-                    padding: 3px 5px;
-                    background-color: #6c757d;
-                    color: white;
-                    font-size: 10px;
-                    font-weight: bold;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 3px;
-                `;
+                priceSourceAnnotation.classList.add("extension-annotation", "spca-annotation", "spca-annotation--source");
                 annotationContainer.appendChild(priceSourceAnnotation);
 
                 if (isExternalLink(resultItem)) {
@@ -131,7 +100,7 @@ function processIdealoResults(referencePrice, priceSiteName, productTitle, produ
                 }
             }
 
-            resultItem.style.position = "relative";
+            resultItem.classList.add("spca-result-item");
             resultItem.appendChild(annotationContainer);
 
             if (matchPercentage > highestMatch.value) {
@@ -141,25 +110,17 @@ function processIdealoResults(referencePrice, priceSiteName, productTitle, produ
     });
 
     if (highestMatch.element) {
-        highestMatch.element.classList.add("highlighted-element");
+        highestMatch.element.classList.add("highlighted-element", "spca-highlighted--match");
         highestMatch.element.setAttribute("data-product-container", "true");
-        highestMatch.element.style.border = "3px dashed green";
-        highestMatch.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
-        highestMatch.element.style.backgroundColor = "rgba(165,214,167, 0.2)";
     }
     if (lowestPriceDiff.element) {
-        lowestPriceDiff.element.classList.add("highlighted-element");
+        lowestPriceDiff.element.classList.add("highlighted-element", "spca-highlighted--deal");
         lowestPriceDiff.element.setAttribute("data-product-container", "true");
-        lowestPriceDiff.element.style.border = "3px dashed orange";
-        lowestPriceDiff.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
-        lowestPriceDiff.element.style.backgroundColor = "rgba(255,209,128, 0.2)";
     }
     if (highestMatch.element && lowestPriceDiff.element && highestMatch.element === lowestPriceDiff.element) {
-        highestMatch.element.classList.add("highlighted-element");
+        highestMatch.element.classList.remove("spca-highlighted--match", "spca-highlighted--deal");
+        highestMatch.element.classList.add("highlighted-element", "spca-highlighted--both");
         highestMatch.element.setAttribute("data-product-container", "true");
-        highestMatch.element.style.border = "3px dashed #800080";
-        highestMatch.element.style.boxStyle = "0 0 5px rgba(0, 0, 0, 0.2)";
-        highestMatch.element.style.backgroundColor = "rgba(128, 0, 128, 0.2)";
     }
 
     createNavButtons(highestMatch, lowestPriceDiff);
@@ -189,16 +150,7 @@ function createNavButtons(highestMatch, lowestPriceDiff) {
 
     if (!controlsContainer) {
         controlsContainer = document.createElement("div");
-        controlsContainer.style = `
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 50%;
-            right: 10px;
-            transform: translateY(-50%);
-            gap: 10px;
-            z-index: 9999;
-        `;
+        controlsContainer.classList.add("spca-nav-container");
         controlsContainer.setAttribute("data-nav-buttons", "true");
         document.body.appendChild(controlsContainer);
     }
@@ -212,36 +164,17 @@ function createNavButtons(highestMatch, lowestPriceDiff) {
     if (highestMatch.element) {
         const closestMatchButton = document.createElement("button");
         closestMatchButton.textContent = "Bester Match";
-        closestMatchButton.style = `
-            width: 100%;
-            padding: 10px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        `;
+        closestMatchButton.classList.add("spca-nav-button", "spca-nav-button--match");
         closestMatchButton.addEventListener("mouseover", () => {
-            closestMatchButton.style.backgroundColor = "#218838";
-            closestMatchButton.style.transform = "translateY(-1px)";
-            closestMatchButton.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
             if (highestMatch.element) {
                 highestMatch.element.style.backgroundColor = "rgba(165,214,167, 0.4)";
                 highestMatch.element.style.border = "3px solid #28a745";
             }
         });
         closestMatchButton.addEventListener("mouseout", () => {
-            closestMatchButton.style.backgroundColor = "#28a745";
-            closestMatchButton.style.transform = "translateY(0)";
-            closestMatchButton.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
             if (highestMatch.element) {
-                highestMatch.element.style.backgroundColor = "rgba(165,214,167, 0.2)";
-                highestMatch.element.style.border = "3px dashed green";
+                highestMatch.element.style.backgroundColor = "";
+                highestMatch.element.style.border = "";
             }
         });
         closestMatchButton.addEventListener("click", () => navigateToElement(highestMatch.element, "Bester Match"));
@@ -251,37 +184,18 @@ function createNavButtons(highestMatch, lowestPriceDiff) {
     if (lowestPriceDiff.element) {
         const bestDealButton = document.createElement("button");
         bestDealButton.textContent = "Bestes Deal";
-        bestDealButton.style = `
-            width: 100%;
-            padding: 10px;
-            background-color: #ffc107;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        `;
+        bestDealButton.classList.add("spca-nav-button", "spca-nav-button--deal");
 
         bestDealButton.addEventListener("mouseover", () => {
-            bestDealButton.style.backgroundColor = "#e0a800";
-            bestDealButton.style.transform = "translateY(-1px)";
-            bestDealButton.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
             if (lowestPriceDiff.element) {
                 lowestPriceDiff.element.style.backgroundColor = "rgba(255,209,128, 0.4)";
                 lowestPriceDiff.element.style.border = "3px solid #ffc107";
             }
         });
         bestDealButton.addEventListener("mouseout", () => {
-            bestDealButton.style.backgroundColor = "#ffc107";
-            bestDealButton.style.transform = "translateY(0)";
-            bestDealButton.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
             if (lowestPriceDiff.element) {
-                lowestPriceDiff.element.style.backgroundColor = "rgba(255,209,128, 0.2)";
-                lowestPriceDiff.element.style.border = "3px dashed orange";
+                lowestPriceDiff.element.style.backgroundColor = "";
+                lowestPriceDiff.element.style.border = "";
             }
         });
 
@@ -292,33 +206,8 @@ function createNavButtons(highestMatch, lowestPriceDiff) {
     if (!document.querySelector('[data-toggle-ui="true"]')) {
         const toggleButton = document.createElement("button");
         toggleButton.textContent = "An/Aus";
-        toggleButton.style = `
-            width: 100%;
-            padding: 10px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 5px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        `;
-
+        toggleButton.classList.add("spca-nav-button", "spca-nav-button--toggle");
         toggleButton.setAttribute("data-toggle-ui", "true");
-        toggleButton.addEventListener("mouseover", () => {
-            toggleButton.style.backgroundColor = "#0056b3";
-            toggleButton.style.transform = "translateY(-1px)";
-            toggleButton.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-        });
-        toggleButton.addEventListener("mouseout", () => {
-            toggleButton.style.backgroundColor = "#007bff";
-            toggleButton.style.transform = "translateY(0)";
-            toggleButton.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-        });
-
         toggleButton.addEventListener("click", toggleExtensionUI);
         controlsContainer.appendChild(toggleButton);
     }
