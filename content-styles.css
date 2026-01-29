@@ -54,7 +54,7 @@
     box-shadow: var(--spca-shadow-md);
     padding: 14px;
     margin: 20px 0;
-    width: 22vw;
+    width: 24vw;
     min-width: 280px;
     max-width: 360px;
     min-height: 420px;
@@ -251,7 +251,7 @@
 
 .spca-form-textarea {
     resize: vertical;
-    min-height: 120px;
+    min-height: 150px;
 }
 
 .spca-btn {
@@ -415,7 +415,6 @@
     border-color: var(--spca-color-primary) !important;
 }
 
-/* Filter Icon Button */
 .spca-filter-icon {
     position: fixed;
     top: 16px;
