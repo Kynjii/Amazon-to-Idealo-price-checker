@@ -67,11 +67,21 @@ function extractProductData() {
 
             if (changeElement) {
                 priceReduction = changeElement.textContent.trim();
-                const percentageElement = targetRow.querySelector(".spca-price-percentage");
-                if (percentageElement) {
-                    priceReductionPercent = ` (${percentageElement.textContent.trim()})`;
-                } else {
-                    priceReductionPercent = "";
+
+                const valueElement = targetRow.querySelector(".priceHistoryStatistics-amount");
+                if (valueElement) {
+                    const valueText = valueElement.textContent.replace(/[^\d,]/g, "").replace(",", ".");
+                    const changeText = changeElement.textContent.replace(/[^\d,]/g, "").replace(",", ".");
+                    const historicalPrice = parseFloat(valueText);
+                    const changeAmount = parseFloat(changeText);
+
+                    if (!isNaN(historicalPrice) && !isNaN(changeAmount) && historicalPrice > 0) {
+                        const percentageChange = (changeAmount / historicalPrice) * 100;
+                        if (isFinite(percentageChange)) {
+                            const formattedPercentage = Math.abs(percentageChange).toFixed(1);
+                            priceReductionPercent = ` (-${formattedPercentage}%)`;
+                        }
+                    }
                 }
             }
         } else {

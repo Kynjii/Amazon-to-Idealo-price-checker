@@ -251,7 +251,7 @@
 
 .spca-form-textarea {
     resize: vertical;
-    min-height: 80px;
+    min-height: 120px;
 }
 
 .spca-btn {
@@ -1648,6 +1648,7 @@
     border-radius: 50%;
     flex-shrink: 0;
     vertical-align: middle;
+    cursor: help;
 }
 
 .spca-card-badge--high {
