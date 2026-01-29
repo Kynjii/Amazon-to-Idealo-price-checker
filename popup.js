@@ -6,13 +6,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const slackStatus = document.getElementById("slackStatus");
     const changelogBtn = document.getElementById("showChangelogBtn");
 
+    const MASKED_URL = "*************";
+    let hasExistingUrl = false;
+
     const manifest = chrome.runtime.getManifest();
     versionEl.textContent = `v${manifest.version}`;
 
     chrome.storage.local.get(["selectedTheme", "slackWebhookUrl"], (result) => {
         const currentTheme = result.selectedTheme || "light";
 
-        // Apply theme to popup
         if (currentTheme === "dark") {
             document.body.classList.add("dark");
         }
@@ -24,7 +26,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         if (result.slackWebhookUrl) {
-            slackInput.value = result.slackWebhookUrl;
+            slackInput.value = MASKED_URL;
+            hasExistingUrl = true;
+        }
+    });
+
+    slackInput.addEventListener("focus", () => {
+        if (slackInput.value === MASKED_URL) {
+            slackInput.value = "";
+        }
+    });
+
+    slackInput.addEventListener("blur", () => {
+        if (slackInput.value === "" && hasExistingUrl) {
+            slackInput.value = MASKED_URL;
         }
     });
 
@@ -32,7 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.addEventListener("click", () => {
             const theme = btn.dataset.theme;
 
-            // Update popup theme
             document.body.classList.remove("dark");
             if (theme === "dark") {
                 document.body.classList.add("dark");
@@ -54,13 +68,16 @@ document.addEventListener("DOMContentLoaded", () => {
     saveSlackBtn.addEventListener("click", () => {
         const url = slackInput.value.trim();
 
-        if (!url) {
-            chrome.storage.local.remove("slackWebhookUrl");
-            slackStatus.textContent = "URL entfernt";
-            slackStatus.className = "popup-hint success";
-            setTimeout(() => {
-                slackStatus.textContent = "";
-            }, 2000);
+        if (!url || url === MASKED_URL) {
+            if (!url) {
+                chrome.storage.local.remove("slackWebhookUrl");
+                hasExistingUrl = false;
+                slackStatus.textContent = "URL entfernt";
+                slackStatus.className = "popup-hint success";
+                setTimeout(() => {
+                    slackStatus.textContent = "";
+                }, 2000);
+            }
             return;
         }
 
@@ -71,6 +88,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         chrome.storage.local.set({ slackWebhookUrl: url }, () => {
+            slackInput.value = MASKED_URL;
+            hasExistingUrl = true;
             slackStatus.textContent = "Gespeichert";
             slackStatus.className = "popup-hint success";
             setTimeout(() => {
